@@ -10,6 +10,7 @@ from .base import BaseConfig
 from .data import DataConfig, PolymarketConfig
 from .env import EnvConfig, TradingEnvConfig
 from .model import LSTMConfig, ModelConfig
+from .run import RunInfo
 
 
 @dataclass
@@ -71,4 +72,5 @@ __all__ = [
     "TradingEnvConfig",
     "ModelConfig",
     "LSTMConfig",
+    "RunInfo",
 ]
