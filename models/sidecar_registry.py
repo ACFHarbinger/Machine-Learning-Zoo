@@ -1,13 +1,35 @@
 """Model registry for loading and managing models."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
+from typing import Any, Callable
 
-from ..configs.sidecar_model import LoadedModel
+try:
+    from ..configs.sidecar_model import LoadedModel
+except ImportError:
+    # Handle direct execution or testing
+    from pi_sidecar.configs.sidecar_model import LoadedModel
 
 logger = logging.getLogger(__name__)
 
+
+# Configurations for specific hardware (24GB VRAM)
+MODEL_CONFIGS = {
+    "deepseek-r1-32b": {
+        "path": "deepseek-r1-distill-qwen-32b.Q4_K_M.gguf",
+        "n_gpu_layers": -1,  # -1 = Full offload to GPU
+        "hf_repo": "bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
+        "hf_file": "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
+    },
+    "llama-3.3-70b": {
+        "path": "llama-3.3-70b-instruct.Q4_K_M.gguf",
+        "n_gpu_layers": 35,  # Partial offload to fit in 24GB VRAM
+        "hf_repo": "bartowski/Llama-3.3-70B-Instruct-GGUF",
+        "hf_file": "Llama-3.3-70B-Instruct-Q4_K_M.gguf",
+    },
+}
 
 class ModelRegistry:
     """Registry for managing loaded models."""
@@ -28,7 +50,7 @@ class ModelRegistry:
         Returns:
             A list of dictionaries containing the model information.
         """
-        models = []
+        models: list[dict[str, Any]] = []
 
         # List models in models_dir
         for item in self.models_dir.iterdir():
@@ -37,6 +59,7 @@ class ModelRegistry:
                     "model_id": item.name,
                     "path": str(item),
                     "loaded": item.name in self._loaded,
+                    "downloaded": True,
                     "backend": "transformers",
                 })
             elif item.suffix == ".gguf":
@@ -44,6 +67,7 @@ class ModelRegistry:
                     "model_id": item.name,
                     "path": str(item),
                     "loaded": item.name in self._loaded,
+                    "downloaded": True,
                     "backend": "llama.cpp",
                 })
 
@@ -54,7 +78,21 @@ class ModelRegistry:
                     "model_id": model_id,
                     "path": None,
                     "loaded": True,
+                    "downloaded": True,
                     "backend": getattr(model, "backend", "unknown"),
+                })
+
+        # Add configured models
+        for model_id, cfg in MODEL_CONFIGS.items():
+            if not any(m["model_id"] == model_id for m in models):
+                gguf_path = self.models_dir / str(cfg["path"])
+                models.append({
+                    "model_id": model_id,
+                    "path": cfg["path"],
+                    "loaded": model_id in self._loaded,
+                    "downloaded": gguf_path.exists(),
+                    "backend": "llama.cpp",
+                    "hf_repo": cfg.get("hf_repo"),
                 })
 
         return models
@@ -75,7 +113,8 @@ class ModelRegistry:
         logger.info("Loading model: %s (backend: %s)", model_id, backend or "auto")
 
         # Check path
-        model_path = self.models_dir / model_id
+        dir_path = Path(self.models_dir)
+        model_path = dir_path / str(model_id)
         is_gguf = model_id.endswith(".gguf") or model_path.suffix == ".gguf"
         
         # Decide backend
@@ -84,10 +123,26 @@ class ModelRegistry:
             effective_backend = "llama.cpp" if is_gguf else "transformers"
 
         if effective_backend == "llama.cpp":
-            from llama_cpp import Llama
+            from llama_cpp import Llama  # type: ignore
             
-            path = str(model_path) if model_path.exists() else model_id
-            model = Llama(model_path=path, n_ctx=2048) # Default context
+            # Check for custom config first
+            if model_id in MODEL_CONFIGS:
+                config = MODEL_CONFIGS[model_id]
+                # If path exists relative to models_dir, use full path, otherwise use name
+                cfg_path = Path(self.models_dir) / str(config["path"])
+                path = str(cfg_path) if cfg_path.exists() else str(config["path"])
+                
+                logger.info("Loading configured model %s with n_gpu_layers=%s", model_id, config["n_gpu_layers"])
+                
+                model = Llama(
+                    model_path=path,
+                    n_gpu_layers=config["n_gpu_layers"],
+                    n_ctx=8192,
+                    verbose=False
+                )
+            else:
+                path = str(model_path) if model_path.exists() else model_id
+                model = Llama(model_path=path, n_ctx=2048) # Default context
             
             loaded = LoadedModel(
                 model_id=model_id,
@@ -96,7 +151,7 @@ class ModelRegistry:
                 backend="llama.cpp",
             )
         else:
-            from transformers import AutoModelForCausalLM, AutoTokenizer
+            from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
 
             # Check if it's a local path or HuggingFace ID
             if model_path.exists():
@@ -140,3 +195,60 @@ class ModelRegistry:
             logger.info("Unloaded model: %s", model_id)
             return True
         return False
+
+    async def download_model(
+        self, model_id: str, progress_callback: Callable[[dict[str, Any]], Any] | None = None
+    ) -> dict[str, Any]:
+        """
+        Download a model GGUF file from HuggingFace.
+        Args:
+            model_id: The model ID from MODEL_CONFIGS.
+            progress_callback: Optional async callback for progress updates.
+        Returns:
+            A dictionary with download status and local path.
+        """
+        config = MODEL_CONFIGS.get(model_id)
+        if not config:
+            raise ValueError(f"Unknown model ID: {model_id}. Available: {list(MODEL_CONFIGS.keys())}")
+
+        hf_repo = config.get("hf_repo")
+        hf_file = config.get("hf_file")
+        if not hf_repo or not hf_file:
+            raise ValueError(f"Model {model_id} has no HuggingFace download info configured")
+        
+        dest_path = Path(self.models_dir) / str(config["path"])
+        if dest_path.exists():
+            logger.info("Model %s already downloaded at %s", model_id, dest_path)
+            return {"status": "already_downloaded", "model_id": model_id, "path": str(dest_path)}
+
+        logger.info("Downloading %s from %s/%s", model_id, hf_repo, hf_file)
+
+        if progress_callback:
+            await progress_callback({"status": "downloading", "model_id": model_id, "progress": 0})
+
+        def _download() -> str:
+            from huggingface_hub import hf_hub_download  # type: ignore
+
+            downloaded_path = hf_hub_download(
+                repo_id=hf_repo,
+                filename=hf_file,
+                local_dir=str(self.models_dir),
+                local_dir_use_symlinks=False,
+            )
+            # Rename to our expected filename if different
+            dl = Path(downloaded_path)
+            if dl.name != config["path"]:
+                target = self.models_dir / str(config["path"])
+                dl.rename(target)
+                return str(target)
+            return downloaded_path
+
+        loop = asyncio.get_event_loop()
+        local_path = await loop.run_in_executor(None, _download)
+
+        logger.info("Download complete: %s -> %s", model_id, local_path)
+
+        if progress_callback:
+            await progress_callback({"status": "complete", "model_id": model_id, "progress": 100})
+
+        return {"status": "downloaded", "model_id": model_id, "path": local_path}

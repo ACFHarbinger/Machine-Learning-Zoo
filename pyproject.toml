@@ -44,8 +44,11 @@ dependencies = [
     "hydra-core>=1.1.0",
     "tqdm>=4.62.0",
     "gymnasium>=0.26.0",
-    "stable-baselines3>=1.6.0",
+    "huggingface-hub>=0.23.0",
+    "stable-baselines3>=2.3.0",
     "pi-sidecar-shared",
+    "llama-cpp-python>=0.2.75",
+    "transformers>=5.0.0",
 ]
 
 [project.optional-dependencies]

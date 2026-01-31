@@ -29,6 +29,8 @@ class MlRequestHandler:
             "inference.load_model": self._inference_load_model,
             "model.list": self._model_list,
             "model.load": self._model_load,
+            "model.unload": self._model_unload,
+            "model.download": self._model_download,
             "training.start": self._training_start,
             "training.stop": self._training_stop,
             "training.status": self._training_status,
@@ -62,6 +64,12 @@ class MlRequestHandler:
     async def _model_load(self, p, _cb):
         await self.registry.load_model(p["model_id"])
         return {"status": "loaded", "model_id": p["model_id"]}
+    async def _model_unload(self, p, _cb):
+        unloaded = self.registry.unload_model(p["model_id"])
+        return {"status": "unloaded" if unloaded else "not_loaded", "model_id": p["model_id"]}
+    async def _model_download(self, p, cb):
+        result = await self.registry.download_model(p["model_id"], progress_callback=cb)
+        return result
     async def _training_start(self, p, _cb): return {"run_id": await self.training.start(p), "status": "started"}
     async def _training_stop(self, p, _cb): return {"stopped": await self.training.stop(p["run_id"]), "run_id": p["run_id"]}
     async def _training_status(self, p, _cb): return await self.training.status(p["run_id"])

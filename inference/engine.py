@@ -41,10 +41,21 @@ class InferenceEngine:
         Returns:
             A dictionary containing the status of the operation.
         """
+        from pi_sidecar.ml.models.sidecar_registry import MODEL_CONFIGS
+
+        # Local models configured in MODEL_CONFIGS are never API models
+        if model_id in MODEL_CONFIGS:
+            try:
+                await self.registry.load_model(model_id)
+                return {"status": "loaded", "model_id": model_id}
+            except Exception as e:
+                logger.error("Failed to load local model %s: %s", model_id, e)
+                raise
+
         # API models don't need local loading
         is_api = any(
             p in model_id.lower()
-            for p in ["claude-", "gemini-", "gpt-", "deepseek-"]
+            for p in ["claude-", "gemini-", "gpt-", "deepseek-chat", "deepseek-v"]
         )
 
         if is_api:
