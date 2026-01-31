@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, cast, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
-import torch
 
 from .deep_factory import DEEP_MODEL_NAMES, create_deep_model
 from .mac_factory import MAC_MODEL_NAMES, create_mac_model

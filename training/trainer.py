@@ -2,7 +2,6 @@
 
 from typing import Optional, Callable, Any
 from pathlib import Path
-import asyncio
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 import torch

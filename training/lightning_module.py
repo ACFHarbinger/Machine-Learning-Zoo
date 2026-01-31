@@ -2,7 +2,6 @@
 
 from typing import Any, Optional
 import torch
-import torch.nn as nn
 import pytorch_lightning as pl
 from transformers import AutoModelForCausalLM, AutoTokenizer
 

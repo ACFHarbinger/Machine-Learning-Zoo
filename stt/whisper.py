@@ -1,4 +1,3 @@
-import os
 import logging
 from typing import Optional
 from faster_whisper import WhisperModel

@@ -10,7 +10,7 @@ from pi_sidecar.ml.models.base import BaseModel
 from pi_sidecar.ml.utils.registry import register_model
 
 if TYPE_CHECKING:
-    from torch import Tensor
+    pass
 
 
 @register_model("lstm")

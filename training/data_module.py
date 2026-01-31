@@ -2,7 +2,6 @@
 
 from typing import Optional, List
 from pathlib import Path
-import torch
 from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
 from transformers import AutoTokenizer

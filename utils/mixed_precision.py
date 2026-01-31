@@ -9,6 +9,7 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from enum import Enum
 from typing import Any
+from pi_sidecar.ml.configs.optimization import MixedPrecisionConfig
 
 import torch
 from torch import autocast, nn
@@ -23,9 +24,6 @@ class PrecisionMode(Enum):
     BF16_MIXED = "bf16-mixed"
     FP16_TRUE = "16-true"
     BF16_TRUE = "bf16-true"
-
-
-from pi_sidecar.ml.configs.optimization import MixedPrecisionConfig
 
 
 class MixedPrecisionTrainer:

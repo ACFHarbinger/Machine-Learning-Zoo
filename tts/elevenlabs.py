@@ -1,7 +1,6 @@
 import os
 import httpx
 from typing import Optional
-from pi_sidecar.constants import personality
 
 
 class ElevenLabsTTS:

@@ -9,7 +9,7 @@ from pi_sidecar.ml.models.base import BaseModel
 from pi_sidecar.ml.models.spiking.snn import LIFCell, surrogate_heaviside
 
 if TYPE_CHECKING:
-    from torch import Tensor
+    pass
 
 
 class LiquidStateMachine(BaseModel):

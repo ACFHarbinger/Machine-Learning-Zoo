@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import Any, Callable, TypeVar, Union
+from typing import Any, Callable, TypeVar
 
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from ..exceptions import ConfigurationError
 
 logger = logging.getLogger(__name__)

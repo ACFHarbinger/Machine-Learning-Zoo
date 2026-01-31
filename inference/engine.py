@@ -9,6 +9,7 @@ Supports:
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from pathlib import Path
@@ -260,16 +261,13 @@ Available tools:
 
             api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
-                from pathlib import Path
-                import json
-
                 secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
                 if secrets_path.exists():
                     try:
                         with open(secrets_path, "r") as f:
                             secrets = json.load(f)
                             api_key = secrets.get("anthropic")
-                    except:
+                    except (json.JSONDecodeError, OSError):
                         pass
 
             if not api_key:

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 import torch.nn as nn
 
 if TYPE_CHECKING:
-    import torch
     from tensordict import TensorDict
 
 __all__ = ["ModelProtocol", "BaseModel", "BaseEncoder", "BaseDecoder"]

@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import torch
 from torch import nn
 
-from pi_sidecar.ml.models.base import BaseModel
-from pi_sidecar.ml.models.modules.xlstm_block import xLSTMBlock
-from pi_sidecar.ml.utils.registry import register_model
 
 if TYPE_CHECKING:
-    from torch import Tensor
+    pass
 
 
 class sLSTMCell(nn.Module):  # noqa: N801

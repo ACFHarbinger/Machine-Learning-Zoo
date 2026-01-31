@@ -4,6 +4,7 @@ Adapted from the Time-Series-Library.
 """
 
 from typing import Any
+from pi_sidecar.ml.utils.registry import register_model
 
 import torch
 from torch import nn
@@ -277,9 +278,6 @@ class Projector(nn.Module):
         y = torch.as_tensor(self.backbone(x))  # B x O
 
         return y
-
-
-from pi_sidecar.ml.utils.registry import register_model
 
 
 @register_model("nstransformer")

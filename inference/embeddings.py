@@ -1,7 +1,6 @@
 """Embedding generation using sentence-transformers."""
 
 from typing import List, Optional
-import numpy as np
 
 
 class EmbeddingEngine:
