@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Union
 from omegaconf import DictConfig, ListConfig
 
+
 def deep_sanitize(cfg: Union[DictConfig, ListConfig, Dict[str, Any], List[Any], Any]) -> Any:
     """
     Convert DictConfig/ListConfig to primitive Python types.
@@ -34,14 +35,15 @@ def deep_sanitize(cfg: Union[DictConfig, ListConfig, Dict[str, Any], List[Any], 
     else:
         return cfg
 
+
 def sanitize_and_inject(cfg: Any, **kwargs: Any) -> Dict[str, Any]:
     """
     Sanitize a configuration and inject additional non-serializable objects.
-    
+
     Args:
         cfg: The configuration to sanitize.
         **kwargs: Additional objects to inject after sanitization.
-        
+
     Returns:
         A dictionary containing the sanitized configuration and injected objects.
     """
@@ -53,6 +55,6 @@ def sanitize_and_inject(cfg: Any, **kwargs: Any) -> Dict[str, Any]:
             # If it's not a dict, we can't inject into it easily
             # But usually top-level configs passed to modules are dicts
             return sanitized
-    
+
     sanitized.update(kwargs)
     return sanitized

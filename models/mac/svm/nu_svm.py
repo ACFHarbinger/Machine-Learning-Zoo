@@ -10,9 +10,7 @@ from ..base import ClassicalModel
 class NuSVMModel(ClassicalModel):
     """Nu-Support Vector Machine for classification or regression."""
 
-    def __init__(
-        self, task: str = "regression", nu: float = 0.5, **kwargs: Any
-    ) -> None:
+    def __init__(self, task: str = "regression", nu: float = 0.5, **kwargs: Any) -> None:
         """Initialize NuSVMModel."""
         super().__init__()
         if task == "regression":

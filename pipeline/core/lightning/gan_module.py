@@ -1,4 +1,3 @@
-
 """
 Generative Adversarial Network (GAN) Module for Time Series Prediction.
 """
@@ -22,9 +21,7 @@ class GANLightningModule(BaseModule):
     - Discriminator: Takes full sequence (X + Y) -> Predicts Real/Fake.
     """
 
-    def __init__(
-        self, generator: nn.Module, discriminator: nn.Module, cfg: dict[str, Any]
-    ) -> None:
+    def __init__(self, generator: nn.Module, discriminator: nn.Module, cfg: dict[str, Any]) -> None:
         """
         Initialize the GAN module.
 

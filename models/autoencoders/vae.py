@@ -29,9 +29,7 @@ class VAE(nn.Module):
         seq_len: int = 100,
         pred_len: int = 20,
         encoder_type: Literal["transformer", "mamba", "lstm", "gru", "xlstm"] = "mamba",
-        decoder_type: (
-            Literal["transformer", "mamba", "lstm", "gru", "xlstm"] | None
-        ) = None,
+        decoder_type: (Literal["transformer", "mamba", "lstm", "gru", "xlstm"] | None) = None,
         n_layers: int = 3,
         n_heads: int = 8,
         d_ff: int = 512,

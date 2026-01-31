@@ -15,6 +15,7 @@ from typing import Any, Dict
 try:
     import torch
     from omegaconf import OmegaConf
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -27,6 +28,7 @@ sys.path.insert(0, str(project_root))
 try:
     from models.composed import build_model
     from utils.config import deep_sanitize
+
     LOCAL_MODULES_AVAILABLE = True
 except ImportError as e:
     LOCAL_MODULES_AVAILABLE = False
@@ -135,7 +137,9 @@ def demonstrate_model(model: Any, config: Dict[str, Any]) -> None:
     with torch.no_grad():
         try:
             output = model(dummy_input)
-            print(f"Model output shape: {output.shape if hasattr(output, 'shape') else type(output)}")
+            print(
+                f"Model output shape: {output.shape if hasattr(output, 'shape') else type(output)}"
+            )
             print(f"Model output type: {type(output)}")
             if isinstance(output, torch.Tensor):
                 print(f"Output sample: {output[0] if output.numel() > 0 else 'Empty tensor'}")
@@ -149,21 +153,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Machine Learning Zoo - Build and demonstrate models from presets"
     )
-    parser.add_argument(
-        "preset",
-        nargs="?",
-        help="Path to preset YAML configuration file"
-    )
-    parser.add_argument(
-        "--list-presets",
-        action="store_true",
-        help="List available preset files"
-    )
+    parser.add_argument("preset", nargs="?", help="Path to preset YAML configuration file")
+    parser.add_argument("--list-presets", action="store_true", help="List available preset files")
     parser.add_argument(
         "--demo",
         action="store_true",
         default=True,
-        help="Run model demonstration with dummy data (default: True)"
+        help="Run model demonstration with dummy data (default: True)",
     )
 
     args = parser.parse_args()

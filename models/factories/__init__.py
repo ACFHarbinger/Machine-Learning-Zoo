@@ -1,2 +1,1 @@
 """Model factory module."""
-

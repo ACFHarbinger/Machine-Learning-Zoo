@@ -1,4 +1,3 @@
-
 """FP-Growth algorithm implementation for association rule learning."""
 
 from typing import Any, Optional
@@ -58,9 +57,7 @@ class FPGrowthAlgorithm:
 
         # Step 3: Build FP-Tree
         tree_root = FPTreeNode("Null", 1, None)
-        header_table: dict[Any, list[Any]] = {
-            item[0]: [item[1], None] for item in sorted_items
-        }
+        header_table: dict[Any, list[Any]] = {item[0]: [item[1], None] for item in sorted_items}
 
         for t in transactions_processed:
             frequent_t = [item for item in t if item in frequent_items]
@@ -114,9 +111,7 @@ class FPGrowthAlgorithm:
     ) -> None:
         """Mine the FP-Tree for frequent itemsets."""
         # Sort items in header table
-        sorted_items = [
-            item[0] for item in sorted(header_table.items(), key=lambda x: x[1][0])
-        ]
+        sorted_items = [item[0] for item in sorted(header_table.items(), key=lambda x: x[1][0])]
 
         for item in sorted_items:
             new_prefix = prefix.copy()
@@ -143,25 +138,19 @@ class FPGrowthAlgorithm:
                     cond_counts[p_item] = cond_counts.get(p_item, 0) + count
 
             # Filter infrequent
-            cond_header_table = {
-                k: [v, None] for k, v in cond_counts.items() if v >= min_count
-            }
+            cond_header_table = {k: [v, None] for k, v in cond_counts.items() if v >= min_count}
 
             if cond_header_table:
                 # Build tree
                 cond_tree_root = FPTreeNode("Null", 1, None)
                 for path, count in conditional_patterns:
-                    frequent_path = [
-                        p_item for p_item in path if p_item in cond_header_table
-                    ]
+                    frequent_path = [p_item for p_item in path if p_item in cond_header_table]
                     if frequent_path:
                         self._insert_tree_with_count(
                             frequent_path, count, cond_tree_root, cond_header_table
                         )
 
-                self._mine_tree(
-                    cond_header_table, min_count, new_prefix, frequent_itemsets
-                )
+                self._mine_tree(cond_header_table, min_count, new_prefix, frequent_itemsets)
 
     def _insert_tree_with_count(
         self,
@@ -184,9 +173,7 @@ class FPGrowthAlgorithm:
                     current = current.neighbor
                 current.neighbor = new_node
         if len(items) > 1:
-            self._insert_tree_with_count(
-                items[1:], count, node.children[items[0]], header_table
-            )
+            self._insert_tree_with_count(items[1:], count, node.children[items[0]], header_table)
 
     def _generate_rules(self) -> list[dict[str, Any]]:
         """Generate association rules."""

@@ -66,12 +66,8 @@ def plot_linechart(  # noqa: PLR0913, PLR0915
                     *lg,
                 )
 
-            line: str | None = (
-                linestyles[idx % len(linestyles)] if linestyles is not None else None
-            )
-            mark: str | None = (
-                markers[idx % len(markers)] if markers is not None else None
-            )
+            line: str | None = linestyles[idx % len(linestyles)] if linestyles is not None else None
+            mark: str | None = markers[idx % len(markers)] if markers is not None else None
 
             if not line and not mark:
                 plot_func(*to_plot)
@@ -109,9 +105,7 @@ def plot_linechart(  # noqa: PLR0913, PLR0915
                 plot_func(ll)
             points_by_nbins[0].append((float(ll[0]), float(ll[5])))
     elif len(graph_log.shape) == 3:
-        points_by_nbins = plot_graphs_out(
-            plot_func, graph_log, x_values, linestyles, markers
-        )
+        points_by_nbins = plot_graphs_out(plot_func, graph_log, x_values, linestyles, markers)
         if annotate:
             for lg in zip(*graph_log, strict=False):
                 inner_lg = list(zip(*lg, strict=False))
@@ -222,9 +216,7 @@ def plot_attention_maps_wrapper(  # noqa: PLR0913
     if head_idx >= 0:
         if batch_idx >= 0:
             attn_map = attention_weights[layer_idx, head_idx, batch_idx].cpu().numpy()
-            title = (
-                f"Attention Map (Layer {layer_idx}, Head {head_idx}, Batch {batch_idx})"
-            )
+            title = f"Attention Map (Layer {layer_idx}, Head {head_idx}, Batch {batch_idx})"
             attention_filename = os.path.join(
                 dir_path,
                 "attention_maps",

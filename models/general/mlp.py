@@ -82,9 +82,7 @@ class MLP(nn.Module):
             emb = cast(torch.Tensor, self.backbone(x))
 
         should_return_embedding = (
-            return_embedding
-            if return_embedding is not None
-            else (self.output_type == "embedding")
+            return_embedding if return_embedding is not None else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

@@ -51,7 +51,7 @@ class TextDataset(Dataset):
             dict: The item.
         """
         text = self.texts[idx]
-        
+
         encoding = self.tokenizer(
             text,
             max_length=self.max_length,
@@ -59,7 +59,7 @@ class TextDataset(Dataset):
             truncation=True,
             return_tensors="pt",
         )
-        
+
         return {
             "input_ids": encoding["input_ids"].squeeze(),
             "attention_mask": encoding["attention_mask"].squeeze(),
@@ -102,7 +102,7 @@ class PiDataModule(pl.LightningDataModule):
         self.max_length = max_length
         self.batch_size = batch_size
         self.num_workers = num_workers
-        
+
         self.train_dataset: Optional[TextDataset] = None
         self.val_dataset: Optional[TextDataset] = None
 
@@ -119,11 +119,11 @@ class PiDataModule(pl.LightningDataModule):
         if self.data_path and self.data_path.exists():
             with open(self.data_path, "r") as f:
                 lines = [line.strip() for line in f if line.strip()]
-            
+
             split_idx = int(len(lines) * 0.9)
             self.train_texts = lines[:split_idx]
             self.val_texts = lines[split_idx:]
-        
+
         if stage == "fit" or stage is None:
             if self.train_texts:
                 self.train_dataset = TextDataset(

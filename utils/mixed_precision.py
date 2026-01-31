@@ -299,18 +299,11 @@ def estimate_memory_savings(
     # Activations (rough estimate based on batch size and sequence length)
     # This is highly model-dependent
     activation_factor = batch_size * sequence_length
-    fp32_activation_memory = (
-        activation_factor * total_params * 0.01 * fp32_bytes / (1024**2)
-    )
-    mixed_activation_memory = (
-        activation_factor * total_params * 0.01 * fp16_bytes / (1024**2)
-    )
+    fp32_activation_memory = activation_factor * total_params * 0.01 * fp32_bytes / (1024**2)
+    mixed_activation_memory = activation_factor * total_params * 0.01 * fp16_bytes / (1024**2)
 
     fp32_total = (
-        fp32_model_memory
-        + fp32_optimizer_memory
-        + fp32_gradient_memory
-        + fp32_activation_memory
+        fp32_model_memory + fp32_optimizer_memory + fp32_gradient_memory + fp32_activation_memory
     )
 
     mixed_total = (

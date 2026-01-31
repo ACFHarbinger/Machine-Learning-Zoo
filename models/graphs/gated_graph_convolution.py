@@ -139,9 +139,7 @@ class GatedGraphConvolution(nn.Module):
         Vh[mask.unsqueeze(-1).expand_as(Vh)] = 0
 
         if self.aggregation == "mean":
-            return torch.sum(Vh, dim=2) / torch.sum(1 - mask, dim=2).unsqueeze(
-                -1
-            ).type_as(Vh)
+            return torch.sum(Vh, dim=2) / torch.sum(1 - mask, dim=2).unsqueeze(-1).type_as(Vh)
         elif self.aggregation == "max":
             return torch.max(Vh, dim=2)[0]
         else:

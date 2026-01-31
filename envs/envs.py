@@ -144,9 +144,7 @@ class TradingEnv(gym.Env[NDArray[np.float64], int]):
 
         return self._get_observation(), {}
 
-    def step(
-        self, action: int
-    ) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
+    def step(self, action: int) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
         """
         Execute one step in the environment.
 
@@ -389,9 +387,7 @@ class PolymarketEnv(gym.Env[NDArray[Any], NDArray[Any]]):
 
         return self._get_observation(), {}
 
-    def step(
-        self, action: NDArray[Any]
-    ) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
+    def step(self, action: NDArray[Any]) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
         """
         Execute actions across multiple prediction markets.
         """
@@ -411,9 +407,7 @@ class PolymarketEnv(gym.Env[NDArray[Any], NDArray[Any]]):
         info = {
             "account_value": current_value,
             "collateral": (
-                self._collateral
-                if self._arena is None
-                else float(self._arena.collateral())
+                self._collateral if self._arena is None else float(self._arena.collateral())
             ),
         }
 

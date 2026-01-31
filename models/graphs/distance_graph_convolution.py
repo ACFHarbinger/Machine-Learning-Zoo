@@ -232,9 +232,7 @@ class DistanceAwareGraphConvolution(nn.Module):
             weighted_messages = messages * edge_weights_flat.unsqueeze(1)
 
             # Use scatter to aggregate messages to targets
-            out = scatter(
-                weighted_messages, target_idx, dim=0, dim_size=h.size(0), reduce="max"
-            )
+            out = scatter(weighted_messages, target_idx, dim=0, dim_size=h.size(0), reduce="max")
 
         elif self.aggregation == "mean":
             # Calculate weighted node degrees for normalization

@@ -40,6 +40,6 @@ MODEL_CONFIGS = {
         "path": "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
         "hf_repo": "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
         "hf_file": "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
-        "n_gpu_layers": 0, # Small model, CPU is fine
+        "n_gpu_layers": 0,  # Small model, CPU is fine
     },
 }

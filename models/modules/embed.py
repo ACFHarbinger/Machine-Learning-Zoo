@@ -25,9 +25,7 @@ class PositionalEmbedding(nn.Module):
         pe.requires_grad = False
 
         position = torch.arange(0, max_len).float().unsqueeze(1)
-        div_term = (
-            torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)
-        ).exp()
+        div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
 
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
@@ -63,9 +61,7 @@ class TokenEmbedding(nn.Module):
         )
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
-                nn.init.kaiming_normal_(
-                    m.weight, mode="fan_in", nonlinearity="leaky_relu"
-                )
+                nn.init.kaiming_normal_(m.weight, mode="fan_in", nonlinearity="leaky_relu")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -90,9 +86,7 @@ class FixedEmbedding(nn.Module):
         w.requires_grad = False
 
         position = torch.arange(0, c_in).float().unsqueeze(1)
-        div_term = (
-            torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)
-        ).exp()
+        div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
 
         w[:, 0::2] = torch.sin(position * div_term)
         w[:, 1::2] = torch.cos(position * div_term)
@@ -112,9 +106,7 @@ class TemporalEmbedding(nn.Module):
     Embedding for Temporal Features (Hour, Day, Month, etc).
     """
 
-    def __init__(
-        self, d_model: int, embed_type: str = "fixed", freq: str = "h"
-    ) -> None:
+    def __init__(self, d_model: int, embed_type: str = "fixed", freq: str = "h") -> None:
         """
         Initialize temporal embedding.
         """
@@ -139,9 +131,7 @@ class TemporalEmbedding(nn.Module):
         Forward pass.
         """
         x = x.long()
-        minute_x = (
-            self.minute_embed(x[:, :, 4]) if hasattr(self, "minute_embed") else 0.0
-        )
+        minute_x = self.minute_embed(x[:, :, 4]) if hasattr(self, "minute_embed") else 0.0
         hour_x = self.hour_embed(x[:, :, 3])
         weekday_x = self.weekday_embed(x[:, :, 2])
         day_x = self.day_embed(x[:, :, 1])
@@ -155,9 +145,7 @@ class TimeFeatureEmbedding(nn.Module):
     Embedding for continuous time features.
     """
 
-    def __init__(
-        self, d_model: int, embed_type: str = "timeF", freq: str = "h"
-    ) -> None:
+    def __init__(self, d_model: int, embed_type: str = "timeF", freq: str = "h") -> None:
         """
         Initialize time feature embedding.
         """

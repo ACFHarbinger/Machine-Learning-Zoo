@@ -15,9 +15,7 @@ def compose_dirpath(func: Callable[..., Any]) -> Callable[..., Any]:
         """Wrapper that ensures directory existence before calling the function."""
         path = args[0] if args else kwargs.get("json_path") or kwargs.get("dir_path")
         if path:
-            os.makedirs(
-                os.path.dirname(path) if os.path.isfile(path) else path, exist_ok=True
-            )
+            os.makedirs(os.path.dirname(path) if os.path.isfile(path) else path, exist_ok=True)
         return func(*args, **kwargs)
 
     return wrapper

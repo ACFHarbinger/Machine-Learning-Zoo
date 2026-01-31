@@ -30,22 +30,27 @@ class PiLightningModule(pl.LightningModule):
         """
         super().__init__()
         self.save_hyperparameters()
-        
+
         self.model_name = model_name
         self.learning_rate = learning_rate
         self.warmup_steps = warmup_steps
         self.weight_decay = weight_decay
-        
+
         # Load model and tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
-        
+
         # Ensure pad token exists
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
             self.model.config.pad_token_id = self.tokenizer.eos_token_id
 
-    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, labels: Optional[torch.Tensor] = None) -> Any:
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        labels: Optional[torch.Tensor] = None,
+    ) -> Any:
         """
         Forward pass.
         Args:
@@ -78,7 +83,7 @@ class PiLightningModule(pl.LightningModule):
             labels=batch["labels"],
         )
         loss = outputs.loss
-        
+
         self.log("train_loss", loss, prog_bar=True, on_step=True, on_epoch=True)
         return loss
 
@@ -98,7 +103,7 @@ class PiLightningModule(pl.LightningModule):
             labels=batch["labels"],
         )
         loss = outputs.loss
-        
+
         self.log("val_loss", loss, prog_bar=True, on_epoch=True)
         return loss
 
@@ -115,14 +120,14 @@ class PiLightningModule(pl.LightningModule):
             lr=self.learning_rate,
             weight_decay=self.weight_decay,
         )
-        
+
         scheduler = torch.optim.lr_scheduler.LinearLR(
             optimizer,
             start_factor=0.1,
             end_factor=1.0,
             total_iters=self.warmup_steps,
         )
-        
+
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
@@ -144,7 +149,7 @@ class PiLightningModule(pl.LightningModule):
         """
         inputs = self.tokenizer(prompt, return_tensors="pt")
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
-        
+
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
@@ -152,5 +157,5 @@ class PiLightningModule(pl.LightningModule):
                 pad_token_id=self.tokenizer.pad_token_id,
                 **kwargs,
             )
-        
+
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)

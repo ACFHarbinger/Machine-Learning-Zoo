@@ -1,4 +1,3 @@
-
 """Mixture Discriminant Analysis (MDA) algorithm implementation."""
 
 from typing import Any, cast
@@ -50,15 +49,11 @@ class MDAAlgorithm:
 
         n_samples = x.shape[0]
         n_classes = len(self.classes_)
-        log_probs: NDArray[np.float64] = np.zeros(
-            (n_samples, n_classes), dtype=np.float64
-        )
+        log_probs: NDArray[np.float64] = np.zeros((n_samples, n_classes), dtype=np.float64)
 
         for c in range(n_classes):
             # weighted log prob
-            log_probs[:, c] = self.gmms[c].score_samples(x) + np.log(
-                self.priors_[c] + 1e-9
-            )
+            log_probs[:, c] = self.gmms[c].score_samples(x) + np.log(self.priors_[c] + 1e-9)
 
         # Softmax: Exp-normalize
         max_log = np.max(log_probs, axis=1, keepdims=True)

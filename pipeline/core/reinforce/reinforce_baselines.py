@@ -265,9 +265,7 @@ class RolloutBaseline(Baseline):
     Baseline based on a fixed rollout model (Greedy baseline).
     """
 
-    def __init__(
-        self, model: torch.nn.Module, problem: Any, opts: Any, epoch: int = 0
-    ) -> None:
+    def __init__(self, model: torch.nn.Module, problem: Any, opts: Any, epoch: int = 0) -> None:
         """
         Initialize Rollout baseline.
         """
@@ -283,9 +281,7 @@ class RolloutBaseline(Baseline):
 
         self._update_model(model, epoch)
 
-    def _update_model(
-        self, model: torch.nn.Module, epoch: int, dataset: Any = None
-    ) -> None:
+    def _update_model(self, model: torch.nn.Module, epoch: int, dataset: Any = None) -> None:
         """
         Update the baseline model.
         """
@@ -294,16 +290,12 @@ class RolloutBaseline(Baseline):
 
         if dataset is not None:
             if len(dataset) != self.opts.val_size:
-                print(
-                    "Warning: not using saved baseline dataset since val_size does not match"
-                )
+                print("Warning: not using saved baseline dataset since val_size does not match")
                 dataset = None
             elif (dataset[0] if self.problem.NAME == "tsp" else dataset[0]["loc"]).size(
                 0
             ) != self.opts.graph_size:
-                print(
-                    "Warning: not using saved baseline dataset since graph_size does not match"
-                )
+                print("Warning: not using saved baseline dataset since graph_size does not match")
                 dataset = None
 
         if dataset is None:
@@ -326,17 +318,13 @@ class RolloutBaseline(Baseline):
         print("Evaluating baseline on dataset...")
         # Need to convert baseline to 2D to prevent converting to double, see
         # https://discuss.pytorch.org/t/dataloader-gives-double-instead-of-float/717/3
-        return BaselineDataset(
-            dataset, rollout(self.model, dataset, self.opts).view(-1, 1)
-        )
+        return BaselineDataset(dataset, rollout(self.model, dataset, self.opts).view(-1, 1))
 
     def unwrap_batch(self, batch: dict[str, Any]) -> tuple[Any, torch.Tensor]:
         """
         Unwrap batch previously wrapped by wrap_dataset.
         """
-        return batch["data"], batch["baseline"].view(
-            -1
-        )  # Flatten result to undo wrapping as 2D
+        return batch["data"], batch["baseline"].view(-1)  # Flatten result to undo wrapping as 2D
 
     def eval(
         self, x: torch.Tensor, c: torch.Tensor

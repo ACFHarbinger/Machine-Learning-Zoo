@@ -1,4 +1,3 @@
-
 """
 Semi-Supervised Learning Module for NGLab.
 
@@ -33,9 +32,7 @@ class SemiSupervisedModule(BaseModule):
         """
         super().__init__(cfg)
         self.backbone = backbone
-        self.head = torch.nn.Linear(
-            int(cfg.get("hidden_dim", 128)), int(cfg.get("num_classes", 2))
-        )
+        self.head = torch.nn.Linear(int(cfg.get("hidden_dim", 128)), int(cfg.get("num_classes", 2)))
         self.threshold = float(cfg.get("threshold", 0.95))
         self.lambda_u = float(cfg.get("lambda_u", 1.0))
 
@@ -77,9 +74,7 @@ class SemiSupervisedModule(BaseModule):
             # Re-compute logits (e.g. with augmentation/dropout enabled)
             # Here assuming simple consistency
             logits_u_strong = self(x_unlabeled)
-            loss_u_elements = F.cross_entropy(
-                logits_u_strong, targets_u, reduction="none"
-            )
+            loss_u_elements = F.cross_entropy(logits_u_strong, targets_u, reduction="none")
             loss_u = (loss_u_elements * mask).mean()
 
             self.log("train/loss_u", loss_u)

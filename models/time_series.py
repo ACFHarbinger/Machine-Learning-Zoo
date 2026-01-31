@@ -59,7 +59,7 @@ class TimeSeriesBackbone(BaseModel):
 
         # Whitelist for models supporting return_sequence
         sequence_supported = DEEP_MODEL_NAMES + MAC_MODEL_NAMES
-        
+
         # Merge kwargs with cfg defaults
         forward_kwargs = {**kwargs}
         if self.cfg.get("return_sequence", False):
@@ -69,7 +69,7 @@ class TimeSeriesBackbone(BaseModel):
             forward_kwargs.pop("return_sequence", None)
 
         out = self.model(obs, **forward_kwargs)
-        
+
         # Return TensorDict
         td.set("state_value", out)
         return td

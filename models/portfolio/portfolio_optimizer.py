@@ -59,9 +59,7 @@ class PortfolioOptimizer:
         )
 
         if not result.success:
-            print(
-                f"MVO optimization failed: {result.message}. Returning equal weights."
-            )
+            print(f"MVO optimization failed: {result.message}. Returning equal weights.")
             return initial_weights
 
         return cast(NDArray[Any], result.x)
@@ -85,9 +83,7 @@ class PortfolioOptimizer:
 
         while len(items) > 0:
             items = [
-                i
-                for j in items
-                for i in PortfolioOptimizer._bisect(j, covariance_matrix, weights)
+                i for j in items for i in PortfolioOptimizer._bisect(j, covariance_matrix, weights)
             ]
 
         return cast(NDArray[Any], weights.sort_index().values)
@@ -98,9 +94,7 @@ class PortfolioOptimizer:
         return cast(NDArray[Any], cov / np.outer(std, std))
 
     @staticmethod
-    def _bisect(
-        indices: list[int], cov: NDArray[Any], weights: pd.Series
-    ) -> list[list[int]]:
+    def _bisect(indices: list[int], cov: NDArray[Any], weights: pd.Series) -> list[list[int]]:
         if len(indices) <= 1:
             return []
 

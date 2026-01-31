@@ -48,9 +48,11 @@ class BaseModel(nn.Module, ABC):
 
 class BaseEncoder(BaseModel, ABC):
     """Abstract base class for all encoders (e.g., VAE encoders)."""
+
     pass
 
 
 class BaseDecoder(BaseModel, ABC):
     """Abstract base class for all decoders (e.g., VAE decoders)."""
+
     pass

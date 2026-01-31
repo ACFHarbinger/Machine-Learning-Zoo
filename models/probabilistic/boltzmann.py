@@ -66,11 +66,6 @@ class BoltzmannMachine(nn.Module):
         """Energy function: -0.5 * x^T W x - b^T x"""
         w = self.get_weights()
         # (Batch, 1, Num_Units) @ (Num_Units, Num_Units) @ (Batch, Num_Units, 1)
-        e = (
-            -0.5
-            * torch.bmm(
-                state.unsqueeze(1), torch.matmul(w, state.unsqueeze(2))
-            ).squeeze()
-        )
+        e = -0.5 * torch.bmm(state.unsqueeze(1), torch.matmul(w, state.unsqueeze(2))).squeeze()
         e -= torch.matmul(state, self.bias)
         return e

@@ -111,29 +111,15 @@ class MultiHeadAttention(nn.Module):
         batch_size = query.size(0)
 
         # Linear projections and split into heads
-        Q = (
-            self.q_linear(query)
-            .view(batch_size, -1, self.num_heads, self.d_k)
-            .transpose(1, 2)
-        )
-        K = (
-            self.k_linear(key)
-            .view(batch_size, -1, self.num_heads, self.d_k)
-            .transpose(1, 2)
-        )
-        V = (
-            self.v_linear(value)
-            .view(batch_size, -1, self.num_heads, self.d_k)
-            .transpose(1, 2)
-        )
+        Q = self.q_linear(query).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        K = self.k_linear(key).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        V = self.v_linear(value).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
 
         # Apply attention
         attn_output, _ = self.attention(Q, K, V, mask)
 
         # Concatenate heads
-        attn_output = (
-            attn_output.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
-        )
+        attn_output = attn_output.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
 
         # Final linear projection
         output = self.out_linear(attn_output)
@@ -153,9 +139,7 @@ class AttentionBlock(nn.Module):
         dropout: Dropout probability
     """
 
-    def __init__(
-        self, d_model: int, num_heads: int = 8, d_ff: int = 2048, dropout: float = 0.1
-    ):
+    def __init__(self, d_model: int, num_heads: int = 8, d_ff: int = 2048, dropout: float = 0.1):
         """Initialize Attention Block."""
         super().__init__()
 
@@ -177,9 +161,7 @@ class AttentionBlock(nn.Module):
         # Dropout
         self.dropout = nn.Dropout(dropout)
 
-    def forward(
-        self, x: torch.Tensor, mask: torch.Tensor | None = None
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """
         Args:
             x: Input tensor (batch, seq_len, d_model)
@@ -252,10 +234,7 @@ class AttentionNetwork(nn.Module):
 
         # Stack of attention blocks
         self.attention_blocks = nn.ModuleList(
-            [
-                AttentionBlock(d_model, num_heads, d_ff, dropout)
-                for _ in range(num_layers)
-            ]
+            [AttentionBlock(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)]
         )
 
         # Layer normalization
@@ -283,8 +262,7 @@ class AttentionNetwork(nn.Module):
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(
-            torch.arange(0, d_model, 2, dtype=torch.float)
-            * (-math.log(10000.0) / d_model)
+            torch.arange(0, d_model, 2, dtype=torch.float) * (-math.log(10000.0) / d_model)
         )
 
         pe[:, 0::2] = torch.sin(position * div_term)

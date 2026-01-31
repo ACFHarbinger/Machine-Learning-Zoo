@@ -119,9 +119,7 @@ class S3Backend(CloudStorageBackend):
 
                 if self.config.aws_access_key_id:
                     session_kwargs["aws_access_key_id"] = self.config.aws_access_key_id
-                    session_kwargs["aws_secret_access_key"] = (
-                        self.config.aws_secret_access_key
-                    )
+                    session_kwargs["aws_secret_access_key"] = self.config.aws_secret_access_key
 
                 session = boto3.Session(**session_kwargs)
                 self._client = session.client("s3")
@@ -203,9 +201,7 @@ class S3Backend(CloudStorageBackend):
             with open(local_path, "wb") as f:
                 f.write(data)
 
-            logger.info(
-                f"Downloaded checkpoint from s3://{self.config.bucket}/{full_key}"
-            )
+            logger.info(f"Downloaded checkpoint from s3://{self.config.bucket}/{full_key}")
 
         except Exception as e:
             if "NoSuchKey" in str(e):
@@ -518,9 +514,7 @@ class CloudCheckpointManager:
         try:
             self._backend.download(remote_key, temp_path)
 
-            checkpoint = cast(
-                dict[str, Any], torch.load(temp_path, map_location=map_location)
-            )
+            checkpoint = cast(dict[str, Any], torch.load(temp_path, map_location=map_location))
             model.load_state_dict(checkpoint["model_state_dict"])
 
             if optimizer is not None and "optimizer_state_dict" in checkpoint:

@@ -65,9 +65,7 @@ class TWSVMModel(ClassicalModel):
         X_full = np.vstack((H, G))
         y_1 = np.vstack((np.zeros((m1, 1)), np.ones((m2, 1))))
 
-        pseudo_inv1 = np.linalg.pinv(
-            X_full.T @ X_full + self.epsilon * np.eye(X_full.shape[1])
-        )
+        pseudo_inv1 = np.linalg.pinv(X_full.T @ X_full + self.epsilon * np.eye(X_full.shape[1]))
         z1 = pseudo_inv1 @ X_full.T @ y_1
         self.weights1 = z1[:-1]
         self.bias1 = float(z1[-1])
@@ -75,9 +73,7 @@ class TWSVMModel(ClassicalModel):
         X_full2 = np.vstack((G, H))
         y_2 = np.vstack((np.zeros((m2, 1)), np.ones((m1, 1))))
 
-        pseudo_inv2 = np.linalg.pinv(
-            X_full2.T @ X_full2 + self.epsilon * np.eye(X_full2.shape[1])
-        )
+        pseudo_inv2 = np.linalg.pinv(X_full2.T @ X_full2 + self.epsilon * np.eye(X_full2.shape[1]))
         z2 = pseudo_inv2 @ X_full2.T @ y_2
         self.weights2 = z2[:-1]
         self.bias2 = float(z2[-1])

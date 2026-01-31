@@ -1,4 +1,3 @@
-
 """
 Base Lightning Module for the NGLab training pipeline.
 
@@ -9,7 +8,6 @@ from typing import Any
 
 import pytorch_lightning as pl
 import torch
-
 
 
 class BaseModule(pl.LightningModule):

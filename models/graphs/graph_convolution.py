@@ -94,10 +94,7 @@ class GraphConvolution(nn.Module):
                     degrees = degrees.expand(batch_size, -1, -1)
             else:  # (V, V)
                 degrees = (
-                    mask.sum(dim=-1)
-                    .view(1, num_nodes, 1)
-                    .expand(batch_size, -1, -1)
-                    .clamp(min=1)
+                    mask.sum(dim=-1).view(1, num_nodes, 1).expand(batch_size, -1, -1).clamp(min=1)
                 )
 
             if mask.dim() == 2:

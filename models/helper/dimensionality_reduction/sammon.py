@@ -1,4 +1,3 @@
-
 """Sammon Mapping algorithm implementation."""
 
 from typing import Any
@@ -54,13 +53,9 @@ class SammonMappingAlgorithm:
         try:
             pca = PCA(n_components=self.n_components)
             Y_init = pca.fit_transform(X_t.cpu().numpy())
-            Y = torch.tensor(
-                Y_init, dtype=torch.float32, requires_grad=True, device=X_t.device
-            )
+            Y = torch.tensor(Y_init, dtype=torch.float32, requires_grad=True, device=X_t.device)
         except Exception:
-            Y = torch.randn(
-                n_samples, self.n_components, requires_grad=True, device=X_t.device
-            )
+            Y = torch.randn(n_samples, self.n_components, requires_grad=True, device=X_t.device)
 
         optimizer = torch.optim.Adam([Y], lr=self.lr)
 

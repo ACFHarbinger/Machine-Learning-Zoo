@@ -69,9 +69,7 @@ class BaldSampler(BaseSampler):
             mc_preds: MC Dropout predictions [num_samples, pool_size, num_classes]
         """
         # Average of entropy
-        entropy_of_avg = -torch.sum(
-            mc_preds.mean(0) * torch.log(mc_preds.mean(0) + 1e-10), dim=1
-        )
+        entropy_of_avg = -torch.sum(mc_preds.mean(0) * torch.log(mc_preds.mean(0) + 1e-10), dim=1)
 
         # Entropy of average
         avg_of_entropy = -torch.mean(

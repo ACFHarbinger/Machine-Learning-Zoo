@@ -3,6 +3,7 @@ import httpx
 from typing import Optional
 from pi_sidecar.constants import personality
 
+
 class ElevenLabsTTS:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("ELEVENLABS_API_KEY")

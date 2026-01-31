@@ -57,9 +57,7 @@ class EchoStateNetwork(nn.Module):
         outputs = []
         for t in range(seq_len):
             u = x[:, t, :]
-            h = torch.tanh(
-                torch.matmul(u, self.win.t()) + torch.matmul(h, self.wres.t())
-            )
+            h = torch.tanh(torch.matmul(u, self.win.t()) + torch.matmul(h, self.wres.t()))
 
             combined = torch.cat([u, h], dim=1)
             out = self.readout(combined)
@@ -67,9 +65,7 @@ class EchoStateNetwork(nn.Module):
             outputs.append(out)
 
         should_return_embedding = (
-            return_embedding
-            if return_embedding is not None
-            else (self.output_type == "embedding")
+            return_embedding if return_embedding is not None else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

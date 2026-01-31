@@ -27,9 +27,7 @@ class SentimentAnalyzer:
         """
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(
-            self.device
-        )
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(self.device)
         self.model.eval()
 
         # FinBERT labels: 0: positive, 1: negative, 2: neutral
@@ -48,9 +46,9 @@ class SentimentAnalyzer:
         if isinstance(text, str):
             text = [text]
 
-        inputs = self.tokenizer(
-            text, padding=True, truncation=True, return_tensors="pt"
-        ).to(self.device)
+        inputs = self.tokenizer(text, padding=True, truncation=True, return_tensors="pt").to(
+            self.device
+        )
 
         with torch.no_grad():
             outputs = self.model(**inputs)

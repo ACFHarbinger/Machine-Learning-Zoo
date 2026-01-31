@@ -33,9 +33,7 @@ def log_timeseries_values(  # noqa: PLR0913
     # Log values to screen
     if step % (opts.get("log_step", 1) * 10) == 0:
         print(f"epoch: {epoch}, train_batch_id: {batch_id}, loss: {loss:.6f}")
-        print(
-            f"grad_norm: {grad_norms_all[0]:.6f}, clipped: {grad_norms_clipped[0]:.6f}"
-        )
+        print(f"grad_norm: {grad_norms_all[0]:.6f}, clipped: {grad_norms_clipped[0]:.6f}")
 
     # Log values to tensorboard
     if not opts.get("no_tensorboard", False):
@@ -120,9 +118,7 @@ def _convert_numpy(obj: Any) -> Any:
     return obj
 
 
-def log_to_json_resilient(
-    json_path: str, data: dict[str, Any], lock: Any | None = None
-) -> None:
+def log_to_json_resilient(json_path: str, data: dict[str, Any], lock: Any | None = None) -> None:
     """
     Thread-safe and error-resilient JSON logger using a temporary file fallback.
     """

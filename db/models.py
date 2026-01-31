@@ -72,9 +72,7 @@ class ModelCheckpoint(Base):
     __tablename__ = "model_checkpoints"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    created_at = Column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow
-    )
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
     model_name = Column(String(100), nullable=False)
     version = Column(String(50), nullable=False)
     architecture = Column(String, nullable=False)
@@ -84,9 +82,7 @@ class ModelCheckpoint(Base):
     git_commit = Column(String(40))
 
     __table_args__ = (
-        Index(
-            "idx_model_checkpoints_name_version", "model_name", "version", unique=True
-        ),
+        Index("idx_model_checkpoints_name_version", "model_name", "version", unique=True),
     )
 
 

@@ -73,9 +73,7 @@ class MemoryPool:
             )
             del warmup_tensor
             torch.cuda.empty_cache()
-            logger.info(
-                f"Pre-allocated {pool_size_mb}MB GPU memory pool on device {device}"
-            )
+            logger.info(f"Pre-allocated {pool_size_mb}MB GPU memory pool on device {device}")
         except RuntimeError as e:
             logger.warning(f"Failed to pre-allocate memory pool: {e}")
 
@@ -257,9 +255,7 @@ class TransferProfiler:
                 print(f"  Count: {int(stats_dict['count'])}")
                 print(f"  Total: {stats_dict['total_ms']:.2f}ms")
                 print(f"  Avg: {stats_dict['avg_ms']:.2f}ms")
-                print(
-                    f"  Min/Max: {stats_dict['min_ms']:.2f}ms / {stats_dict['max_ms']:.2f}ms"
-                )
+                print(f"  Min/Max: {stats_dict['min_ms']:.2f}ms / {stats_dict['max_ms']:.2f}ms")
 
     def clear(self) -> None:
         """Clear all profiles."""
@@ -301,12 +297,8 @@ class GPUMemoryOptimizer:
         after_label: str,
     ) -> dict[str, float]:
         """Compare two labeled snapshots."""
-        before = next(
-            (s for s in self._snapshots if s.get("label") == before_label), None
-        )
-        after = next(
-            (s for s in self._snapshots if s.get("label") == after_label), None
-        )
+        before = next((s for s in self._snapshots if s.get("label") == before_label), None)
+        after = next((s for s in self._snapshots if s.get("label") == after_label), None)
 
         if before is None or after is None:
             return {"error": -1.0}  # Signal error with negative value
@@ -418,9 +410,7 @@ class GPUMemoryOptimizer:
         # Optimizer states (Adam uses 2 additional buffers per parameter)
         optimizer_bytes = param_bytes * 2 if with_grad else 0
 
-        total_bytes = (
-            param_bytes + grad_bytes + input_bytes + activation_bytes + optimizer_bytes
-        )
+        total_bytes = param_bytes + grad_bytes + input_bytes + activation_bytes + optimizer_bytes
 
         return {
             "parameters_mb": param_bytes / 1024**2,
@@ -487,21 +477,15 @@ def get_gpu_optimization_recommendations() -> list[str]:
             "✅ GPU supports Flash Attention - enable via enable_memory_efficient_attention()"
         )
     elif capability[0] >= 7:  # Volta/Turing
-        recommendations.append(
-            "✅ GPU supports FP16 Tensor Cores - use 16-mixed precision"
-        )
+        recommendations.append("✅ GPU supports FP16 Tensor Cores - use 16-mixed precision")
     else:
-        recommendations.append(
-            "⚠️ Older GPU - mixed precision may not provide significant speedup"
-        )
+        recommendations.append("⚠️ Older GPU - mixed precision may not provide significant speedup")
 
     # Memory recommendations
     total_memory = torch.cuda.get_device_properties(device).total_memory / 1024**3
     if total_memory < 8:
         recommendations.append("⚠️ Limited GPU memory - use gradient checkpointing")
-        recommendations.append(
-            "⚠️ Consider smaller batch sizes or gradient accumulation"
-        )
+        recommendations.append("⚠️ Consider smaller batch sizes or gradient accumulation")
 
     # CUDA version
     cuda_version = torch.version.cuda

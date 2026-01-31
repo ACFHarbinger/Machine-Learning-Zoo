@@ -74,11 +74,14 @@ class ProgressCallback(Callback):
         """
         if batch_idx % 10 == 0:  # Report every 10 batches
             loss = outputs["loss"].item() if isinstance(outputs, dict) else outputs.item()
-            self._emit_progress("batch", {
-                "epoch": self.current_epoch,
-                "batch": batch_idx,
-                "loss": loss,
-            })
+            self._emit_progress(
+                "batch",
+                {
+                    "epoch": self.current_epoch,
+                    "batch": batch_idx,
+                    "loss": loss,
+                },
+            )
 
     def on_train_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         """
@@ -90,11 +93,16 @@ class ProgressCallback(Callback):
         Returns:
             None
         """
-        metrics = {k: v.item() if torch.is_tensor(v) else v for k, v in trainer.callback_metrics.items()}
-        self._emit_progress("epoch_end", {
-            "epoch": self.current_epoch,
-            "metrics": metrics,
-        })
+        metrics = {
+            k: v.item() if torch.is_tensor(v) else v for k, v in trainer.callback_metrics.items()
+        }
+        self._emit_progress(
+            "epoch_end",
+            {
+                "epoch": self.current_epoch,
+                "metrics": metrics,
+            },
+        )
 
     def on_train_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         """
@@ -144,7 +152,7 @@ class TrainingOrchestrator:
         self.model_name = model_name
         self.output_dir = output_dir or Path("./checkpoints")
         self.progress_fn = progress_fn
-        
+
         self.module: Optional[PiLightningModule] = None
         self.trainer: Optional[pl.Trainer] = None
 
@@ -190,7 +198,7 @@ class TrainingOrchestrator:
         """
         if self.module is None:
             self.prepare()
-        
+
         # Create data module
         data_module = PiDataModule(
             tokenizer=self.module.tokenizer,
@@ -198,7 +206,7 @@ class TrainingOrchestrator:
             val_texts=val_texts or [],
             batch_size=batch_size,
         )
-        
+
         # Callbacks
         callbacks = [
             ProgressCallback(self.progress_fn),
@@ -210,7 +218,7 @@ class TrainingOrchestrator:
                 mode="min",
             ),
         ]
-        
+
         # Create trainer
         self.trainer = pl.Trainer(
             max_epochs=epochs,
@@ -219,10 +227,10 @@ class TrainingOrchestrator:
             enable_progress_bar=False,  # We use our own progress
             logger=False,
         )
-        
+
         # Train
         self.trainer.fit(self.module, data_module)
-        
+
         return {
             "epochs": epochs,
             "final_loss": self.trainer.callback_metrics.get("train_loss", 0),
@@ -240,11 +248,11 @@ class TrainingOrchestrator:
         """
         if self.module is None:
             raise RuntimeError("No model to save")
-        
+
         save_path = path or self.output_dir / "final_model"
         save_path.mkdir(parents=True, exist_ok=True)
-        
+
         self.module.model.save_pretrained(save_path)
         self.module.tokenizer.save_pretrained(save_path)
-        
+
         return save_path

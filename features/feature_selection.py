@@ -32,9 +32,7 @@ class TimeSeriesFeatureSelector:
         X_clean = X.fillna(0)
         y_clean = y.fillna(0)
 
-        mi_scores = mutual_info_regression(
-            X_clean, y_clean, discrete_features=discrete_features
-        )
+        mi_scores = mutual_info_regression(X_clean, y_clean, discrete_features=discrete_features)
         mi_series = pd.Series(mi_scores, index=X.columns)
         return mi_series.sort_values(ascending=False)
 
@@ -52,9 +50,7 @@ class TimeSeriesFeatureSelector:
         Automatically finds the optimal number of features.
         """
         cv_split = TimeSeriesSplit(n_splits=cv)
-        selector = RFECV(
-            estimator=estimator, step=step, cv=cv_split, scoring=scoring, n_jobs=-1
-        )
+        selector = RFECV(estimator=estimator, step=step, cv=cv_split, scoring=scoring, n_jobs=-1)
         selector.fit(X, y)
 
         selected_features: list[str] = list(X.columns[selector.support_])

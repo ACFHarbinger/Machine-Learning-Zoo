@@ -12,9 +12,7 @@ class RBM(nn.Module):
     Restricted Boltzmann Machine (RBM).
     """
 
-    def __init__(
-        self, visible_dim: int, hidden_dim: int, output_type: str = "embedding"
-    ) -> None:
+    def __init__(self, visible_dim: int, hidden_dim: int, output_type: str = "embedding") -> None:
         """Initialize RBM."""
         super().__init__()
         self.visible_dim = visible_dim
@@ -55,9 +53,7 @@ class RBM(nn.Module):
             _p_v, v_recon = self.sample_v(h)
 
         should_return_embedding = (
-            return_embedding
-            if return_embedding is not None
-            else (self.output_type == "embedding")
+            return_embedding if return_embedding is not None else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

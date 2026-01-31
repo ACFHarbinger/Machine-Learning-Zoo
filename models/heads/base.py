@@ -20,6 +20,7 @@ __all__ = ["HeadConfig", "Head", "HEAD_REGISTRY", "register_head"]
 @dataclass
 class HeadConfig:
     """Configuration for head modules."""
+
     input_dim: int = 256  # Must match backbone.output_dim
     output_dim: int = 10  # Task-specific (num_classes, action_dim, etc.)
     hidden_dims: tuple[int, ...] = ()  # Optional MLP layers
@@ -30,23 +31,23 @@ class HeadConfig:
 class Head(nn.Module, ABC):
     """
     Abstract base class for task-specific heads.
-    
+
     Heads take backbone features and produce task-specific outputs.
     """
-    
+
     def __init__(self, config: HeadConfig) -> None:
         super().__init__()
         self.config = config
-    
+
     @abstractmethod
     def forward(self, features: torch.Tensor, **kwargs: Any) -> torch.Tensor:
         """
         Forward pass producing task-specific output.
-        
+
         Args:
             features: Output from backbone (batch, ..., backbone_dim)
             **kwargs: Task-specific arguments
-        
+
         Returns:
             Task-specific output tensor
         """
@@ -59,7 +60,9 @@ HEAD_REGISTRY: dict[str, type[Head]] = {}
 
 def register_head(name: str):
     """Decorator to register a head class."""
+
     def decorator(cls: type[Head]) -> type[Head]:
         HEAD_REGISTRY[name] = cls
         return cls
+
     return decorator

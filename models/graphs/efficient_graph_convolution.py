@@ -82,9 +82,7 @@ class EfficientGraphConvolution(MessagePassing):
         self.bases_weight = Parameter(
             torch.Tensor(in_channels, (out_channels // num_heads) * num_bases)
         )
-        self.comb_weight = Linear(
-            in_channels, num_heads * num_bases * len(self.aggregators)
-        )
+        self.comb_weight = Linear(in_channels, num_heads * num_bases * len(self.aggregators))
 
         if bias:
             self.bias = Parameter(torch.Tensor(out_channels))
@@ -181,9 +179,7 @@ class EfficientGraphConvolution(MessagePassing):
 
         # [num_nodes, num_aggregators, (out_channels // num_heads) * num_bases]
         # propagate_type: (x: Tensor, symnorm_weight: OptTensor)
-        aggregated = self.propagate(
-            edge_index, x=bases, symnorm_weight=symnorm_weight, size=None
-        )
+        aggregated = self.propagate(edge_index, x=bases, symnorm_weight=symnorm_weight, size=None)
 
         weightings = weightings.view(
             batch_size,
@@ -246,9 +242,7 @@ class EfficientGraphConvolution(MessagePassing):
                 out = scatter(inputs, index, 0, dim_size, reduce="max")
             elif aggregator in {"var", "std"}:
                 mean = scatter(inputs, index, 0, dim_size, reduce="mean")
-                mean_squares = scatter(
-                    inputs * inputs, index, 0, dim_size, reduce="mean"
-                )
+                mean_squares = scatter(inputs * inputs, index, 0, dim_size, reduce="mean")
                 out = mean_squares - mean * mean
                 if aggregator == "std":
                     out = torch.sqrt(torch.relu(out) + 1e-5)

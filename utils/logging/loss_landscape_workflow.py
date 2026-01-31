@@ -54,9 +54,7 @@ class SimplePolicy(nn.Module):
     Simple 2-layer MLP policy for landscape analysis.
     """
 
-    def __init__(
-        self, input_dim: int = 12, hidden_dim: int = 64, output_dim: int = 1
-    ) -> None:
+    def __init__(self, input_dim: int = 12, hidden_dim: int = 64, output_dim: int = 1) -> None:
         """
         Initialize.
         """

@@ -93,9 +93,7 @@ class DifferentialEvolutionBase:
             for i, hp in enumerate(list(self.cs.values())):
                 # maps hyperparameter name to positional index in vector form
                 self.hps[hp.name] = i
-        self.output_path = (
-            Path(kwargs["output_path"]) if "output_path" in kwargs else Path("./")
-        )
+        self.output_path = Path(kwargs["output_path"]) if "output_path" in kwargs else Path("./")
         self.output_path.mkdir(parents=True, exist_ok=True)
 
         if config_repository:
@@ -189,9 +187,7 @@ class DifferentialEvolutionBase:
         else:
             # if no CS representation available, uniformly sample from [0, 1]
             assert self.dimensions is not None
-            population = self.rng.uniform(
-                low=0.0, high=1.0, size=(pop_size, self.dimensions)
-            )
+            population = self.rng.uniform(low=0.0, high=1.0, size=(pop_size, self.dimensions))
 
         assert population is not None
         return population
@@ -248,9 +244,7 @@ class DifferentialEvolutionBase:
         if len(violations) == 0:
             return vector
         if self.fix_type == "random":
-            vector[violations] = self.rng.uniform(
-                low=0.0, high=1.0, size=len(violations)
-            )
+            vector[violations] = self.rng.uniform(low=0.0, high=1.0, size=len(violations))
         else:
             vector[violations] = np.clip(vector[violations], a_min=0, a_max=1)
         return vector
@@ -284,9 +278,7 @@ class DifferentialEvolutionBase:
                 else:
                     param_value = hyper.lower + (hyper.upper - hyper.lower) * vector[i]
                 if isinstance(hyper, CS.UniformIntegerHyperparameter):
-                    param_value = int(
-                        np.round(param_value)
-                    )  # converting to discrete (int)
+                    param_value = int(np.round(param_value))  # converting to discrete (int)
                 else:
                     param_value = float(param_value)
             new_config[hyper.name] = param_value
@@ -320,9 +312,7 @@ class DifferentialEvolutionBase:
                 nlevels = len(hyper.choices)
                 vector[i] = hyper.choices.index(config[name]) / nlevels
             elif isinstance(hyper, CS.Constant):
-                vector[i] = (
-                    0  # set constant to 0, so that it wont be affected by mutation
-                )
+                vector[i] = 0  # set constant to 0, so that it wont be affected by mutation
             else:
                 bounds = (hyper.lower, hyper.upper)
                 param_value = config[name]
@@ -331,9 +321,7 @@ class DifferentialEvolutionBase:
                         np.log(param_value / bounds[0]) / np.log(bounds[1] / bounds[0])
                     )
                 else:
-                    vector[i] = float(
-                        (config[name] - bounds[0]) / (bounds[1] - bounds[0])
-                    )
+                    vector[i] = float((config[name] - bounds[0]) / (bounds[1] - bounds[0]))
         return np.array(vector, dtype=np.float64)
 
     def f_objective(self, *args: Any, **kwargs: Any) -> Any:

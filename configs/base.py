@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import yaml
@@ -47,6 +46,7 @@ class BaseConfig:
 def deep_sanitize(cfg: Any) -> Any:
     """Recursively convert DictConfig/ListConfig to primitives."""
     from omegaconf import DictConfig, ListConfig
+
     if isinstance(cfg, DictConfig):
         return {k: deep_sanitize(v) for k, v in cfg.items()}
     if isinstance(cfg, ListConfig):

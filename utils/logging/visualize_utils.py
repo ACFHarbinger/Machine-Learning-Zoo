@@ -62,9 +62,7 @@ class MyModelWrapper(nn.Module):
         return cast(torch.Tensor, self.model(x))
 
 
-def load_model_instance(
-    model_path: str, device: torch.device
-) -> tuple[nn.Module, dict[str, Any]]:
+def load_model_instance(model_path: str, device: torch.device) -> tuple[nn.Module, dict[str, Any]]:
     """
     Loads a model for visualization using the project's standard loading utility.
 
@@ -101,9 +99,7 @@ def plot_weight_trajectories(checkpoint_dir: str, output_file: str) -> None:
     # Sort files by epoch number if possible
     try:
         files.sort(
-            key=lambda x: (
-                int(x.split("-")[1].split(".")[0]) if "-" in x and "epoch" in x else 0
-            )
+            key=lambda x: (int(x.split("-")[1].split(".")[0]) if "-" in x and "epoch" in x else 0)
         )
     except (IndexError, ValueError):
         files.sort()
@@ -122,9 +118,7 @@ def plot_weight_trajectories(checkpoint_dir: str, output_file: str) -> None:
                 continue
 
             # Flatten all parameters into a single vector
-            tensors = [
-                p.flatten() for p in state_dict.values() if isinstance(p, torch.Tensor)
-            ]
+            tensors = [p.flatten() for p in state_dict.values() if isinstance(p, torch.Tensor)]
             if not tensors:
                 continue
             flat_weight = torch.cat(tensors).numpy()
@@ -358,9 +352,7 @@ def visualize_epoch(
     try:
         if "distributions" in viz_modes or "both" in viz_modes:
             writer = (
-                tb_logger.writer
-                if tb_logger is not None and hasattr(tb_logger, "writer")
-                else None
+                tb_logger.writer if tb_logger is not None and hasattr(tb_logger, "writer") else None
             )
             log_weight_distributions(
                 model,
@@ -370,9 +362,7 @@ def visualize_epoch(
             )
 
         if "logit_lens" in viz_modes:
-            x_batch = get_batch(
-                viz_opts["device"], seq_len=opts.get("lookback", 30), batch_size=1
-            )
+            x_batch = get_batch(viz_opts["device"], seq_len=opts.get("lookback", 30), batch_size=1)
             plot_logit_lens(
                 model,
                 x_batch,
@@ -393,9 +383,7 @@ def visualize_epoch(
 
         if "trajectory" in viz_modes:
             checkpoint_dir = opts.get("save_dir", "checkpoints")
-            plot_weight_trajectories(
-                checkpoint_dir, os.path.join(viz_output_dir, "trajectory.png")
-            )
+            plot_weight_trajectories(checkpoint_dir, os.path.join(viz_output_dir, "trajectory.png"))
 
     finally:
         model.to(orig_device)
@@ -407,23 +395,13 @@ def main() -> None:
     """Main execution entry point for visualization debugging."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, help="Path to model checkpoint")
-    parser.add_argument(
-        "--checkpoint_dir", type=str, help="Directory with multiple checkpoints"
-    )
-    parser.add_argument(
-        "--output_dir", type=str, default="visualizations", help="Output directory"
-    )
-    parser.add_argument(
-        "--log_dir", type=str, default="logs", help="TensorBoard log directory"
-    )
+    parser.add_argument("--checkpoint_dir", type=str, help="Directory with multiple checkpoints")
+    parser.add_argument("--output_dir", type=str, default="visualizations", help="Output directory")
+    parser.add_argument("--log_dir", type=str, default="logs", help="TensorBoard log directory")
 
     parser.add_argument("--seq_len", type=int, default=30, help="Sequence length")
-    parser.add_argument(
-        "--batch_size", type=int, default=16, help="Batch size for evaluation"
-    )
-    parser.add_argument(
-        "--resolution", type=int, default=10, help="Resolution for landscapes"
-    )
+    parser.add_argument("--batch_size", type=int, default=16, help="Batch size for evaluation")
+    parser.add_argument("--resolution", type=int, default=10, help="Resolution for landscapes")
     parser.add_argument("--span", type=float, default=1.0, help="Span for landscapes")
 
     parser.add_argument(

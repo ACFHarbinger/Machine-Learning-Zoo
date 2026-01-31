@@ -13,7 +13,7 @@ class OnlineNormalizer:
     def __init__(self, feature_dim: int, epsilon: float = 1e-8):
         self.feature_dim = feature_dim
         self.epsilon = epsilon
-        
+
         self.n = 0
         self.mean = np.zeros(feature_dim)
         self.m2 = np.zeros(feature_dim)  # Sum of squares of differences from the mean
@@ -22,8 +22,10 @@ class OnlineNormalizer:
         """Update running mean and variance with a new observation."""
         x = np.asarray(x)
         if x.shape[-1] != self.feature_dim:
-            raise ValueError(f"Input dimension {x.shape[-1]} does not match feature_dim {self.feature_dim}")
-            
+            raise ValueError(
+                f"Input dimension {x.shape[-1]} does not match feature_dim {self.feature_dim}"
+            )
+
         # Welford's Algorithm
         self.n += 1
         delta = x - self.mean
@@ -35,7 +37,7 @@ class OnlineNormalizer:
         """Scale the input using current mean and standard deviation."""
         if self.n < 2:
             return x - self.mean
-            
+
         variance = self.m2 / self.n
         std = np.sqrt(variance)
         return (x - self.mean) / (std + self.epsilon)

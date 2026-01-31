@@ -39,9 +39,7 @@ def rollout(
         Evaluate a single batch.
         """
         with torch.no_grad():
-            cost, _ = cast(
-                tuple[torch.Tensor, Any], model(move_to(bat, opts["device"]))
-            )
+            cost, _ = cast(tuple[torch.Tensor, Any], model(move_to(bat, opts["device"])))
         return cost.data.cpu()
 
     dataloader = torch.utils.data.DataLoader(
@@ -67,9 +65,7 @@ def clip_grad_norms(
     grad_norms = [
         torch.nn.utils.clip_grad_norm_(
             group["params"],
-            (
-                max_norm if max_norm > 0 else math.inf
-            ),  # Inf so no clipping but still call to calc
+            (max_norm if max_norm > 0 else math.inf),  # Inf so no clipping but still call to calc
             norm_type=2,
         ).item()
         for group in param_groups
@@ -110,12 +106,8 @@ def train_epoch(  # noqa: PLR0913
         dataset, batch_size=opts["batch_size"], shuffle=True
     )
 
-    for batch_id, batch in enumerate(
-        tqdm(training_dataloader, disable=opts["no_progress_bar"])
-    ):
-        train_batch(
-            model, optimizer, baseline, epoch, batch_id, batch, step, tb_logger, opts
-        )
+    for batch_id, batch in enumerate(tqdm(training_dataloader, disable=opts["no_progress_bar"])):
+        train_batch(model, optimizer, baseline, epoch, batch_id, batch, step, tb_logger, opts)
         step += 1
 
     epoch_duration = time.time() - start_time
@@ -123,9 +115,9 @@ def train_epoch(  # noqa: PLR0913
     if is_cuda:
         torch.cuda.empty_cache()
 
-    if (
-        opts["checkpoint_epochs"] != 0 and epoch % opts["checkpoint_epochs"] == 0
-    ) or epoch == opts["n_epochs"] - 1:
+    if (opts["checkpoint_epochs"] != 0 and epoch % opts["checkpoint_epochs"] == 0) or epoch == opts[
+        "n_epochs"
+    ] - 1:
         print("Saving model and state...")
         torch.save(
             {

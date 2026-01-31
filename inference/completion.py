@@ -30,12 +30,12 @@ class CompletionEngine:
             None
         """
         from transformers import AutoModelForCausalLM, AutoTokenizer
-        
+
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
         self.model.to(self.device)
         self.model.eval()
-        
+
         # Ensure pad token
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -62,10 +62,10 @@ class CompletionEngine:
         """
         if self.model is None:
             self._load_model()
-        
+
         inputs = self.tokenizer(prompt, return_tensors="pt")
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
-        
+
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
@@ -75,17 +75,17 @@ class CompletionEngine:
                 do_sample=temperature > 0,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
-        
+
         # Decode and remove the prompt
         generated = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        completion = generated[len(prompt):].strip()
-        
+        completion = generated[len(prompt) :].strip()
+
         # Handle stop sequences
         if stop_sequences:
             for stop in stop_sequences:
                 if stop in completion:
-                    completion = completion[:completion.index(stop)]
-        
+                    completion = completion[: completion.index(stop)]
+
         return completion
 
     def load_model(self, model_path: str) -> None:
@@ -98,7 +98,7 @@ class CompletionEngine:
             None
         """
         from transformers import AutoModelForCausalLM, AutoTokenizer
-        
+
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
         self.model = AutoModelForCausalLM.from_pretrained(model_path)
         self.model.to(self.device)

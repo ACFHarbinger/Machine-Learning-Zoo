@@ -43,9 +43,7 @@ class ActivationFunction(nn.Module):
         if af_name == "relu":
             self.activation = nn.ReLU(inplace=inplace or False)
         elif af_name == "leakyrelu":
-            self.activation = nn.LeakyReLU(
-                inplace=inplace or False, negative_slope=fparam or 0.01
-            )
+            self.activation = nn.LeakyReLU(inplace=inplace or False, negative_slope=fparam or 0.01)
         elif af_name == "silu":
             self.activation = nn.SiLU(inplace=inplace or False)
         elif af_name == "selu":
@@ -61,9 +59,7 @@ class ActivationFunction(nn.Module):
             )
         elif af_name == "rrelu":
             lower, upper = urange if urange else (0.125, 0.333)
-            self.activation = nn.RReLU(
-                inplace=inplace or False, lower=lower, upper=upper
-            )
+            self.activation = nn.RReLU(inplace=inplace or False, lower=lower, upper=upper)
         elif af_name == "gelu":
             self.activation = nn.GELU()
         elif af_name == "gelu_tanh":
@@ -120,9 +116,7 @@ class ActivationFunction(nn.Module):
             stdv = 1.0 / math.sqrt(param.size(-1))
             param.data.uniform_(-stdv, stdv)
 
-    def forward(
-        self, input: torch.Tensor, mask: torch.Tensor | None = None
-    ) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """
         Applies the activation function to the input.
 

@@ -139,9 +139,7 @@ class GPUFeatureEngineer:
         if data.dim() == 1:
             delta = torch.cat([torch.zeros(1, device=data.device), delta])
         else:
-            delta = torch.cat(
-                [torch.zeros((data.shape[0], 1), device=data.device), delta], dim=1
-            )
+            delta = torch.cat([torch.zeros((data.shape[0], 1), device=data.device), delta], dim=1)
 
         gain = torch.max(delta, torch.zeros_like(delta))
         loss = torch.abs(torch.min(delta, torch.zeros_like(delta)))
@@ -195,14 +193,13 @@ class GPUFeatureEngineer:
 
         # 3. Variance = SMA_sq - SMA^2
         var = sma_sq - sma**2
-        std = torch.sqrt(
-            torch.clamp(var, min=0)
-        )  # clamp to avoid negative due to precision
+        std = torch.sqrt(torch.clamp(var, min=0))  # clamp to avoid negative due to precision
 
         upper = sma + (std * num_std)
         lower = sma - (std * num_std)
 
         return upper, sma, lower
+
     def compute_imbalance(self, bid_vol: torch.Tensor, ask_vol: torch.Tensor) -> torch.Tensor:
         """
         Calculate Order Book Imbalance.
@@ -219,18 +216,22 @@ class GPUFeatureEngineer:
         mid = (best_bid + best_ask) / 2.0
         return (best_ask - best_bid) / (mid + 1e-10)
 
-    def compute_vwap(self, prices: torch.Tensor, volumes: torch.Tensor, window: int = 20) -> torch.Tensor:
+    def compute_vwap(
+        self, prices: torch.Tensor, volumes: torch.Tensor, window: int = 20
+    ) -> torch.Tensor:
         """
         Calculate Volume-Weighted Average Price (VWAP) over a rolling window.
         """
         prices = self._to_tensor(prices)
         volumes = self._to_tensor(volumes)
-        
+
         pv = prices * volumes
-        
-        sum_pv = self.moving_average(pv, window) * window # moving_average returns mean, so multiply by window
+
+        sum_pv = (
+            self.moving_average(pv, window) * window
+        )  # moving_average returns mean, so multiply by window
         sum_vol = self.moving_average(volumes, window) * window
-        
+
         return sum_pv / (sum_vol + 1e-10)
 
     def compute_price_momentum(self, prices: torch.Tensor, window: int = 10) -> torch.Tensor:

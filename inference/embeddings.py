@@ -30,6 +30,7 @@ class EmbeddingEngine:
         """
         try:
             from sentence_transformers import SentenceTransformer
+
             self.model = SentenceTransformer(self.model_name)
         except ImportError:
             raise RuntimeError("sentence-transformers not installed")
@@ -45,7 +46,7 @@ class EmbeddingEngine:
         """
         if self.model is None:
             self._load_model()
-        
+
         embedding = self.model.encode(text, convert_to_numpy=True)
         return embedding.tolist()
 
@@ -60,7 +61,7 @@ class EmbeddingEngine:
         """
         if self.model is None:
             self._load_model()
-        
+
         embeddings = self.model.encode(texts, convert_to_numpy=True)
         return [e.tolist() for e in embeddings]
 

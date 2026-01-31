@@ -41,9 +41,7 @@ class ContinuousActionWrapper(gym.ActionWrapper[Any, Any, Any]):
         """
         super().__init__(env)
         action_space = env.action_space
-        assert isinstance(
-            action_space, spaces.Discrete
-        ), "Expected Discrete action space"
+        assert isinstance(action_space, spaces.Discrete), "Expected Discrete action space"
         self.n_actions = int(cast(Any, action_space).n)
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
 
@@ -91,9 +89,7 @@ def train_sac(cfg: DictConfig) -> None:
     env = DummyVecEnv([make_env(0, cfg.seed, cfg.env.lookback, cfg.env.max_steps)])
 
     # Evaluation environment
-    eval_env = DummyVecEnv(
-        [make_env(0, cfg.seed + 100, cfg.env.lookback, cfg.env.max_steps)]
-    )
+    eval_env = DummyVecEnv([make_env(0, cfg.seed + 100, cfg.env.lookback, cfg.env.max_steps)])
 
     # Define the SAC model
     model = SAC(

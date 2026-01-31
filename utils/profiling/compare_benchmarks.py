@@ -50,9 +50,7 @@ def compare_metrics(
         curr_val = current[key]
 
         # Skip non-numeric
-        if not isinstance(base_val, (int, float)) or not isinstance(
-            curr_val, (int, float)
-        ):
+        if not isinstance(base_val, (int, float)) or not isinstance(curr_val, (int, float)):
             continue
 
         # Determine direction.
@@ -96,9 +94,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    logger.info(
-        f"Comparing {args.current} vs {args.baseline} (Threshold: {args.threshold})"
-    )
+    logger.info(f"Comparing {args.current} vs {args.baseline} (Threshold: {args.threshold})")
 
     curr_data = load_benchmark(args.current)
     base_data = load_benchmark(args.baseline)

@@ -1,4 +1,3 @@
-
 """
 Association rule learning models for NGLab.
 """
@@ -48,9 +47,7 @@ class AprioriModel(AssociationRuleModel):
     ) -> None:
         """Initialize Apriori Model."""
         super().__init__()
-        self.model = AprioriAlgorithm(
-            min_support=min_support, min_confidence=min_confidence
-        )
+        self.model = AprioriAlgorithm(min_support=min_support, min_confidence=min_confidence)
 
 
 class FPGrowthModel(AssociationRuleModel):
@@ -61,9 +58,7 @@ class FPGrowthModel(AssociationRuleModel):
     ) -> None:
         """Initialize FP-Growth Model."""
         super().__init__()
-        self.model = FPGrowthAlgorithm(
-            min_support=min_support, min_confidence=min_confidence
-        )
+        self.model = FPGrowthAlgorithm(min_support=min_support, min_confidence=min_confidence)
 
 
 class EclatModel(AssociationRuleModel):

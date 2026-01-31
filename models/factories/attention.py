@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from typing import Any
@@ -24,6 +23,5 @@ class AttentionFactory(NeuralComponentFactory):
             return AttentionNet(**kwargs)
         else:
             raise ValueError(
-                f"Unknown attention model: {name}. "
-                f"Available: nstransformer, attention"
+                f"Unknown attention model: {name}. Available: nstransformer, attention"
             )

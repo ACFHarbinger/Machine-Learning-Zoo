@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from typing import Any
@@ -34,6 +33,5 @@ class RecurrentFactory(NeuralComponentFactory):
             return LSM(**kwargs)
         else:
             raise ValueError(
-                f"Unknown recurrent model: {name}. "
-                f"Available: lstm, gru, xlstm, mamba, esn, lsm"
+                f"Unknown recurrent model: {name}. Available: lstm, gru, xlstm, mamba, esn, lsm"
             )

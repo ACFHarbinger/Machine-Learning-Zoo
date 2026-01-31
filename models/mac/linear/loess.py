@@ -65,9 +65,7 @@ class LOESSModel(ClassicalModel):
         if lowess is None:
             raise ImportError("statsmodels is required for LOESSModel")
 
-        res = lowess(
-            y_axis[indices], x_axis[indices], frac=self.frac, it=self.it, **self.kwargs
-        )
+        res = lowess(y_axis[indices], x_axis[indices], frac=self.frac, it=self.it, **self.kwargs)
 
         from scipy.interpolate import interp1d
 

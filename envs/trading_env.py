@@ -1,4 +1,3 @@
-
 """
 Trading Environment for NGLab.
 
@@ -24,9 +23,7 @@ class TradingEnv(gym.Env[NDArray[Any], NDArray[Any]]):
 
     metadata: dict[str, Any] = {"render_modes": ["human"]}  # noqa: RUF012
 
-    def __init__(
-        self, lookback: int = 30, max_steps: int = 1000, feature_dim: int = 12
-    ) -> None:
+    def __init__(self, lookback: int = 30, max_steps: int = 1000, feature_dim: int = 12) -> None:
         """
         Initialize the trading environment.
 
@@ -64,9 +61,7 @@ class TradingEnv(gym.Env[NDArray[Any], NDArray[Any]]):
         info: dict[str, Any] = {}
         return observation, info
 
-    def step(
-        self, action: NDArray[Any]
-    ) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
+    def step(self, action: NDArray[Any]) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
         """
         Execute one step in the environment.
         """

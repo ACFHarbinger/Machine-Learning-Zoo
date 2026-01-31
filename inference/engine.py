@@ -6,6 +6,7 @@ Supports:
 - Anthropic Claude
 - Google Gemini (with OAuth)
 """
+
 from __future__ import annotations
 
 import logging
@@ -91,6 +92,7 @@ class InferenceEngine:
     def _load_secrets(self) -> dict[str, str]:
         """Load secrets from ~/.pi-assistant/secrets.json."""
         import json
+
         secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
         if secrets_path.exists():
             try:
@@ -103,6 +105,7 @@ class InferenceEngine:
     def _save_secrets(self, secrets: dict[str, str]) -> None:
         """Save secrets to ~/.pi-assistant/secrets.json."""
         import json
+
         secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
         secrets_path.parent.mkdir(parents=True, exist_ok=True)
         with open(secrets_path, "w") as f:
@@ -144,18 +147,14 @@ class InferenceEngine:
                     if has_antigravity_tokens:
                         logger.info("Falling back to Antigravity Gateway")
                         model = model_id or "claude-3-5-sonnet-v2@20241022"
-                        return await self._complete_gemini(
-                            prompt, model, max_tokens, temperature
-                        )
+                        return await self._complete_gemini(prompt, model, max_tokens, temperature)
                     raise
             elif has_antigravity_tokens:
                 logger.info("Routing Anthropic request via Antigravity Gateway")
                 model = model_id or "claude-3-5-sonnet-v2@20241022"
                 return await self._complete_gemini(prompt, model, max_tokens, temperature)
             else:
-                return await self._complete_anthropic(
-                    prompt, model_id, max_tokens, temperature
-                )
+                return await self._complete_anthropic(prompt, model_id, max_tokens, temperature)
         elif provider == "google":
             return await self._complete_gemini(prompt, model_id, max_tokens, temperature)
         else:
@@ -184,9 +183,7 @@ class InferenceEngine:
         personality = get_personality()
         personality_prompt = personality.system_prompt
 
-        tools_list_str = "\n".join(
-            f"- {t.get('name')}: {t.get('description')}" for t in tools
-        )
+        tools_list_str = "\n".join(f"- {t.get('name')}: {t.get('description')}" for t in tools)
 
         system_prompt = f"""{personality_prompt}
 
@@ -256,32 +253,33 @@ Available tools:
         Note: OAuth traffic is routed via _complete_gemini.
         """
         import os
-        
+
         # If we got here, we are using standard API Key
         if self._anthropic_client is None:
             import anthropic
-            
+
             api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
-                 from pathlib import Path
-                 import json
-                 secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
-                 if secrets_path.exists():
+                from pathlib import Path
+                import json
+
+                secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
+                if secrets_path.exists():
                     try:
                         with open(secrets_path, "r") as f:
                             secrets = json.load(f)
                             api_key = secrets.get("anthropic")
                     except:
                         pass
-            
+
             if not api_key:
                 raise ValueError("ANTHROPIC_API_KEY not set")
-                
+
             self._anthropic_client = anthropic.AsyncAnthropic(api_key=api_key)
 
         model = model_id or "claude-3-5-sonnet-latest"
         logger.info("Calling Anthropic SDK: %s", model)
-        
+
         response = await self._anthropic_client.messages.create(
             model=model,
             max_tokens=max_tokens,
@@ -301,6 +299,7 @@ Available tools:
     async def _refresh_claude_max_token(self) -> str:
         """Refresh Claude Max OAuth token and return new access token."""
         import httpx
+
         secrets = self._load_secrets()
         refresh_token = secrets.get("claude_max_refresh")
         if not refresh_token:
@@ -318,9 +317,7 @@ Available tools:
             )
 
             if response.status_code != 200:
-                raise ValueError(
-                    f"Token refresh failed ({response.status_code}): {response.text}"
-                )
+                raise ValueError(f"Token refresh failed ({response.status_code}): {response.text}")
 
             data = response.json()
             new_token = data["access_token"]
@@ -331,9 +328,8 @@ Available tools:
                 secrets["claude_max_refresh"] = data["refresh_token"]
             if "expires_in" in data:
                 import time
-                secrets["claude_max_expires_at"] = str(
-                    int(time.time()) + data["expires_in"]
-                )
+
+                secrets["claude_max_expires_at"] = str(int(time.time()) + data["expires_in"])
             self._save_secrets(secrets)
 
             logger.info("Claude Max token refreshed successfully")
@@ -401,21 +397,15 @@ Available tools:
 
             if response.status_code != 200:
                 error_text = response.text
-                logger.error(
-                    "Claude Max API error %d: %s", response.status_code, error_text
-                )
-                raise ValueError(
-                    f"Claude Max API error ({response.status_code}): {error_text}"
-                )
+                logger.error("Claude Max API error %d: %s", response.status_code, error_text)
+                raise ValueError(f"Claude Max API error ({response.status_code}): {error_text}")
 
             data = response.json()
 
             # Parse Anthropic Messages API response
             content_blocks = data.get("content", [])
             text = "".join(
-                block.get("text", "")
-                for block in content_blocks
-                if block.get("type") == "text"
+                block.get("text", "") for block in content_blocks if block.get("type") == "text"
             )
 
             usage = data.get("usage", {})
@@ -434,7 +424,7 @@ Available tools:
     ) -> dict[str, Any]:
         """
         Complete using Google Antigravity (Cloud Code Assist API) with OAuth.
-        
+
         This mimics the `opencode-antigravity-auth` plugin behavior:
         - Endpoint: daily-cloudcode-pa.sandbox.googleapis.com
         - Headers: Specific User-Agent and Client-Metadata
@@ -446,6 +436,7 @@ Available tools:
             secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
             if secrets_path.exists():
                 import json
+
                 try:
                     with open(secrets_path, "r") as f:
                         secrets = json.load(f)
@@ -464,12 +455,12 @@ Available tools:
             raise ValueError("No Google OAuth token found in secrets.json")
 
         model_name = model_id or "gemini-2.0-flash"
-        
+
         # Antigravity Logic
         # See reversed logic from opencode-antigravity-auth
         base_url = "https://daily-cloudcode-pa.sandbox.googleapis.com"
         endpoint = f"{base_url}/v1internal:generateContent"
-        
+
         # Headers from constants.js (Antigravity/1.15.8)
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -486,73 +477,70 @@ Available tools:
             "claude-3-5-sonnet": "claude-sonnet-4-5",
             # Add other mappings as needed
         }
-        
+
         target_model = model_map.get(model_name, model_name)
-        
+
         # Payload construction
         # Antigravity expects a wrapped "request" object
         import time
+
         payload = {
-            "project": "rising-fact-p41fc", # Sandbox default
+            "project": "rising-fact-p41fc",  # Sandbox default
             "model": target_model,
             "request": {
-                "contents": [
-                    {
-                        "role": "user",
-                        "parts": [{"text": prompt}]
-                    }
-                ],
+                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
                 "generationConfig": {
                     "maxOutputTokens": max_tokens,
                     "temperature": temperature,
-                    "candidateCount": 1
-                }
+                    "candidateCount": 1,
+                },
             },
             "requestType": "agent",
             "userAgent": "antigravity",
-            "requestId": f"agent-{int(time.time()*1000)}"
+            "requestId": f"agent-{int(time.time() * 1000)}",
         }
-        
+
         # Add system instruction if personality is available (implicit) or passed
         # Currently prompt includes system prompt, but Antigravity separates it.
-        # For now, we keep it simple as prompt is merged. 
+        # For now, we keep it simple as prompt is merged.
         # But if we were to split it:
         # payload["request"]["systemInstruction"] = { "parts": [{ "text": system_prompt }] }
 
         logger.info(f"Calling Antigravity: {endpoint} model={model_name}")
 
         import httpx
+
         async with httpx.AsyncClient(trust_env=False) as client:
             try:
                 response = await client.post(endpoint, json=payload, headers=headers, timeout=60.0)
-                
+
                 if response.status_code != 200:
                     error_text = response.text
                     logger.error(f"Antigravity API Error {response.status_code}: {error_text}")
                     raise ValueError(f"Antigravity API Error {response.status_code}: {error_text}")
-                
+
                 data = response.json()
-                
+
                 # Parse response (standard Gemini format)
                 # candidates[0].content.parts[0].text
                 candidates = data.get("candidates", [])
                 if not candidates:
                     return {"text": "", "provider": "gemini", "model": model_name}
-                
+
                 content = candidates[0].get("content", {})
                 parts = content.get("parts", [])
                 text = "".join(part.get("text", "") for part in parts)
-                
+
                 return {
                     "text": text,
                     "provider": "gemini",
                     "model": model_name,
                     "usage": {
-                        "input_tokens": 0, # Not always returned
-                        "output_tokens": 0
-                    }
+                        "input_tokens": 0,  # Not always returned
+                        "output_tokens": 0,
+                    },
                 }
-                
+
             except Exception as e:
                 logger.error(f"Antigravity call failed: {e}")
                 raise
@@ -585,7 +573,7 @@ Available tools:
                 prompt,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                stop=["</s>", "User:", "Assistant:"], # Basic stop tokens
+                stop=["</s>", "User:", "Assistant:"],  # Basic stop tokens
             )
             return {
                 "text": response["choices"][0]["text"],

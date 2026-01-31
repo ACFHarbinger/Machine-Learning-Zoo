@@ -155,9 +155,7 @@ class GPUBenchmark:
         mixed_precision: bool,
     ) -> BenchmarkResult:
         """Run single inference benchmark."""
-        sample_input = torch.randn(
-            batch_size, *input_shape, dtype=dtype, device=self.device
-        )
+        sample_input = torch.randn(batch_size, *input_shape, dtype=dtype, device=self.device)
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -197,9 +195,7 @@ class GPUBenchmark:
 
                     torch.cuda.synchronize()
                     times.append(start_evt.elapsed_time(end_evt))
-                    memory_readings.append(
-                        torch.cuda.max_memory_allocated() / (1024 * 1024)
-                    )
+                    memory_readings.append(torch.cuda.max_memory_allocated() / (1024 * 1024))
                 else:
                     start_time = time.perf_counter()
                     if mixed_precision:
@@ -225,9 +221,7 @@ class GPUBenchmark:
             throughput_samples_per_sec=batch_size * 1000 / times_tensor.mean().item(),
             throughput_batches_per_sec=1000 / times_tensor.mean().item(),
             peak_memory_mb=max(memory_readings) if memory_readings else 0.0,
-            avg_memory_mb=(
-                sum(memory_readings) / len(memory_readings) if memory_readings else 0.0
-            ),
+            avg_memory_mb=(sum(memory_readings) / len(memory_readings) if memory_readings else 0.0),
             batch_size=batch_size,
             sequence_length=input_shape[0] if len(input_shape) > 0 else 0,
             num_iterations=num_iterations,
@@ -298,25 +292,17 @@ class GPUBenchmark:
 
         optimizer = cast(Any, optimizer_class)(self.model.parameters(), lr=1e-4)
         scaler = (
-            torch.cuda.amp.GradScaler()
-            if mixed_precision and torch.cuda.is_available()
-            else None
+            torch.cuda.amp.GradScaler() if mixed_precision and torch.cuda.is_available() else None
         )
 
-        sample_input = torch.randn(
-            batch_size, *input_shape, dtype=dtype, device=self.device
-        )
-        sample_target = torch.randn(
-            batch_size, *target_shape, dtype=dtype, device=self.device
-        )
+        sample_input = torch.randn(batch_size, *input_shape, dtype=dtype, device=self.device)
+        sample_target = torch.randn(batch_size, *target_shape, dtype=dtype, device=self.device)
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             torch.cuda.reset_peak_memory_stats()
 
-        def train_step(
-            opt: torch.optim.Optimizer, sclr: torch.cuda.amp.GradScaler | None
-        ) -> None:
+        def train_step(opt: torch.optim.Optimizer, sclr: torch.cuda.amp.GradScaler | None) -> None:
             """Execute a single training step for benchmarking."""
             opt.zero_grad()
             if mixed_precision and sclr is not None:
@@ -355,9 +341,7 @@ class GPUBenchmark:
 
                 torch.cuda.synchronize()
                 times.append(start_evt.elapsed_time(end_evt))
-                memory_readings.append(
-                    torch.cuda.max_memory_allocated() / (1024 * 1024)
-                )
+                memory_readings.append(torch.cuda.max_memory_allocated() / (1024 * 1024))
             else:
                 start_time = time.perf_counter()
                 train_step(optimizer, scaler)
@@ -387,9 +371,7 @@ class GPUBenchmark:
             throughput_samples_per_sec=batch_size * 1000 / times_tensor.mean().item(),
             throughput_batches_per_sec=1000 / times_tensor.mean().item(),
             peak_memory_mb=max(memory_readings) if memory_readings else 0.0,
-            avg_memory_mb=(
-                sum(memory_readings) / len(memory_readings) if memory_readings else 0.0
-            ),
+            avg_memory_mb=(sum(memory_readings) / len(memory_readings) if memory_readings else 0.0),
             batch_size=batch_size,
             sequence_length=input_shape[0] if len(input_shape) > 0 else 0,
             num_iterations=num_iterations,

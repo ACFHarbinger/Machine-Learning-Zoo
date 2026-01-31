@@ -1,4 +1,3 @@
-
 """
 TorchRL Environment Wrapper for NGLab.
 
@@ -50,9 +49,7 @@ class TradingEnvWrapper(GymWrapper):
 
         super().__init__(env, device=device, batch_size=batch_size)
 
-    def _make_specs(
-        self, env: gym.Env[Any, Any], batch_size: torch.Size | None = None
-    ) -> None:
+    def _make_specs(self, env: gym.Env[Any, Any], batch_size: torch.Size | None = None) -> None:
         """
         Infer and validate environment specs.
         """

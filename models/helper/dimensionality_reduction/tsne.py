@@ -1,4 +1,3 @@
-
 """t-SNE algorithm implementation."""
 
 from typing import Any, cast

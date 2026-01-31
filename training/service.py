@@ -26,25 +26,25 @@ __all__ = ["TrainingService"]
 class TrainingService:
     """
     Service for managing training runs.
-    
+
     Provides async interface for:
     - Starting new training runs
     - Stopping running jobs
     - Querying run status
     - Listing historical runs
     """
-    
+
     def __init__(self, output_dir: str = "~/.pi-assistant/models") -> None:
         self.output_dir = Path(output_dir).expanduser()
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Active runs
         self._runs: dict[str, RunInfo] = {}
         self._tasks: dict[str, asyncio.Task] = {}  # type: ignore
-        
+
         # Load run history from disk
         self._load_history()
-    
+
     def _load_history(self) -> None:
         """Load historical run info from disk."""
         # Check for runs.json in output dir
@@ -52,6 +52,7 @@ class TrainingService:
         if history_file.exists():
             try:
                 import json
+
                 with open(history_file) as f:
                     data = json.load(f)
                 for run_data in data.get("runs", []):
@@ -59,19 +60,23 @@ class TrainingService:
                         run_id=run_data["run_id"],
                         status=RunStatus(run_data["status"]),
                         config=run_data.get("config", {}),
-                        started_at=datetime.fromisoformat(run_data["started_at"]) if run_data.get("started_at") else None,
-                        completed_at=datetime.fromisoformat(run_data["completed_at"]) if run_data.get("completed_at") else None,
+                        started_at=datetime.fromisoformat(run_data["started_at"])
+                        if run_data.get("started_at")
+                        else None,
+                        completed_at=datetime.fromisoformat(run_data["completed_at"])
+                        if run_data.get("completed_at")
+                        else None,
                         metrics=run_data.get("metrics", {}),
                         error=run_data.get("error"),
                         model_path=run_data.get("model_path"),
                     )
             except Exception as e:
                 logger.warning(f"Failed to load run history: {e}")
-    
+
     def _save_history(self) -> None:
         """Persist run history to disk."""
         import json
-        
+
         history_file = self.output_dir / "runs.json"
         data = {
             "runs": [
@@ -88,14 +93,14 @@ class TrainingService:
                 for run in self._runs.values()
             ]
         }
-        
+
         with open(history_file, "w") as f:
             json.dump(data, f, indent=2)
-    
+
     async def start(self, config: dict[str, Any]) -> str:
         """
         Start a new training run.
-        
+
         Args:
             config: Training configuration dict with:
                 - backbone: Name of backbone to use
@@ -104,12 +109,12 @@ class TrainingService:
                 - head_config: Dict of head parameters
                 - training: Training hyperparameters
                 - data: Dataset configuration
-        
+
         Returns:
             run_id: Unique identifier for this run
         """
         run_id = str(uuid.uuid4())[:8]
-        
+
         run_info = RunInfo(
             run_id=run_id,
             status=RunStatus.PENDING,
@@ -117,24 +122,27 @@ class TrainingService:
             started_at=datetime.now(),
         )
         self._runs[run_id] = run_info
-        
+
         # Spawn training task
         task = asyncio.create_task(self._run_training(run_id, config))
         self._tasks[run_id] = task
-        
+
         logger.info(f"Started training run: {run_id}")
         return run_id
-    
+
     async def _run_training(self, run_id: str, config: dict[str, Any]) -> None:
         """Execute training in background."""
         run_info = self._runs[run_id]
         run_info.status = RunStatus.RUNNING
-        
+
         try:
             # Import here to avoid circular deps and lazy load heavy modules
             from pi_sidecar.ml.models.composed import build_model
-            from pi_sidecar.ml.pipeline.accelerated import AcceleratedTrainer, AcceleratedTrainerConfig
-            
+            from pi_sidecar.ml.pipeline.accelerated import (
+                AcceleratedTrainer,
+                AcceleratedTrainerConfig,
+            )
+
             # Build model
             model = build_model(
                 backbone_name=config.get("backbone", "transformer"),
@@ -142,24 +150,26 @@ class TrainingService:
                 backbone_config=config.get("backbone_config", {}),
                 head_config=config.get("head_config", {}),
             )
-            
+
             # Create dummy data for now (would be replaced by actual data loading)
             import torch
             from torch.utils.data import DataLoader, TensorDataset
-            
+
             data_config = config.get("data", {})
             batch_size = data_config.get("batch_size", 32)
             num_samples = data_config.get("num_samples", 1000)
             seq_len = data_config.get("seq_len", 50)
             input_dim = config.get("backbone_config", {}).get("input_dim", 10)
-            
+
             # Generate synthetic data
             x = torch.randn(num_samples, seq_len, input_dim)
-            y = torch.randint(0, config.get("head_config", {}).get("num_classes", 10), (num_samples,))
-            
+            y = torch.randint(
+                0, config.get("head_config", {}).get("num_classes", 10), (num_samples,)
+            )
+
             dataset = TensorDataset(x, y)
             train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-            
+
             # Configure trainer
             training_config = config.get("training", {})
             trainer_config = AcceleratedTrainerConfig(
@@ -170,7 +180,7 @@ class TrainingService:
                 run_name=run_id,
                 mixed_precision=training_config.get("mixed_precision", "no"),
             )
-            
+
             # Train
             trainer = AcceleratedTrainer(
                 model=model,
@@ -178,69 +188,69 @@ class TrainingService:
                 config=trainer_config,
                 loss_fn=torch.nn.CrossEntropyLoss(),
             )
-            
+
             result = trainer.train()
-            
+
             # Update run info
             run_info.status = RunStatus.COMPLETED
             run_info.completed_at = datetime.now()
             run_info.metrics = result
             run_info.model_path = str(self.output_dir / run_id / "best_model.pt")
-            
+
             logger.info(f"Training completed: {run_id}")
-            
+
         except asyncio.CancelledError:
             run_info.status = RunStatus.CANCELLED
             run_info.completed_at = datetime.now()
             logger.info(f"Training cancelled: {run_id}")
-            
+
         except Exception as e:
             run_info.status = RunStatus.FAILED
             run_info.completed_at = datetime.now()
             run_info.error = str(e)
             logger.error(f"Training failed: {run_id} - {e}")
-        
+
         finally:
             self._save_history()
             if run_id in self._tasks:
                 del self._tasks[run_id]
-    
+
     async def stop(self, run_id: str) -> bool:
         """
         Stop a running training job.
-        
+
         Args:
             run_id: ID of the run to stop
-        
+
         Returns:
             True if stopped, False if not found or not running
         """
         if run_id not in self._tasks:
             return False
-        
+
         task = self._tasks[run_id]
         task.cancel()
-        
+
         try:
             await task
         except asyncio.CancelledError:
             pass
-        
+
         return True
-    
+
     async def status(self, run_id: str) -> dict[str, Any]:
         """
         Get status of a training run.
-        
+
         Args:
             run_id: ID of the run
-        
+
         Returns:
             Dict with run status and metrics
         """
         if run_id not in self._runs:
             return {"error": f"Run not found: {run_id}"}
-        
+
         run = self._runs[run_id]
         return {
             "run_id": run.run_id,
@@ -251,15 +261,12 @@ class TrainingService:
             "error": run.error,
             "model_path": run.model_path,
         }
-    
+
     async def list_runs(self) -> list[dict[str, Any]]:
         """
         List all training runs.
-        
+
         Returns:
             List of run status dicts
         """
-        return [
-            await self.status(run_id)
-            for run_id in sorted(self._runs.keys(), reverse=True)
-        ]
+        return [await self.status(run_id) for run_id in sorted(self._runs.keys(), reverse=True)]

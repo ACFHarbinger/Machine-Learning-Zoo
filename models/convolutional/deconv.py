@@ -35,9 +35,7 @@ class DeconvNet(nn.Module):
         for h_channels in hidden_channels:
             # Transposed conv for upsampling
             layers.append(
-                nn.ConvTranspose1d(
-                    last_channels, h_channels, kernel_size=4, stride=2, padding=1
-                )
+                nn.ConvTranspose1d(last_channels, h_channels, kernel_size=4, stride=2, padding=1)
             )
             layers.append(nn.BatchNorm1d(h_channels))
             layers.append(nn.ReLU())
@@ -94,9 +92,7 @@ class AutoDeconvNet(nn.Module):
         layers: list[nn.Module] = []
         last_channels = input_dim
         for h_channels in hidden_channels:
-            layers.append(
-                nn.Conv1d(last_channels, h_channels, kernel_size=4, stride=2, padding=1)
-            )
+            layers.append(nn.Conv1d(last_channels, h_channels, kernel_size=4, stride=2, padding=1))
             layers.append(nn.BatchNorm1d(h_channels))
             layers.append(nn.ReLU())
             last_channels = h_channels
@@ -128,9 +124,7 @@ class AutoDeconvNet(nn.Module):
         z = cast(torch.Tensor, self.fc_latent(self.pool(e).squeeze(-1)))
 
         should_return_embedding = (
-            return_embedding
-            if return_embedding is not None
-            else (self.output_type == "embedding")
+            return_embedding if return_embedding is not None else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

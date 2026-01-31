@@ -1,4 +1,3 @@
-
 """Gaussian Mixture Model (GMM) algorithm implementation."""
 
 from typing import Any, cast

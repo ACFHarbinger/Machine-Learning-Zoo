@@ -1,4 +1,5 @@
 """Model registry for loading and managing models."""
+
 from __future__ import annotations
 
 import asyncio
@@ -31,6 +32,7 @@ MODEL_CONFIGS = {
     },
 }
 
+
 class ModelRegistry:
     """Registry for managing loaded models."""
 
@@ -55,45 +57,53 @@ class ModelRegistry:
         # List models in models_dir
         for item in self.models_dir.iterdir():
             if item.is_dir():
-                models.append({
-                    "model_id": item.name,
-                    "path": str(item),
-                    "loaded": item.name in self._loaded,
-                    "downloaded": True,
-                    "backend": "transformers",
-                })
+                models.append(
+                    {
+                        "model_id": item.name,
+                        "path": str(item),
+                        "loaded": item.name in self._loaded,
+                        "downloaded": True,
+                        "backend": "transformers",
+                    }
+                )
             elif item.suffix == ".gguf":
-                models.append({
-                    "model_id": item.name,
-                    "path": str(item),
-                    "loaded": item.name in self._loaded,
-                    "downloaded": True,
-                    "backend": "llama.cpp",
-                })
+                models.append(
+                    {
+                        "model_id": item.name,
+                        "path": str(item),
+                        "loaded": item.name in self._loaded,
+                        "downloaded": True,
+                        "backend": "llama.cpp",
+                    }
+                )
 
         # Add loaded models not in directory
         for model_id, model in self._loaded.items():
             if not any(m["model_id"] == model_id for m in models):
-                models.append({
-                    "model_id": model_id,
-                    "path": None,
-                    "loaded": True,
-                    "downloaded": True,
-                    "backend": getattr(model, "backend", "unknown"),
-                })
+                models.append(
+                    {
+                        "model_id": model_id,
+                        "path": None,
+                        "loaded": True,
+                        "downloaded": True,
+                        "backend": getattr(model, "backend", "unknown"),
+                    }
+                )
 
         # Add configured models
         for model_id, cfg in MODEL_CONFIGS.items():
             if not any(m["model_id"] == model_id for m in models):
                 gguf_path = self.models_dir / str(cfg["path"])
-                models.append({
-                    "model_id": model_id,
-                    "path": cfg["path"],
-                    "loaded": model_id in self._loaded,
-                    "downloaded": gguf_path.exists(),
-                    "backend": "llama.cpp",
-                    "hf_repo": cfg.get("hf_repo"),
-                })
+                models.append(
+                    {
+                        "model_id": model_id,
+                        "path": cfg["path"],
+                        "loaded": model_id in self._loaded,
+                        "downloaded": gguf_path.exists(),
+                        "backend": "llama.cpp",
+                        "hf_repo": cfg.get("hf_repo"),
+                    }
+                )
 
         return models
 
@@ -116,7 +126,7 @@ class ModelRegistry:
         dir_path = Path(self.models_dir)
         model_path = dir_path / str(model_id)
         is_gguf = model_id.endswith(".gguf") or model_path.suffix == ".gguf"
-        
+
         # Decide backend
         effective_backend = backend
         if not effective_backend:
@@ -124,26 +134,27 @@ class ModelRegistry:
 
         if effective_backend == "llama.cpp":
             from llama_cpp import Llama  # type: ignore
-            
+
             # Check for custom config first
             if model_id in MODEL_CONFIGS:
                 config = MODEL_CONFIGS[model_id]
                 # If path exists relative to models_dir, use full path, otherwise use name
                 cfg_path = Path(self.models_dir) / str(config["path"])
                 path = str(cfg_path) if cfg_path.exists() else str(config["path"])
-                
-                logger.info("Loading configured model %s with n_gpu_layers=%s", model_id, config["n_gpu_layers"])
-                
+
+                logger.info(
+                    "Loading configured model %s with n_gpu_layers=%s",
+                    model_id,
+                    config["n_gpu_layers"],
+                )
+
                 model = Llama(
-                    model_path=path,
-                    n_gpu_layers=config["n_gpu_layers"],
-                    n_ctx=8192,
-                    verbose=False
+                    model_path=path, n_gpu_layers=config["n_gpu_layers"], n_ctx=8192, verbose=False
                 )
             else:
                 path = str(model_path) if model_path.exists() else model_id
-                model = Llama(model_path=path, n_ctx=2048) # Default context
-            
+                model = Llama(model_path=path, n_ctx=2048)  # Default context
+
             loaded = LoadedModel(
                 model_id=model_id,
                 model=model,
@@ -168,7 +179,7 @@ class ModelRegistry:
                 tokenizer=tokenizer,
                 backend="transformers",
             )
-            
+
         self._loaded[model_id] = loaded
         return loaded
 
@@ -209,13 +220,15 @@ class ModelRegistry:
         """
         config = MODEL_CONFIGS.get(model_id)
         if not config:
-            raise ValueError(f"Unknown model ID: {model_id}. Available: {list(MODEL_CONFIGS.keys())}")
+            raise ValueError(
+                f"Unknown model ID: {model_id}. Available: {list(MODEL_CONFIGS.keys())}"
+            )
 
         hf_repo = config.get("hf_repo")
         hf_file = config.get("hf_file")
         if not hf_repo or not hf_file:
             raise ValueError(f"Model {model_id} has no HuggingFace download info configured")
-        
+
         dest_path = Path(self.models_dir) / str(config["path"])
         if dest_path.exists():
             logger.info("Model %s already downloaded at %s", model_id, dest_path)

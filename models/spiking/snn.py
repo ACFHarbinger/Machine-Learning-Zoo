@@ -27,9 +27,7 @@ class SurrogateHeaviside(torch.autograd.Function):
         (input_tensor,) = ctx.saved_tensors
         # Surrogate gradient: alpha / (1 + |alpha * input|)^2
         # This is the derivative of the fast sigmoid function.
-        grad_input = grad_outputs * (
-            ctx.alpha / (1 + torch.abs(ctx.alpha * input_tensor)).pow(2)
-        )
+        grad_input = grad_outputs * (ctx.alpha / (1 + torch.abs(ctx.alpha * input_tensor)).pow(2))
         return grad_input, None
 
 
@@ -159,9 +157,7 @@ class SNN(nn.Module):
             out = final_spikes[:, -1, :]
 
         should_return_embedding = (
-            return_embedding
-            if return_embedding is not None
-            else (self.output_type == "embedding")
+            return_embedding if return_embedding is not None else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

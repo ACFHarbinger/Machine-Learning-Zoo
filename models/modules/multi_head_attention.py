@@ -88,9 +88,7 @@ class MultiHeadAttention(nn.Module):
         assert q.size(2) == input_dim
         assert input_dim == self.input_dim, "Wrong embedding dimension of input"
 
-        hflat = h.contiguous().view(
-            -1, input_dim
-        )  # [batch_size * graph_size, embed_dim]
+        hflat = h.contiguous().view(-1, input_dim)  # [batch_size * graph_size, embed_dim]
         qflat = q.contiguous().view(-1, input_dim)  # [batch_size * n_query, embed_dim]
 
         # last dimension can be different for keys and values
@@ -142,9 +140,7 @@ class MultiHeadAttention(nn.Module):
             attn[:, :, :, :graph_size], V
         )  # V: (self.n_heads, batch_size, graph_size, val_size)
         out = torch.mm(
-            heads.permute(1, 2, 0, 3)
-            .contiguous()
-            .view(-1, self.n_heads * self.val_dim),
+            heads.permute(1, 2, 0, 3).contiguous().view(-1, self.n_heads * self.val_dim),
             self.W_out.view(-1, cast(int, self.embed_dim)),
         ).view(batch_size, n_query, cast(int, self.embed_dim))
 

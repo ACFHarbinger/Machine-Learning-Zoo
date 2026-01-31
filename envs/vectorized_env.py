@@ -1,4 +1,3 @@
-
 """
 Vectorized Trading Environment for Parallel Reinforcement Learning.
 
@@ -67,9 +66,7 @@ class VectorizedTradingEnv:
         self.observation_shape = (num_envs, *self.single_observation_shape)
         self.action_space_n = 3
 
-        single_action_space: gym.spaces.Discrete[Any] = gym.spaces.Discrete(
-            self.action_space_n
-        )
+        single_action_space: gym.spaces.Discrete[Any] = gym.spaces.Discrete(self.action_space_n)
         single_observation_space: gym.spaces.Box = gym.spaces.Box(
             low=-np.inf,
             high=np.inf,
@@ -83,8 +80,8 @@ class VectorizedTradingEnv:
         self.single_observation_space = single_observation_space
 
         if use_multiprocessing:
-            self._executor: ProcessPoolExecutor | ThreadPoolExecutor = (
-                ProcessPoolExecutor(max_workers=num_envs)
+            self._executor: ProcessPoolExecutor | ThreadPoolExecutor = ProcessPoolExecutor(
+                max_workers=num_envs
             )
         else:
             self._executor = ThreadPoolExecutor(max_workers=num_envs)
@@ -131,14 +128,10 @@ class VectorizedTradingEnv:
             if len(actions) != self.num_envs:
                 actions = actions.flatten()
                 if len(actions) != self.num_envs:
-                    raise ValueError(
-                        f"Expected {self.num_envs} actions, got {len(actions)}"
-                    )
+                    raise ValueError(f"Expected {self.num_envs} actions, got {len(actions)}")
         elif isinstance(actions, list):
             if len(actions) != self.num_envs:
-                raise ValueError(
-                    f"Expected {self.num_envs} actions, got {len(actions)}"
-                )
+                raise ValueError(f"Expected {self.num_envs} actions, got {len(actions)}")
         else:
             actions = [int(cast(Any, actions))] * self.num_envs
 
@@ -153,9 +146,7 @@ class VectorizedTradingEnv:
         truncated = np.array([r[3] for r in results], dtype=np.bool_)
 
         infos = {
-            "portfolio_values": [
-                getattr(r[4], "portfolio_value", 0.0) for r in results
-            ],
+            "portfolio_values": [getattr(r[4], "portfolio_value", 0.0) for r in results],
             "positions": [getattr(r[4], "position", 0) for r in results],
         }
 
@@ -186,9 +177,7 @@ class VectorizedTradingEnv:
         truncated = np.array([r[3] for r in results], dtype=np.bool_)
 
         infos = {
-            "portfolio_values": [
-                getattr(r[4], "portfolio_value", 0.0) for r in results
-            ],
+            "portfolio_values": [getattr(r[4], "portfolio_value", 0.0) for r in results],
             "positions": [getattr(r[4], "position", 0) for r in results],
         }
 

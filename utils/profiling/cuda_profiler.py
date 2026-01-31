@@ -152,14 +152,10 @@ class CUDAProfiler:
 
         # Calculate totals
         total_cuda_time = sum(
-            float(event.cuda_time_total)
-            for event in key_averages
-            if event.cuda_time_total
+            float(event.cuda_time_total) for event in key_averages if event.cuda_time_total
         )
         total_cpu_time = sum(
-            float(event.cpu_time_total)
-            for event in key_averages
-            if event.cpu_time_total
+            float(event.cpu_time_total) for event in key_averages if event.cpu_time_total
         )
 
         # Get memory stats
@@ -171,9 +167,7 @@ class CUDAProfiler:
 
         # Get top operations by CUDA time
         top_ops: list[dict[str, Any]] = []
-        for event in sorted(
-            key_averages, key=lambda x: x.cuda_time_total or 0, reverse=True
-        )[:10]:
+        for event in sorted(key_averages, key=lambda x: x.cuda_time_total or 0, reverse=True)[:10]:
             top_ops.append(
                 {
                     "name": event.key,

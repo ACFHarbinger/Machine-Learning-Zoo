@@ -44,9 +44,7 @@ def cache_key(*args: Any, **kwargs: Any) -> str:
 
 def cached_query(
     ttl: int = 300, key_prefix: str = "query"
-) -> Callable[
-    [Callable[..., Coroutine[Any, Any, T]]], Callable[..., Coroutine[Any, Any, T]]
-]:
+) -> Callable[[Callable[..., Coroutine[Any, Any, T]]], Callable[..., Coroutine[Any, Any, T]]]:
     """
     Decorator for caching query results in Redis.
 
@@ -90,9 +88,7 @@ def cached_query(
                 await client.setex(
                     key,
                     ttl,
-                    json.dumps(
-                        result, default=str
-                    ),  # default=str for datetime serialization
+                    json.dumps(result, default=str),  # default=str for datetime serialization
                 )
                 logger.debug(f"Cache set: {key} (TTL: {ttl}s)")
             except Exception as e:

@@ -59,9 +59,7 @@ def train_ppo(cfg: DictConfig) -> None:
         env = DummyVecEnv([make_env(0, cfg.seed, cfg.env.lookback, cfg.env.max_steps)])
 
     # Evaluation environment
-    eval_env = DummyVecEnv(
-        [make_env(0, cfg.seed + 100, cfg.env.lookback, cfg.env.max_steps)]
-    )
+    eval_env = DummyVecEnv([make_env(0, cfg.seed + 100, cfg.env.lookback, cfg.env.max_steps)])
 
     # Define the PPO model
     model = PPO(

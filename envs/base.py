@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -63,9 +62,7 @@ class TradingEnvBase(ABC):
                 )
 
         if any(v <= 0 for v in value):
-            raise ValueError(
-                f"batch_size must contain positive values. Got: {value}"
-            )
+            raise ValueError(f"batch_size must contain positive values. Got: {value}")
 
         self._batch_size = value
 

@@ -25,9 +25,7 @@ class StaticHyperConnection(nn.Module):
         self.n = expansion_rate
 
         # Initialize slightly off-identity to preserve gradient flow at start
-        self.width_mixer = nn.Parameter(
-            torch.eye(self.n) + torch.randn(self.n, self.n) * 0.01
-        )
+        self.width_mixer = nn.Parameter(torch.eye(self.n) + torch.randn(self.n, self.n) * 0.01)
         self.input_mixer = nn.Parameter(torch.randn(self.n, 1) * 0.01)
         self.depth_mixer = nn.Parameter(torch.randn(1, self.n) * 0.01)
 

@@ -79,21 +79,15 @@ class OnlineNormalizer(nn.Module):
             # Update sum of squares (m2 = var * count)
             m2_old = self.running_var * self.count
             m2_new = batch_var * batch_count
-            m2_total = (
-                m2_old + m2_new + delta**2 * self.count * batch_count / total_count
-            )
+            m2_total = m2_old + m2_new + delta**2 * self.count * batch_count / total_count
 
             self.running_mean = new_mean
             self.running_var = m2_total / total_count
             self.count = total_count
         else:
             # Exponential Moving Average (Momentum)
-            self.running_mean = (
-                1 - self.momentum
-            ) * self.running_mean + self.momentum * batch_mean
-            self.running_var = (
-                1 - self.momentum
-            ) * self.running_var + self.momentum * batch_var
+            self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * batch_mean
+            self.running_var = (1 - self.momentum) * self.running_var + self.momentum * batch_var
             # Count is irrelevant for momentum
 
     def forward(self, x: torch.Tensor, update_stats: bool = True) -> torch.Tensor:

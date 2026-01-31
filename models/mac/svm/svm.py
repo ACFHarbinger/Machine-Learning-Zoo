@@ -12,9 +12,7 @@ class SVMModel(ClassicalModel):
     Support Vector Machine wrapper for classification (SVC) or regression (SVR).
     """
 
-    def __init__(
-        self, task: str = "regression", kernel: str = "rbf", **kwargs: Any
-    ) -> None:
+    def __init__(self, task: str = "regression", kernel: str = "rbf", **kwargs: Any) -> None:
         """
         Initialize the SVM model.
 

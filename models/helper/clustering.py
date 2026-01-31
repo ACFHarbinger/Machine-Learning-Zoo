@@ -1,4 +1,3 @@
-
 """
 Clustering models for NGLab.
 """

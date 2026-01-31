@@ -32,9 +32,7 @@ class sLSTMCell(nn.Module):  # noqa: N801
         self,
         x: torch.Tensor,
         state: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
-    ) -> tuple[
-        torch.Tensor, tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
-    ]:
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]:
         """
         Forward pass for a single time step.
 
@@ -88,9 +86,7 @@ class mLSTMCell(nn.Module):  # noqa: N801
         is_divisible = self.head_dim * num_heads == hidden_dim
         assert is_divisible, "Hidden dim must be divisible by num_heads"
 
-        self.weight_ih = nn.Linear(
-            input_dim, 3 * hidden_dim + 2 * num_heads + hidden_dim
-        )
+        self.weight_ih = nn.Linear(input_dim, 3 * hidden_dim + 2 * num_heads + hidden_dim)
 
     def forward(
         self,
@@ -214,9 +210,7 @@ class xLSTMBlock(nn.Module):  # noqa: N801
             current_state = (
                 torch.zeros(batch_size, self.hidden_dim, device=dev),
                 torch.zeros(batch_size, self.hidden_dim, device=dev),
-                torch.full(
-                    (batch_size, self.hidden_dim), -100.0, device=dev
-                ),  # log scale
+                torch.full((batch_size, self.hidden_dim), -100.0, device=dev),  # log scale
                 torch.zeros(batch_size, self.hidden_dim, device=dev),
             )
 

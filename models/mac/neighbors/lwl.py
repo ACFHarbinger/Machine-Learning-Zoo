@@ -28,10 +28,6 @@ class LWLModel(ClassicalModel):
         )
 
         if task == "regression":
-            self.model = KNeighborsRegressor(
-                n_neighbors=n_neighbors, weights=weights, **kwargs
-            )
+            self.model = KNeighborsRegressor(n_neighbors=n_neighbors, weights=weights, **kwargs)
         else:
-            self.model = KNeighborsClassifier(
-                n_neighbors=n_neighbors, weights=weights, **kwargs
-            )
+            self.model = KNeighborsClassifier(n_neighbors=n_neighbors, weights=weights, **kwargs)

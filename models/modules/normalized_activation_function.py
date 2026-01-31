@@ -81,9 +81,7 @@ class NormalizedActivationFunction(nn.Module):
                 stdv = 1.0 / math.sqrt(param.size(-1))
                 param.data.uniform_(-stdv, stdv)
 
-    def forward(
-        self, x: torch.Tensor, mask: torch.Tensor | None = None
-    ) -> torch.Tensor | Any:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor | Any:
         """
         Applies the normalized activation function to the input.
 

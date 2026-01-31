@@ -11,9 +11,7 @@ import torch
 from torch import nn
 
 
-def pinball_loss(
-    pred: torch.Tensor, target: torch.Tensor, quantiles: list[float]
-) -> torch.Tensor:
+def pinball_loss(pred: torch.Tensor, target: torch.Tensor, quantiles: list[float]) -> torch.Tensor:
     """
     Computes the pinball loss for quantile regression.
 

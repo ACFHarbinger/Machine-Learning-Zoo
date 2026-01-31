@@ -80,9 +80,7 @@ class DNCMemory(nn.Module):
 
         return memory
 
-    def read_memory(
-        self, memory: torch.Tensor, read_weights: torch.Tensor
-    ) -> torch.Tensor:
+    def read_memory(self, memory: torch.Tensor, read_weights: torch.Tensor) -> torch.Tensor:
         """
         Read from memory using read weights.
 
@@ -139,15 +137,11 @@ class DNC(nn.Module):
         self.controller_type = controller_type
 
         # Controller network (LSTM or Linear)
-        controller_input_dim = (
-            input_dim + num_reads * memory_dim
-        )  # Input + read vectors
+        controller_input_dim = input_dim + num_reads * memory_dim  # Input + read vectors
 
         self.controller: nn.Module
         if controller_type == "lstm":
-            self.controller = nn.LSTM(
-                controller_input_dim, hidden_dim, batch_first=True
-            )
+            self.controller = nn.LSTM(controller_input_dim, hidden_dim, batch_first=True)
         else:
             self.controller = nn.Linear(controller_input_dim, hidden_dim)
 
@@ -170,9 +164,7 @@ class DNC(nn.Module):
         # Output network
         self.output_net = nn.Linear(hidden_dim + num_reads * memory_dim, output_dim)
 
-    def parse_interface_vector(
-        self, interface: torch.Tensor
-    ) -> dict[str, torch.Tensor]:
+    def parse_interface_vector(self, interface: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         Parse the interface vector into DNC parameters.
 
@@ -241,12 +233,8 @@ class DNC(nn.Module):
         batch_size, seq_len, _ = x.shape
 
         # Initialize memory and states
-        memory = torch.zeros(
-            batch_size, self.memory_size, self.memory_dim, device=x.device
-        )
-        read_vectors = torch.zeros(
-            batch_size, self.num_reads, self.memory_dim, device=x.device
-        )
+        memory = torch.zeros(batch_size, self.memory_size, self.memory_dim, device=x.device)
+        read_vectors = torch.zeros(batch_size, self.num_reads, self.memory_dim, device=x.device)
 
         h_state: torch.Tensor | None = None
         c_state: torch.Tensor | None = None
@@ -258,9 +246,7 @@ class DNC(nn.Module):
 
         for t in range(seq_len):
             # Concatenate input with previous read vectors
-            controller_input = torch.cat(
-                [x[:, t, :], read_vectors.view(batch_size, -1)], dim=-1
-            )
+            controller_input = torch.cat([x[:, t, :], read_vectors.view(batch_size, -1)], dim=-1)
 
             # Controller forward pass
             if self.controller_type == "lstm":
@@ -302,9 +288,7 @@ class DNC(nn.Module):
             read_vectors = self.memory_module.read_memory(memory, read_weights)
 
             # Generate output
-            output_input = torch.cat(
-                [controller_output, read_vectors.view(batch_size, -1)], dim=-1
-            )
+            output_input = torch.cat([controller_output, read_vectors.view(batch_size, -1)], dim=-1)
 
             output = self.output_net(output_input)
             outputs.append(output)

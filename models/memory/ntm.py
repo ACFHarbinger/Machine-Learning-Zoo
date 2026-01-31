@@ -329,9 +329,7 @@ class NTM(nn.Module):
 
         self.controller: nn.Module
         if controller_type == "lstm":
-            self.controller = nn.LSTM(
-                controller_input_dim, hidden_dim, batch_first=True
-            )
+            self.controller = nn.LSTM(controller_input_dim, hidden_dim, batch_first=True)
         else:
             self.controller = nn.Linear(controller_input_dim, hidden_dim)
 
@@ -342,10 +340,7 @@ class NTM(nn.Module):
 
         # Write heads
         self.write_heads = nn.ModuleList(
-            [
-                NTMWriteHead(memory_size, memory_dim, hidden_dim)
-                for _ in range(num_writes)
-            ]
+            [NTMWriteHead(memory_size, memory_dim, hidden_dim) for _ in range(num_writes)]
         )
 
         # Output network
@@ -365,9 +360,7 @@ class NTM(nn.Module):
         batch_size, seq_len, _ = x.shape
 
         # Initialize memory and weights
-        memory = torch.zeros(
-            batch_size, self.memory_size, self.memory_dim, device=x.device
-        )
+        memory = torch.zeros(batch_size, self.memory_size, self.memory_dim, device=x.device)
         memory = memory + 1e-6  # Small initialization to avoid NaN
 
         read_weights = [
@@ -380,9 +373,7 @@ class NTM(nn.Module):
         ]
 
         # Initialize read vectors
-        read_vectors = torch.zeros(
-            batch_size, self.num_reads * self.memory_dim, device=x.device
-        )
+        read_vectors = torch.zeros(batch_size, self.num_reads * self.memory_dim, device=x.device)
 
         # Initialize controller state
         if self.controller_type == "lstm":
@@ -409,18 +400,14 @@ class NTM(nn.Module):
             # Read from memory
             read_vecs = []
             for i, read_head in enumerate(self.read_heads):
-                read_vec, read_weights[i] = read_head(
-                    controller_output, memory, read_weights[i]
-                )
+                read_vec, read_weights[i] = read_head(controller_output, memory, read_weights[i])
                 read_vecs.append(read_vec)
 
             read_vectors = torch.cat(read_vecs, dim=1)
 
             # Write to memory
             for i, write_head in enumerate(self.write_heads):
-                memory, write_weights[i] = write_head(
-                    controller_output, memory, write_weights[i]
-                )
+                memory, write_weights[i] = write_head(controller_output, memory, write_weights[i])
 
             # Generate output
             output_input = torch.cat([controller_output, read_vectors], dim=1)

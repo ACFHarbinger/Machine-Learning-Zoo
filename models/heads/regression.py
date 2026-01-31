@@ -20,6 +20,7 @@ __all__ = ["RegressionHeadConfig", "RegressionHead"]
 @dataclass
 class RegressionHeadConfig(HeadConfig):
     """Configuration for regression head."""
+
     output_dim: int = 1
     pool_type: Literal["mean", "last", "none"] = "last"
     output_activation: Literal["none", "sigmoid", "tanh", "softplus"] = "none"
@@ -29,34 +30,36 @@ class RegressionHeadConfig(HeadConfig):
 class RegressionHead(Head):
     """
     Regression head for continuous outputs.
-    
+
     Supports:
     - Single-target and multi-target regression
     - Various output activations for bounded outputs
     - Sequence-to-value and sequence-to-sequence
     """
-    
+
     def __init__(self, config: RegressionHeadConfig) -> None:
         super().__init__(config)
         self.cfg = config
-        
+
         layers = []
         current_dim = config.input_dim
-        
+
         for hidden_dim in config.hidden_dims:
-            layers.extend([
-                nn.Linear(current_dim, hidden_dim),
-                nn.GELU(),
-                nn.Dropout(config.dropout),
-            ])
+            layers.extend(
+                [
+                    nn.Linear(current_dim, hidden_dim),
+                    nn.GELU(),
+                    nn.Dropout(config.dropout),
+                ]
+            )
             current_dim = hidden_dim
-        
+
         layers.append(nn.Linear(current_dim, config.output_dim))
         self.regressor = nn.Sequential(*layers)
-        
+
         self.pool_type = config.pool_type
         self.activation = self._get_activation(config.output_activation)
-    
+
     def _get_activation(self, name: str) -> nn.Module | None:
         if name == "sigmoid":
             return nn.Sigmoid()
@@ -65,7 +68,7 @@ class RegressionHead(Head):
         elif name == "softplus":
             return nn.Softplus()
         return None
-    
+
     def forward(
         self,
         features: torch.Tensor,
@@ -74,7 +77,7 @@ class RegressionHead(Head):
         """
         Args:
             features: (batch, seq, dim) or (batch, dim)
-        
+
         Returns:
             (batch, output_dim) or (batch, seq, output_dim) depending on pool_type
         """
@@ -85,10 +88,10 @@ class RegressionHead(Head):
             elif self.pool_type == "last":
                 features = features[:, -1]
             # "none" keeps the sequence for seq2seq
-        
+
         output = self.regressor(features)
-        
+
         if self.activation is not None:
             output = self.activation(output)
-        
+
         return output

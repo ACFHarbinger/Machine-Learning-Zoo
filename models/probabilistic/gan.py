@@ -80,9 +80,7 @@ class TimeGANDiscriminator(nn.Module):
         Initialize the Discriminator.
         """
         super().__init__()
-        self.lstm = nn.LSTM(
-            input_dim, hidden_dim, n_layers, batch_first=True, bidirectional=True
-        )
+        self.lstm = nn.LSTM(input_dim, hidden_dim, n_layers, batch_first=True, bidirectional=True)
         self.fc = nn.Linear(hidden_dim * 2, 1)  # *2 for bidirectional
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

@@ -11,13 +11,15 @@ logger = logging.getLogger(__name__)
 
 F = TypeVar("F", bound=Callable[..., Any])
 
+
 def validate_config(schema: Any = None) -> Callable[[F], F]:
     """
     Decorator to validate configuration arguments.
-    
+
     If schema is provided, it validates the config against the schema.
     Otherwise, it performs basic sanity checks.
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -29,13 +31,16 @@ def validate_config(schema: Any = None) -> Callable[[F], F]:
                 cfg = kwargs["cfg"]
             elif "config" in kwargs:
                 cfg = kwargs["config"]
-                
+
             if cfg is not None:
                 _perform_validation(cfg, schema)
-                
+
             return func(*args, **kwargs)
-        return wrapper # type: ignore
+
+        return wrapper  # type: ignore
+
     return decorator
+
 
 def _perform_validation(cfg: Any, schema: Any = None) -> None:
     """Internal validation logic."""
@@ -59,10 +64,12 @@ def _perform_validation(cfg: Any, schema: Any = None) -> None:
     if hasattr(cfg, "task") and not cfg.task:
         raise ConfigurationError("Config 'task' cannot be empty.")
 
+
 def validate_input(condition: Callable[[Any], bool], message: str) -> Callable[[F], F]:
     """
     Decorator to validate function inputs based on a condition.
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -73,7 +80,10 @@ def validate_input(condition: Callable[[Any], bool], message: str) -> Callable[[
                 if not condition(value):
                     raise ValueError(f"Input validation failed: {message}")
             return func(*args, **kwargs)
-        return wrapper # type: ignore
+
+        return wrapper  # type: ignore
+
     return decorator
+
 
 __all__ = ["validate_config", "validate_input"]
