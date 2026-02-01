@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 MODEL_CONFIGS: dict[str, dict[str, Any]] = {
     "deepseek-r1-32b": {
         "path": "deepseek-r1-distill-qwen-32b.Q4_K_M.gguf",
-        "n_gpu_layers": 50,  # Partial offload to leave room for KV cache and overhead
+        "n_gpu_layers": 40,  # Safer partial offload for 24GB VRAM with system overhead
         "n_ctx": 2048,
         "hf_repo": "bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
         "hf_file": "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
@@ -147,20 +147,28 @@ class ModelRegistry:
         if effective_backend == "llama.cpp":
             from llama_cpp import Llama  # type: ignore
 
-            n_gpu_layers: int = -1  # Default to GPU if not specified
+        if is_gguf:
+            n_gpu_layers: int = 0  # Default to CPU for safety
             n_ctx: int = 2048
 
+            # Try to find config by ID or by path/filename
+            config = MODEL_CONFIGS.get(model_id)
+            if not config:
+                # Search configs for matching path
+                for cfg_id, cfg in MODEL_CONFIGS.items():
+                    if cfg.get("path") == model_id or Path(cfg.get("path", "")).name == model_id:
+                        config = cfg
+                        model_id = cfg_id
+                        break
+
             # Check for custom config
-            if model_id in MODEL_CONFIGS:
-                config: dict[str, Any] = MODEL_CONFIGS[model_id]
+            if config:
                 # If path exists relative to models_dir, use full path, otherwise use name
                 config_path = str(config.get("path", ""))
                 cfg_path = Path(self.models_dir) / config_path
                 path = str(cfg_path) if cfg_path.exists() else config_path
-
-                n_gpu_layers = int(config.get("n_gpu_layers", -1))
+                n_gpu_layers = int(config.get("n_gpu_layers", 0))
                 n_ctx = int(config.get("n_ctx", 2048))
-
                 logger.info(
                     "Loading configured model %s with n_gpu_layers=%s, n_ctx=%s",
                     model_id,
