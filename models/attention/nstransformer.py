@@ -7,8 +7,8 @@ from typing import Any
 
 import torch
 from torch import nn
-
-from python.src.models.modules import (
+from ...utils.registry import register_model
+from ..modules import (
     AttentionLayer,
     DataEmbedding,
     DSAttention,
@@ -60,9 +60,7 @@ class EncoderLayer(nn.Module):
         Forward pass.
         """
         y = x = torch.as_tensor(
-            self.norm(
-                self.attention(x, x, x, attn_mask=attn_mask, tau=tau, delta=delta)[0]
-            )
+            self.norm(self.attention(x, x, x, attn_mask=attn_mask, tau=tau, delta=delta)[0])
         )
         y = torch.as_tensor(self.conv(y))
         return torch.as_tensor(self.norm(x + y))
@@ -84,9 +82,7 @@ class Encoder(nn.Module):
         """
         super().__init__()
         self.attn_layers = nn.ModuleList(attn_layers)
-        self.conv_layers = (
-            nn.ModuleList(conv_layers) if conv_layers is not None else None
-        )
+        self.conv_layers = nn.ModuleList(conv_layers) if conv_layers is not None else None
         self.norm = norm_layer
 
     def forward(
@@ -183,9 +179,7 @@ class DecoderLayer(nn.Module):
         )
         x = torch.as_tensor(
             self.norm(
-                self.cross_attention(
-                    x, cross, cross, attn_mask=cross_mask, tau=tau, delta=delta
-                )[0]
+                self.cross_attention(x, cross, cross, attn_mask=cross_mask, tau=tau, delta=delta)[0]
             )
         )
         y = torch.as_tensor(self.conv(x))
@@ -225,9 +219,7 @@ class Decoder(nn.Module):
         """
         for layer in self.layers:
             x = torch.as_tensor(
-                layer(
-                    x, cross, x_mask=x_mask, cross_mask=cross_mask, tau=tau, delta=delta
-                )
+                layer(x, cross, x_mask=x_mask, cross_mask=cross_mask, tau=tau, delta=delta)
             )
 
         if self.norm is not None:
@@ -286,8 +278,6 @@ class Projector(nn.Module):
 
         return y
 
-from python.src.utils.registry import register_model
-
 
 @register_model("nstransformer")
 class NSTransformer(nn.Module):
@@ -318,26 +308,18 @@ class NSTransformer(nn.Module):
         super().__init__()
         self.pred_len = pred_len
         self.seq_len = seq_len
-        self.init_embedding = DataEmbedding(
-            input_dim, embed_dim, embed_type, freq, dropout_rate
-        )
+        self.init_embedding = DataEmbedding(input_dim, embed_dim, embed_type, freq, dropout_rate)
         self.encoder = Encoder(
             [
-                EncoderLayer(
-                    n_heads, embed_dim, hidden_dim, dropout_rate, normalization="layer"
-                )
+                EncoderLayer(n_heads, embed_dim, hidden_dim, dropout_rate, normalization="layer")
                 for _ in range(n_enc_layers)
             ],
             norm_layer=torch.nn.LayerNorm(embed_dim),
         )
-        self.dec_embedding = DataEmbedding(
-            embed_dim, embed_dim, embed_type, freq, dropout_rate
-        )
+        self.dec_embedding = DataEmbedding(embed_dim, embed_dim, embed_type, freq, dropout_rate)
         self.decoder = Decoder(
             [
-                DecoderLayer(
-                    n_heads, embed_dim, hidden_dim, dropout_rate, normalization="layer"
-                )
+                DecoderLayer(n_heads, embed_dim, hidden_dim, dropout_rate, normalization="layer")
                 for _ in range(n_dec_layers)
             ],
             norm_layer=torch.nn.LayerNorm(embed_dim),
@@ -387,15 +369,11 @@ class NSTransformer(nn.Module):
         )
 
         enc_out = torch.as_tensor(self.init_embedding(x_enc, x_mark_enc))
-        enc_out = torch.as_tensor(
-            self.encoder(enc_out, attn_mask=None, tau=tau, delta=delta)
-        )
+        enc_out = torch.as_tensor(self.encoder(enc_out, attn_mask=None, tau=tau, delta=delta))
 
         dec_out = torch.as_tensor(self.dec_embedding(x_dec_new, x_mark_dec))
         dec_out = torch.as_tensor(
-            self.decoder(
-                dec_out, enc_out, x_mask=None, cross_mask=None, tau=tau, delta=delta
-            )
+            self.decoder(dec_out, enc_out, x_mask=None, cross_mask=None, tau=tau, delta=delta)
         )
         dec_out = dec_out * std_enc + mean_enc
         return dec_out

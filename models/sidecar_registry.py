@@ -18,16 +18,18 @@ logger = logging.getLogger(__name__)
 
 
 # Configurations for specific hardware (24GB VRAM)
-MODEL_CONFIGS = {
+MODEL_CONFIGS: dict[str, dict[str, Any]] = {
     "deepseek-r1-32b": {
         "path": "deepseek-r1-distill-qwen-32b.Q4_K_M.gguf",
         "n_gpu_layers": -1,  # -1 = Full offload to GPU
+        "n_ctx": 2048,  # Reduced to 2048 to fit in 24GB VRAM with other apps
         "hf_repo": "bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
         "hf_file": "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
     },
     "llama-3.3-70b": {
         "path": "llama-3.3-70b-instruct.Q4_K_M.gguf",
         "n_gpu_layers": 35,  # Partial offload to fit in 24GB VRAM
+        "n_ctx": 2048,
         "hf_repo": "bartowski/Llama-3.3-70B-Instruct-GGUF",
         "hf_file": "Llama-3.3-70B-Instruct-Q4_K_M.gguf",
     },
@@ -123,10 +125,19 @@ class ModelRegistry:
 
         logger.info("Loading model: %s (backend: %s)", model_id, backend or "auto")
 
-        # Check path
+        # Check path and config
         dir_path = Path(self.models_dir)
         model_path = dir_path / str(model_id)
-        is_gguf = model_id.endswith(".gguf") or model_path.suffix == ".gguf"
+
+        # Determine if it's GGUF from ID, path, or config
+        is_gguf = (
+            model_id.endswith(".gguf")
+            or model_path.suffix == ".gguf"
+            or (
+                model_id in MODEL_CONFIGS
+                and str(MODEL_CONFIGS[model_id].get("path", "")).endswith(".gguf")
+            )
+        )
 
         # Decide backend
         effective_backend = backend
@@ -136,25 +147,35 @@ class ModelRegistry:
         if effective_backend == "llama.cpp":
             from llama_cpp import Llama  # type: ignore
 
-            # Check for custom config first
+            n_gpu_layers: int = -1  # Default to GPU if not specified
+            n_ctx: int = 2048
+
+            # Check for custom config
             if model_id in MODEL_CONFIGS:
-                config = MODEL_CONFIGS[model_id]
+                config: dict[str, Any] = MODEL_CONFIGS[model_id]
                 # If path exists relative to models_dir, use full path, otherwise use name
-                cfg_path = Path(self.models_dir) / str(config["path"])
-                path = str(cfg_path) if cfg_path.exists() else str(config["path"])
+                config_path = str(config.get("path", ""))
+                cfg_path = Path(self.models_dir) / config_path
+                path = str(cfg_path) if cfg_path.exists() else config_path
+
+                n_gpu_layers = int(config.get("n_gpu_layers", -1))
+                n_ctx = int(config.get("n_ctx", 2048))
 
                 logger.info(
-                    "Loading configured model %s with n_gpu_layers=%s",
+                    "Loading configured model %s with n_gpu_layers=%s, n_ctx=%s",
                     model_id,
-                    config["n_gpu_layers"],
-                )
-
-                model = Llama(
-                    model_path=path, n_gpu_layers=config["n_gpu_layers"], n_ctx=8192, verbose=False
+                    n_gpu_layers,
                 )
             else:
                 path = str(model_path) if model_path.exists() else model_id
-                model = Llama(model_path=path, n_ctx=2048)  # Default context
+                logger.info("Loading GGUF model from %s", path)
+
+            model = Llama(
+                model_path=path,
+                n_gpu_layers=n_gpu_layers,
+                n_ctx=n_ctx,
+                verbose=True,  # Enable for debugging GPU offload
+            )
 
             loaded = LoadedModel(
                 model_id=model_id,

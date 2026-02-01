@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from scipy.stats import norm
 
-from python.src.utils.registry import register_policy
+from ..utils.registry import register_policy
 
 from .base import Policy
 
@@ -77,9 +77,7 @@ class BlackScholesPolicy(Policy):
                 float(observation[2]),
             )
 
-        theoretical_price = self._black_scholes_call(
-            S, K, T, self.risk_free_rate, self.volatility
-        )
+        theoretical_price = self._black_scholes_call(S, K, T, self.risk_free_rate, self.volatility)
 
         # Simple logic: Buy if undervalued, Sell if overvalued
         # Action: 0=Hold, 1=Buy, 2=Sell

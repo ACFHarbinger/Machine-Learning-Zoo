@@ -8,7 +8,7 @@ import loss_landscapes
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from pi_sidecar.ml.envs.trading_env import TradingEnv
+from pi_sidecar.envs.trading_env import TradingEnv
 from torch import nn
 
 

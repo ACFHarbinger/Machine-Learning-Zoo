@@ -14,16 +14,14 @@ from torch import nn
 # Add repo root to path so we can import modules
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from python.src.models.time_series import TimeSeriesBackbone
-from python.src.utils.io.model_versioning import ModelMetadata, load_model_with_metadata
+from .models.time_series import TimeSeriesBackbone
+from .utils.io.model_versioning import ModelMetadata, load_model_with_metadata
 
 
 def main() -> None:  # noqa: PLR0915
     """Run inference using a trained model and input JSON."""
     parser = argparse.ArgumentParser(description="Run inference on a trained model")
-    parser.add_argument(
-        "--model_path", type=str, required=True, help="Path to .pt checkpoint"
-    )
+    parser.add_argument("--model_path", type=str, required=True, help="Path to .pt checkpoint")
     parser.add_argument(
         "--input_json",
         type=str,
@@ -62,9 +60,7 @@ def main() -> None:  # noqa: PLR0915
             if "metadata" in checkpoint:
                 metadata = ModelMetadata.from_dict(checkpoint["metadata"])
             else:
-                raise ValueError(
-                    "Checkpoint missing metadata and no sidecar JSON found."
-                )
+                raise ValueError("Checkpoint missing metadata and no sidecar JSON found.")
 
         # 3. Instantiate Model
         config = metadata.training_config

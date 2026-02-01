@@ -1,4 +1,3 @@
-
 """
 Unsupervised Learning Module for NGLab.
 
@@ -12,7 +11,7 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import nn
 
-from python.src.utils.registry import register_pipeline
+from ....utils.registry import register_pipeline
 
 from .base import BaseModule
 

@@ -1,4 +1,3 @@
-
 """
 Supervised Learning Module for NGLab.
 
@@ -18,7 +17,7 @@ import torch.nn.functional as F  # noqa: N812
 from torch import nn
 from torch.utils.data import DataLoader
 
-from python.src.utils.registry import register_pipeline
+from ....utils.registry import register_pipeline
 
 from .base import BaseModule
 
@@ -100,9 +99,7 @@ class ProgressCallback:
         """
         self.total_epochs = total_epochs
 
-    def on_epoch_end(
-        self, epoch: int, train_loss: float, val_loss: float | None = None
-    ) -> None:
+    def on_epoch_end(self, epoch: int, train_loss: float, val_loss: float | None = None) -> None:
         """Emit progress JSON to stdout."""
         progress = {
             "type": "progress",
@@ -295,9 +292,7 @@ def train_from_csv(  # noqa: PLR0913, PLR0915
     if output_path is None:
         output_dir = Path(__file__).parent.parent.parent.parent.parent / "model_weights"
         output_dir.mkdir(exist_ok=True)
-        output_path_resolved = str(
-            output_dir / f"{model_name.lower()}_{target_column}.pt"
-        )
+        output_path_resolved = str(output_dir / f"{model_name.lower()}_{target_column}.pt")
     else:
         output_path_resolved = output_path
 
@@ -335,29 +330,17 @@ def main() -> None:
     """CLI entry point for supervised training."""
     parser = argparse.ArgumentParser(description="Train supervised time series model")
     parser.add_argument("--csv_path", type=str, required=True, help="Path to CSV file")
-    parser.add_argument(
-        "--target_column", type=str, required=True, help="Column to predict"
-    )
-    parser.add_argument(
-        "--model_name", type=str, default="LSTM", help="Model architecture"
-    )
+    parser.add_argument("--target_column", type=str, required=True, help="Column to predict")
+    parser.add_argument("--model_name", type=str, default="LSTM", help="Model architecture")
     parser.add_argument("--epochs", type=int, default=100, help="Training epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
-    parser.add_argument(
-        "--learning_rate", type=float, default=0.001, help="Learning rate"
-    )
+    parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate")
     parser.add_argument("--seq_len", type=int, default=30, help="Sequence length")
     parser.add_argument("--pred_len", type=int, default=1, help="Prediction length")
-    parser.add_argument(
-        "--train_split", type=float, default=0.8, help="Train/val split"
-    )
-    parser.add_argument(
-        "--model_params", type=str, default="{}", help="JSON model params"
-    )
+    parser.add_argument("--train_split", type=float, default=0.8, help="Train/val split")
+    parser.add_argument("--model_params", type=str, default="{}", help="JSON model params")
     parser.add_argument("--output_path", type=str, default=None, help="Output path")
-    parser.add_argument(
-        "--list_columns", action="store_true", help="List CSV columns and exit"
-    )
+    parser.add_argument("--list_columns", action="store_true", help="List CSV columns and exit")
 
     args = parser.parse_args()
 

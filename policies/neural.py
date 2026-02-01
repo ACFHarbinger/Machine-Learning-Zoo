@@ -7,7 +7,7 @@ from tensordict import TensorDict
 from tensordict.nn import TensorDictModuleBase
 from torch import nn
 
-from python.src.utils.registry import register_policy
+from ..utils.registry import register_policy
 
 from .base import Policy
 

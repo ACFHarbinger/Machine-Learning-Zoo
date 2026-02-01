@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from python.src.utils.registry import register_model
+from ..utils.registry import register_model
 
 from .base import BaseModel
 from .deep_factory import DEEP_MODEL_NAMES, create_deep_model

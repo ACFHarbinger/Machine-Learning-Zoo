@@ -7,25 +7,12 @@ GPU utilization and reduce memory usage while maintaining model accuracy.
 
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from enum import Enum
 from typing import Any
 
 import torch
 from torch import autocast, nn
 from torch.cuda.amp.grad_scaler import GradScaler
-
-
-class PrecisionMode(Enum):
-    """Supported precision modes."""
-
-    FP32 = "32"
-    FP16_MIXED = "16-mixed"
-    BF16_MIXED = "bf16-mixed"
-    FP16_TRUE = "16-true"
-    BF16_TRUE = "bf16-true"
-
-
-from python.src.configs.optimization import MixedPrecisionConfig
+from ..configs.optimization import MixedPrecisionConfig
 
 
 class MixedPrecisionTrainer:
@@ -299,18 +286,11 @@ def estimate_memory_savings(
     # Activations (rough estimate based on batch size and sequence length)
     # This is highly model-dependent
     activation_factor = batch_size * sequence_length
-    fp32_activation_memory = (
-        activation_factor * total_params * 0.01 * fp32_bytes / (1024**2)
-    )
-    mixed_activation_memory = (
-        activation_factor * total_params * 0.01 * fp16_bytes / (1024**2)
-    )
+    fp32_activation_memory = activation_factor * total_params * 0.01 * fp32_bytes / (1024**2)
+    mixed_activation_memory = activation_factor * total_params * 0.01 * fp16_bytes / (1024**2)
 
     fp32_total = (
-        fp32_model_memory
-        + fp32_optimizer_memory
-        + fp32_gradient_memory
-        + fp32_activation_memory
+        fp32_model_memory + fp32_optimizer_memory + fp32_gradient_memory + fp32_activation_memory
     )
 
     mixed_total = (

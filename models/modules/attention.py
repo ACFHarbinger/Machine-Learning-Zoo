@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from python.src.utils.functions.masking import ProbMask, TriangularCausalMask
+from ...utils.functions.masking import ProbMask, TriangularCausalMask
 
 
 # Adapted from the Time-Series-Library (https://github.com/thuml/Time-Series-Library/blob/main/layers/SelfAttention_Family.py)
@@ -171,9 +171,7 @@ class ProbAttention(nn.Module):
         M = Q_K_sample.max(-1)[0] - torch.div(Q_K_sample.sum(-1), L_K)
         M_top = M.topk(n_top, sorted=False)[1]
 
-        Q_reduce = Q[
-            torch.arange(B)[:, None, None], torch.arange(H)[None, :, None], M_top, :
-        ]
+        Q_reduce = Q[torch.arange(B)[:, None, None], torch.arange(H)[None, :, None], M_top, :]
         Q_K = torch.matmul(Q_reduce, K.transpose(-2, -1))
 
         return Q_K, M_top
@@ -205,14 +203,12 @@ class ProbAttention(nn.Module):
 
         attn = torch.softmax(scores, dim=-1)
 
-        context_in[
-            torch.arange(B)[:, None, None], torch.arange(H)[None, :, None], index, :
-        ] = torch.matmul(attn, V).type_as(context_in)
+        context_in[torch.arange(B)[:, None, None], torch.arange(H)[None, :, None], index, :] = (
+            torch.matmul(attn, V).type_as(context_in)
+        )
         if self.output_attention:
             attns = (torch.ones([B, H, L_V, L_V]) / L_V).type_as(attn).to(attn.device)
-            attns[
-                torch.arange(B)[:, None, None], torch.arange(H)[None, :, None], index, :
-            ] = attn
+            attns[torch.arange(B)[:, None, None], torch.arange(H)[None, :, None], index, :] = attn
             return context_in, attns
         else:
             return context_in, None
@@ -249,9 +245,7 @@ class ProbAttention(nn.Module):
             scores_top = scores_top * scale
 
         context = self._get_initial_context(values, L_Q)
-        context, attn = self._update_context(
-            context, values, scores_top, index, L_Q, attn_mask
-        )
+        context, attn = self._update_context(context, values, scores_top, index, L_Q, attn_mask)
 
         return context.contiguous(), attn
 
@@ -304,8 +298,6 @@ class AttentionLayer(nn.Module):
         keys = self.key_projection(keys).view(B, S, H, -1)
         values = self.value_projection(values).view(B, S, H, -1)
 
-        out, attn = self.inner_attention(
-            queries, keys, values, attn_mask, tau=tau, delta=delta
-        )
+        out, attn = self.inner_attention(queries, keys, values, attn_mask, tau=tau, delta=delta)
         out = out.view(B, L, -1)
         return self.out_projection(out), attn

@@ -1,4 +1,3 @@
-
 """
 PyTorch Lightning Module for VAE Training
 
@@ -10,8 +9,8 @@ from typing import Any, Literal, cast
 
 import torch
 
-from python.src.models.autoencoders.vae import VAE, vae_loss
-from python.src.utils.registry import register_pipeline
+from ....models.autoencoders.vae import VAE, vae_loss
+from ....utils.registry import register_pipeline
 
 from .base import BaseModule
 
@@ -59,9 +58,7 @@ class VAELightningModule(BaseModule):
         seq_len: int = 100,
         pred_len: int = 20,
         encoder_type: Literal["transformer", "mamba", "lstm", "gru", "xlstm"] = "mamba",
-        decoder_type: (
-            Literal["transformer", "mamba", "lstm", "gru", "xlstm"] | None
-        ) = None,
+        decoder_type: (Literal["transformer", "mamba", "lstm", "gru", "xlstm"] | None) = None,
         n_layers: int = 3,
         n_heads: int = 8,
         d_ff: int = 512,
@@ -171,9 +168,7 @@ class VAELightningModule(BaseModule):
 
         return loss_dict
 
-    def training_step(
-        self, batch: dict[str, torch.Tensor], batch_idx: int
-    ) -> torch.Tensor:
+    def training_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
         """Training step."""
         loss_dict = self.compute_loss(batch, batch_idx)
 
@@ -188,9 +183,7 @@ class VAELightningModule(BaseModule):
 
         return loss_dict["total_loss"]
 
-    def validation_step(
-        self, batch: dict[str, torch.Tensor], batch_idx: int
-    ) -> torch.Tensor:
+    def validation_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
         """Validation step."""
         loss_dict = self.compute_loss(batch, batch_idx)
 

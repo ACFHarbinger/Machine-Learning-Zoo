@@ -5,9 +5,9 @@ from collections.abc import Callable
 from typing import Any
 
 from pi_sidecar.ipc.ndjson_transport import NdjsonTransport
-from pi_sidecar.ml.inference.engine import InferenceEngine
-from pi_sidecar.ml.models.sidecar_registry import ModelRegistry
-from pi_sidecar.ml.training import TrainingService
+from pi_sidecar.inference.engine import InferenceEngine
+from pi_sidecar.models.sidecar_registry import ModelRegistry
+from pi_sidecar.training import TrainingService
 
 logging.basicConfig(
     stream=sys.stderr,
@@ -100,14 +100,14 @@ class MlRequestHandler:
         return {"runs": await self.training.list_runs()}
 
     async def _voice_synthesize(self, p, _cb):
-        from pi_sidecar.ml.tts.elevenlabs import ElevenLabsTTS
+        from pi_sidecar.tts.elevenlabs import ElevenLabsTTS
 
         tts = ElevenLabsTTS(api_key=p.get("api_key"))
         success = await tts.synthesize(p["text"], p["output_path"])
         return {"success": success, "output_path": p["output_path"]}
 
     async def _voice_transcribe(self, p, _cb):
-        from pi_sidecar.ml.stt.whisper import WhisperSTT
+        from pi_sidecar.stt.whisper import WhisperSTT
 
         stt = WhisperSTT(model_size=p.get("model_size", "base"), device=p.get("device", "cpu"))
         text = await stt.transcribe(p["audio_path"])

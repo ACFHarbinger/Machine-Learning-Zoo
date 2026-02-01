@@ -1,13 +1,12 @@
-
 from __future__ import annotations
 
 from typing import Any
 
 from torch import nn
 
-from python.src.models.attention.attention_net import AttentionNet
-from python.src.models.attention.nstransformer import NSTransformer
-from python.src.models.factories.base import NeuralComponentFactory
+from ..attention.attention_net import AttentionNetwork
+from ..attention.nstransformer import NSTransformer
+from ..factories.base import NeuralComponentFactory
 
 
 class AttentionFactory(NeuralComponentFactory):
@@ -21,9 +20,8 @@ class AttentionFactory(NeuralComponentFactory):
         if "nstransformer" in name:
             return NSTransformer(**kwargs)
         elif "attention" in name:
-            return AttentionNet(**kwargs)
+            return AttentionNetwork(**kwargs)
         else:
             raise ValueError(
-                f"Unknown attention model: {name}. "
-                f"Available: nstransformer, attention"
+                f"Unknown attention model: {name}. Available: nstransformer, attention"
             )

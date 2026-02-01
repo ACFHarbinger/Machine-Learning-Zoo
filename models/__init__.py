@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from python.src.models.base import BaseDecoder, BaseEncoder, BaseModel
-from python.src.models.registry import MODEL_REGISTRY, get_model, register_model
-from python.src.models.time_series import TimeSeriesBackbone
+from .base import BaseDecoder, BaseEncoder, BaseModel
+from .registry import MODEL_REGISTRY, get_model, register_model
+from .time_series import TimeSeriesBackbone
 
 # Flattened Architecture Modules
 from .attention import *  # noqa: F403

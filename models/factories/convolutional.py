@@ -1,17 +1,16 @@
-
 from __future__ import annotations
 
 from typing import Any
 
 from torch import nn
 
-from python.src.models.convolutional.capsule import CapsuleNet
-from python.src.models.convolutional.cnn import CNN
-from python.src.models.convolutional.dcign import DCIGN
-from python.src.models.convolutional.dcn import DCN
-from python.src.models.convolutional.deconv import DeconvNet
-from python.src.models.convolutional.resnet import ResNet
-from python.src.models.factories.base import NeuralComponentFactory
+from ..convolutional.capsule import CapsuleLayer
+from ..convolutional.cnn import RollingWindowCNN
+from ..convolutional.dcign import DCIGN
+from ..convolutional.dcn import DeepConvNet
+from ..convolutional.deconv import DeconvNet
+from ..convolutional.resnet import DeepResNet
+from ..factories.base import NeuralComponentFactory
 
 
 class ConvolutionalFactory(NeuralComponentFactory):
@@ -22,17 +21,17 @@ class ConvolutionalFactory(NeuralComponentFactory):
         """Get convolutional model by name."""
         name = name.lower()
         if "resnet" in name:
-            return ResNet(**kwargs)
+            return DeepResNet(**kwargs)
         elif "capsule" in name:
-            return CapsuleNet(**kwargs)
+            return CapsuleLayer(**kwargs)
         elif "dcign" in name:
             return DCIGN(**kwargs)
         elif "deconv" in name:
             return DeconvNet(**kwargs)
         elif "dcn" in name:
-            return DCN(**kwargs)
+            return DeepConvNet(**kwargs)
         elif "cnn" in name:
-            return CNN(**kwargs)
+            return RollingWindowCNN(**kwargs)
         else:
             raise ValueError(
                 f"Unknown convolutional model: {name}. "

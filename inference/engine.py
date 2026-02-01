@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from pi_sidecar.ml.models.sidecar_registry import ModelRegistry
+from pi_sidecar.models.sidecar_registry import ModelRegistry
 from pi_sidecar.personality import get_personality
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class InferenceEngine:
         Returns:
             A dictionary containing the status of the operation.
         """
-        from pi_sidecar.ml.models.sidecar_registry import MODEL_CONFIGS
+        from pi_sidecar.models.sidecar_registry import MODEL_CONFIGS
 
         # Local models configured in MODEL_CONFIGS are never API models
         if model_id in MODEL_CONFIGS:

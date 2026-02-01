@@ -27,7 +27,7 @@ except ImportError:
     HAS_ACCELERATE = False
     Accelerator = None  # type: ignore
 
-from pi_sidecar.ml.pipeline.base import BaseCallback, BaseTrainer
+from pi_sidecar.pipeline.base import BaseCallback, BaseTrainer
 
 logger = logging.getLogger(__name__)
 

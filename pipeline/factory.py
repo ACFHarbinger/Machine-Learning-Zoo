@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from python.src.utils.registry import PIPELINE_REGISTRY
+from ..utils.registry import PIPELINE_REGISTRY
 
 
 class PipelineFactory:
@@ -12,19 +12,19 @@ class PipelineFactory:
     def get_pipeline(name: str, **kwargs: Any) -> Any:
         """
         Get pipeline component by name.
-        
+
         Args:
             name: Name of the pipeline component to instantiate.
             **kwargs: Arguments to pass to the constructor.
-            
+
         Returns:
             An instance of the requested pipeline component.
-            
+
         Raises:
             ModelNotFoundError: If the component name is not in the registry.
         """
         from ..exceptions import ModelNotFoundError
-        
+
         try:
             pipeline_cls = PIPELINE_REGISTRY.get(name.lower())
             return pipeline_cls(**kwargs)

@@ -8,7 +8,7 @@ from torch import nn
 if TYPE_CHECKING:
     from tensordict import TensorDict
 
-    from python.src.envs.base import TradingEnvBase
+    from ..envs.base import TradingEnvBase
 
 __all__ = ["ConstructivePolicy", "ImprovementPolicy", "Policy"]
 

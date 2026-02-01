@@ -15,7 +15,7 @@ from typing import Any, cast
 
 import torch
 import zstandard as zstd
-from pi_sidecar.ml.configs.storage import CloudStorageConfig
+from pi_sidecar.configs.storage import CloudStorageConfig
 
 logger = logging.getLogger(__name__)
 

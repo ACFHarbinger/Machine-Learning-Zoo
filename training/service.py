@@ -137,8 +137,8 @@ class TrainingService:
 
         try:
             # Import here to avoid circular deps and lazy load heavy modules
-            from pi_sidecar.ml.models.composed import build_model
-            from pi_sidecar.ml.pipeline.accelerated import (
+            from pi_sidecar.models.composed import build_model
+            from pi_sidecar.pipeline.accelerated import (
                 AcceleratedTrainer,
                 AcceleratedTrainerConfig,
             )

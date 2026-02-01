@@ -88,7 +88,7 @@ def load_model(path: str, epoch: int | None = None) -> tuple[torch.nn.Module, di
     Returns:
         tuple: (model, args)
     """
-    from pi_sidecar.ml.models import LSTM, NSTransformer
+    from pi_sidecar.models import LSTM, NSTransformer
 
     if os.path.isfile(path):
         model_filename = path

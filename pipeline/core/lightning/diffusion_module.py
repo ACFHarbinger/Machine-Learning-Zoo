@@ -1,4 +1,3 @@
-
 """
 Diffusion Lightning Module for Time Series Forecasting (DDPM).
 """
@@ -9,7 +8,7 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import nn
 
-from python.src.utils.registry import register_pipeline
+from ....utils.registry import register_pipeline
 
 from .base import BaseModule
 
@@ -61,9 +60,7 @@ class DiffusionLightningModule(BaseModule):
         self.register_buffer("sqrt_alphas_cumprod", torch.sqrt(self.alphas_cumprod))
         self.sqrt_alphas_cumprod: torch.Tensor
 
-        self.register_buffer(
-            "sqrt_one_minus_alphas_cumprod", torch.sqrt(1.0 - self.alphas_cumprod)
-        )
+        self.register_buffer("sqrt_one_minus_alphas_cumprod", torch.sqrt(1.0 - self.alphas_cumprod))
         self.sqrt_one_minus_alphas_cumprod: torch.Tensor
 
         self.register_buffer(
@@ -86,12 +83,8 @@ class DiffusionLightningModule(BaseModule):
 
         # Broadcast parameters to match (B, L, F)
         # t is (B,) long tensor
-        sqrt_alphas_cumprod_t = self.sqrt_alphas_cumprod[t][
-            :, None, None
-        ]  # Broadcast to (B, L, F)
-        sqrt_one_minus_alphas_cumprod_t = self.sqrt_one_minus_alphas_cumprod[t][
-            :, None, None
-        ]
+        sqrt_alphas_cumprod_t = self.sqrt_alphas_cumprod[t][:, None, None]  # Broadcast to (B, L, F)
+        sqrt_one_minus_alphas_cumprod_t = self.sqrt_one_minus_alphas_cumprod[t][:, None, None]
 
         return sqrt_alphas_cumprod_t * x_start + sqrt_one_minus_alphas_cumprod_t * noise
 
@@ -139,16 +132,12 @@ class DiffusionLightningModule(BaseModule):
         return loss
 
     @torch.no_grad()
-    def p_sample(
-        self, x: torch.Tensor, t: int, t_index: int, cond: torch.Tensor
-    ) -> torch.Tensor:
+    def p_sample(self, x: torch.Tensor, t: int, t_index: int, cond: torch.Tensor) -> torch.Tensor:
         """
         Reverse step: p(x_{t-1} | x_t).
         """
         betas_t: torch.Tensor = self.betas[t]
-        sqrt_one_minus_alphas_cumprod_t: torch.Tensor = (
-            self.sqrt_one_minus_alphas_cumprod[t]
-        )
+        sqrt_one_minus_alphas_cumprod_t: torch.Tensor = self.sqrt_one_minus_alphas_cumprod[t]
         sqrt_recip_alphas_t: torch.Tensor = self.sqrt_recip_alphas[t]
 
         # Reshape for broadcasting

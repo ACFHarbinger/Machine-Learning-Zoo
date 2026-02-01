@@ -30,8 +30,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 from pydantic import BaseModel, ConfigDict, Field, validator
 
-from python.src.utils import definitions
-from python.src.utils.functions.functions import load_model
+from ..utils import definitions
+from ..utils.functions.functions import load_model
 
 
 # Dummy tracer for when OpenTelemetry is disabled/missing
@@ -86,9 +86,7 @@ class PredictionRequest(BaseModel):
     observations: list[list[float]] = Field(
         ..., description="Batch of observation tensors.", min_length=1
     )
-    model_path: str | None = Field(
-        None, description="Path to specific model checkpoint."
-    )
+    model_path: str | None = Field(None, description="Path to specific model checkpoint.")
     temperature: float = Field(1.0, ge=0.01, le=2.0)
 
     model_config = ConfigDict(strict=True)
@@ -134,8 +132,7 @@ class BatchInferenceHandler:
             model_loader_func: Function to load the model singleton.
         """
         self.queue: (
-            asyncio.Queue[tuple[PredictionRequest, asyncio.Future[list[list[float]]]]]
-            | None
+            asyncio.Queue[tuple[PredictionRequest, asyncio.Future[list[list[float]]]]] | None
         ) = None
         self.model_loader = model_loader_func
         self._shutdown = False
@@ -161,18 +158,14 @@ class BatchInferenceHandler:
         """Add request to queue and await result."""
         if self.queue is None:
             raise RuntimeError("BatchInferenceHandler not started")
-        future: asyncio.Future[list[list[float]]] = (
-            asyncio.get_running_loop().create_future()
-        )
+        future: asyncio.Future[list[list[float]]] = asyncio.get_running_loop().create_future()
         await self.queue.put((request, future))
         return await future
 
     async def _worker_loop(self) -> None:
         """Background loop to process batches."""
         while not self._shutdown:
-            batch: list[tuple[PredictionRequest, asyncio.Future[list[list[float]]]]] = (
-                []
-            )
+            batch: list[tuple[PredictionRequest, asyncio.Future[list[list[float]]]]] = []
 
             # 1. Fetch first item (blocking)
             try:
@@ -244,9 +237,7 @@ class BatchInferenceHandler:
                 # Distribute results
                 cursor = 0
                 # Cast futures to correct type since zip result is Tuple[Any, ...]
-                typed_futures = cast(
-                    tuple[asyncio.Future[list[list[float]]], ...], futures
-                )
+                typed_futures = cast(tuple[asyncio.Future[list[list[float]]], ...], futures)
 
                 for i, future in enumerate(typed_futures):
                     num_samples = splits[i]
@@ -257,9 +248,7 @@ class BatchInferenceHandler:
                         future.set_result(result)
 
             except Exception as e:
-                typed_futures_err = cast(
-                    tuple[asyncio.Future[list[list[float]]], ...], futures
-                )
+                typed_futures_err = cast(tuple[asyncio.Future[list[list[float]]], ...], futures)
                 for future in typed_futures_err:
                     if not future.done():
                         future.set_exception(e)
@@ -358,9 +347,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     global _REDIS  # noqa: PLW0603
     await batch_handler.start()
     try:
-        _REDIS = redis.from_url(
-            definitions.REDIS_URL, encoding="utf-8", decode_responses=True
-        )
+        _REDIS = redis.from_url(definitions.REDIS_URL, encoding="utf-8", decode_responses=True)
         # Ping to check connection
         # await _REDIS.ping()
         print("Redis connected")
@@ -410,9 +397,7 @@ async def predict(request: PredictionRequest) -> PredictionResponse:
     cache_key = None
     if _REDIS:
         # Create stable hash of input
-        payload = json.dumps(
-            request.observations
-        )  # Canonical serialization needed in prod
+        payload = json.dumps(request.observations)  # Canonical serialization needed in prod
         key_str = f"{request.model_path}:{payload}"
         cache_key = hashlib.sha256(key_str.encode()).hexdigest()
 
@@ -433,9 +418,7 @@ async def predict(request: PredictionRequest) -> PredictionResponse:
         # 3. Cache Result
         if _REDIS and cache_key:
             # Async cache set (fire and forget ideally, but await here for safety)
-            await _REDIS.set(
-                cache_key, json.dumps(predictions), ex=definitions.CACHE_TTL
-            )
+            await _REDIS.set(cache_key, json.dumps(predictions), ex=definitions.CACHE_TTL)
 
         latency = (time.perf_counter() - start_time) * 1000
 

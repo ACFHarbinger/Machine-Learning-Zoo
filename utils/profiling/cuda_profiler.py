@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
-from pi_sidecar.ml.configs.optimization import ProfilerConfig
+from pi_sidecar.configs.optimization import ProfilerConfig
 from torch import nn
 from torch.profiler import (
     ProfilerActivity,

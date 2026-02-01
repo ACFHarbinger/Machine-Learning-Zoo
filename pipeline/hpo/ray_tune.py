@@ -10,8 +10,8 @@ from ray.train.lightning import RayDDPStrategy, RayTrainReportCallback
 from ray.tune.schedulers import ASHAScheduler
 from ray.tune.search.optuna import OptunaSearch
 
-from python.src.models.time_series import TimeSeriesBackbone
-from python.src.pipeline.core.lightning.supervised_learning import SLLightningModule
+from ...models.time_series import TimeSeriesBackbone
+from ..core.lightning.supervised_learning import SLLightningModule
 
 
 def train_func(config: dict[str, Any], opts: dict[str, Any]) -> None:

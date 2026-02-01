@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, cast
 import torch
 from torch import nn
 
-from python.src.models.base import BaseModel
-from python.src.models.modules.xlstm_block import xLSTMBlock
-from python.src.utils.registry import register_model
+from ..base import BaseModel
+from ..modules.xlstm_block import xLSTMBlock
+from ...utils.registry import register_model
 
 if TYPE_CHECKING:
     pass
@@ -111,9 +111,7 @@ class xLSTM(BaseModel):  # noqa: N801
             out_state = x_norm[:, -1, :]
 
         should_return_embedding = (
-            return_embedding
-            if return_embedding is not None
-            else (self.output_type == "embedding")
+            return_embedding if return_embedding is not None else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

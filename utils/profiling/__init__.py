@@ -4,13 +4,13 @@ GPU Profiling Module for NGLab.
 Provides tools for profiling GPU utilization, memory usage, and training performance.
 """
 
-from pi_sidecar.ml.utils.profiling.benchmark import (
+from pi_sidecar.utils.profiling.benchmark import (
     BenchmarkResult,
     GPUBenchmark,
     run_inference_benchmark,
     run_training_benchmark,
 )
-from pi_sidecar.ml.utils.profiling.cuda_profiler import (
+from pi_sidecar.utils.profiling.cuda_profiler import (
     CUDAProfiler,
     GPUMemoryStats,
     ProfilerConfig,
@@ -19,7 +19,7 @@ from pi_sidecar.ml.utils.profiling.cuda_profiler import (
     profile_model_forward,
     profile_training_step,
 )
-from pi_sidecar.ml.utils.profiling.gpu_optimization import (
+from pi_sidecar.utils.profiling.gpu_optimization import (
     GPUMemoryOptimizer,
     MemoryPool,
     TransferProfile,

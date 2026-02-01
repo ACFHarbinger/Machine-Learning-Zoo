@@ -48,7 +48,7 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         self.selection_params = selection_params or {}
 
         # Components
-        from python.src.features.regime import MarketRegimeDetector
+        from .regime import MarketRegimeDetector
 
         self.regime_detector = MarketRegimeDetector(
             n_regimes=self.selection_params.get("n_regimes", 3)
@@ -90,7 +90,7 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         elif self.scaler_type == "robust":
             self.scaler = RobustScaler()
         elif self.scaler_type == "online":
-            from python.src.features.normalization import OnlineNormalizer
+            from .normalization import OnlineNormalizer
 
             self.scaler = OnlineNormalizer(feature_dim=full_features.shape[1])
         else:
@@ -108,7 +108,7 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         elif self.selection_method == "mi":
             from sklearn.feature_selection import SelectKBest, mutual_info_regression
 
-            from python.src.features.feature_selection import TimeSeriesFeatureSelector
+            from .feature_selection import TimeSeriesFeatureSelector
 
             self.selector = SelectKBest(
                 mutual_info_regression, k=self.selection_params.get("n_features", 10)
@@ -117,7 +117,7 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         elif self.selection_method == "rfecv":
             from sklearn.ensemble import RandomForestRegressor
 
-            from python.src.features.feature_selection import TimeSeriesFeatureSelector
+            from .feature_selection import TimeSeriesFeatureSelector
 
             estimator = self.selection_params.get(
                 "estimator", RandomForestRegressor(n_estimators=10, n_jobs=-1)

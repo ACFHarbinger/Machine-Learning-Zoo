@@ -29,9 +29,7 @@ class VAE(nn.Module):
         seq_len: int = 100,
         pred_len: int = 20,
         encoder_type: Literal["transformer", "mamba", "lstm", "gru", "xlstm"] = "mamba",
-        decoder_type: (
-            Literal["transformer", "mamba", "lstm", "gru", "xlstm"] | None
-        ) = None,
+        decoder_type: (Literal["transformer", "mamba", "lstm", "gru", "xlstm"] | None) = None,
         n_layers: int = 3,
         n_heads: int = 8,
         d_ff: int = 512,
@@ -73,7 +71,7 @@ class VAE(nn.Module):
         backbone_encoder_type = _map_name(encoder_type)
         backbone_decoder_type = _map_name(self.decoder_type)
 
-        from python.src.models.time_series import TimeSeriesBackbone
+        from ..time_series import TimeSeriesBackbone
 
         # Encoder: maps input sequence to embedding space
         encoder_cfg: dict[str, Any] = {

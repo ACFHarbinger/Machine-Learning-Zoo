@@ -19,13 +19,13 @@ from optuna.visualization import (
     plot_param_importances,
 )
 
-from python.src.models.time_series import TimeSeriesBackbone
-from python.src.pipeline.core.lightning.supervised_learning import SLLightningModule
-from python.src.pipeline.hpo.dehb import (
+from ...models.time_series import TimeSeriesBackbone
+from ..core.lightning.supervised_learning import SLLightningModule
+from .dehb import (
     DifferentialEvolutionHyperband,
     get_config_space,
 )
-from python.src.pipeline.hpo.ray_tune import run_hpo_search
+from .ray_tune import run_hpo_search
 
 
 def optimize_model(
@@ -109,12 +109,8 @@ def bayesian_optimization(
     if opts.get("save_plots", False):
         plot_dir = os.path.join(opts.get("output_dir", "results"), "plots")
         os.makedirs(plot_dir, exist_ok=True)
-        plot_optimization_history(study).write_image(
-            os.path.join(plot_dir, "opt_history.png")
-        )
-        plot_param_importances(study).write_image(
-            os.path.join(plot_dir, "param_importance.png")
-        )
+        plot_optimization_history(study).write_image(os.path.join(plot_dir, "opt_history.png"))
+        plot_param_importances(study).write_image(os.path.join(plot_dir, "param_importance.png"))
 
     logger.info(f"Bayesian Optimization finished. Best params: {study.best_params}")
     return study.best_params
