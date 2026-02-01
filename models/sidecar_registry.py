@@ -39,27 +39,44 @@ MODEL_CONFIGS: dict[str, dict[str, Any]] = {
 class ModelRegistry:
     """Registry for managing loaded models."""
 
-    def __init__(self, models_dir: Path | None = None):
+    def __init__(
+        self,
+        models_dir: Path | None = None,
+        device_manager: Any | None = None,
+    ):
         """
         Initialize the model registry.
         Args:
             models_dir: The directory to store models.
+            device_manager: Optional DeviceManager for device-aware placement.
         """
         self.models_dir = models_dir or Path.home() / ".pi-assistant" / "models"
         self.models_dir.mkdir(parents=True, exist_ok=True)
         self._loaded: dict[str, LoadedModel] = {}
+        self.device_manager = device_manager
 
     def list_models(self) -> list[dict]:
         """
-        List available models.
+        List available models with device placement info.
         Returns:
             A list of dictionaries containing the model information.
         """
         models: list[dict[str, Any]] = []
 
+        def _device_info(model_id: str) -> dict[str, Any]:
+            """Get device and size info for a loaded model."""
+            loaded = self._loaded.get(model_id)
+            if loaded:
+                return {
+                    "device": loaded.device,
+                    "model_size_mb": loaded.model_size_mb,
+                }
+            return {"device": None, "model_size_mb": None}
+
         # List models in models_dir
         for item in self.models_dir.iterdir():
             if item.is_dir():
+                info = _device_info(item.name)
                 models.append(
                     {
                         "model_id": item.name,
@@ -67,9 +84,11 @@ class ModelRegistry:
                         "loaded": item.name in self._loaded,
                         "downloaded": True,
                         "backend": "transformers",
+                        **info,
                     }
                 )
             elif item.suffix == ".gguf":
+                info = _device_info(item.name)
                 models.append(
                     {
                         "model_id": item.name,
@@ -77,6 +96,7 @@ class ModelRegistry:
                         "loaded": item.name in self._loaded,
                         "downloaded": True,
                         "backend": "llama.cpp",
+                        **info,
                     }
                 )
 
@@ -90,6 +110,8 @@ class ModelRegistry:
                         "loaded": True,
                         "downloaded": True,
                         "backend": getattr(model, "backend", "unknown"),
+                        "device": model.device,
+                        "model_size_mb": model.model_size_mb,
                     }
                 )
 
@@ -97,6 +119,7 @@ class ModelRegistry:
         for model_id, cfg in MODEL_CONFIGS.items():
             if not any(m["model_id"] == model_id for m in models):
                 gguf_path = self.models_dir / str(cfg["path"])
+                info = _device_info(model_id)
                 models.append(
                     {
                         "model_id": model_id,
@@ -105,6 +128,7 @@ class ModelRegistry:
                         "downloaded": gguf_path.exists(),
                         "backend": "llama.cpp",
                         "hf_repo": cfg.get("hf_repo"),
+                        **info,
                     }
                 )
 
@@ -200,11 +224,13 @@ class ModelRegistry:
                 else:
                     raise e
 
+            device = "cuda:0" if n_gpu_layers > 0 else "cpu"
             loaded = LoadedModel(
                 model_id=model_id,
                 model=model,
                 tokenizer=None,
                 backend="llama.cpp",
+                device=device,
             )
         else:
             from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
@@ -218,11 +244,24 @@ class ModelRegistry:
             tokenizer = AutoTokenizer.from_pretrained(path)
             model = AutoModelForCausalLM.from_pretrained(path)
 
+            # Device-aware placement
+            size_mb = self._estimate_model_size(model)
+            if self.device_manager:
+                target_device = self.device_manager.best_device_for("inference", size_mb)
+            else:
+                import torch
+
+                target_device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            model = model.to(target_device)
+            logger.info("Placed transformers model %s on %s (%d MB)", model_id, target_device, size_mb)
+
             loaded = LoadedModel(
                 model_id=model_id,
                 model=model,
                 tokenizer=tokenizer,
                 backend="transformers",
+                device=target_device,
+                model_size_mb=size_mb,
             )
 
         self._loaded[model_id] = loaded
@@ -248,9 +287,98 @@ class ModelRegistry:
         """
         if model_id in self._loaded:
             del self._loaded[model_id]
+            import gc
+
+            gc.collect()
+            try:
+                import torch
+
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except ImportError:
+                pass
             logger.info("Unloaded model: %s", model_id)
             return True
         return False
+
+    async def migrate_model(self, model_id: str, target_device: str) -> dict[str, Any]:
+        """
+        Move a loaded model to a different device at runtime.
+
+        Args:
+            model_id: The model to migrate.
+            target_device: Target device string, e.g. "cpu", "cuda:0".
+
+        Returns:
+            Dict with status, model_id, previous_device, new_device.
+        """
+        loaded = self._loaded.get(model_id)
+        if loaded is None:
+            raise ValueError(f"Model not loaded: {model_id}")
+
+        prev_device = loaded.device
+        if prev_device == target_device:
+            return {
+                "status": "already_on_device",
+                "model_id": model_id,
+                "device": target_device,
+            }
+
+        import gc
+
+        if loaded.backend == "llama.cpp":
+            # llama.cpp doesn't support .to() — must reload with different n_gpu_layers
+            from llama_cpp import Llama  # type: ignore
+
+            old_model = loaded.model
+            model_path = old_model.model_path
+            n_ctx = old_model.n_ctx()
+            n_gpu_layers = -1 if "cuda" in target_device else 0
+
+            del old_model
+            gc.collect()
+            try:
+                import torch
+
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except ImportError:
+                pass
+
+            new_model = Llama(
+                model_path=model_path,
+                n_gpu_layers=n_gpu_layers,
+                n_ctx=n_ctx,
+                verbose=True,
+            )
+            loaded.model = new_model
+            loaded.device = target_device
+        else:
+            # transformers: straightforward .to()
+            import torch
+
+            loaded.model = loaded.model.to(target_device)
+            loaded.device = target_device
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+        logger.info("Migrated %s: %s -> %s", model_id, prev_device, target_device)
+        return {
+            "status": "migrated",
+            "model_id": model_id,
+            "previous_device": prev_device,
+            "new_device": target_device,
+        }
+
+    @staticmethod
+    def _estimate_model_size(model: Any) -> int:
+        """Estimate model size in MB from parameter count."""
+        try:
+            param_bytes = sum(p.nelement() * p.element_size() for p in model.parameters())
+            return param_bytes // (1024 * 1024)
+        except Exception:
+            return 0
 
     async def download_model(
         self, model_id: str, progress_callback: Callable[[dict[str, Any]], Any] | None = None

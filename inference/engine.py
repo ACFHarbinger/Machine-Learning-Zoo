@@ -581,6 +581,46 @@ Available tools:
     async def _complete_local_stream(
         self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
     ):
+        """Complete using local model with streaming, with OOM auto-fallback to CPU."""
+        try:
+            async for token in self._complete_local_stream_inner(
+                prompt, model_id, max_tokens, temperature
+            ):
+                yield token
+        except RuntimeError as e:
+            if "out of memory" not in str(e).lower():
+                raise
+
+            resolved_id = model_id or "default"
+            model = self.registry.get_model(resolved_id)
+            if model is None or model.device == "cpu":
+                raise  # Already on CPU or not loaded — nothing we can do
+
+            logger.warning(
+                "CUDA OOM on model %s (device=%s). Auto-migrating to CPU and retrying.",
+                resolved_id,
+                model.device,
+            )
+
+            import gc
+            gc.collect()
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except ImportError:
+                pass
+
+            await self.registry.migrate_model(resolved_id, "cpu")
+
+            async for token in self._complete_local_stream_inner(
+                prompt, model_id, max_tokens, temperature
+            ):
+                yield token
+
+    async def _complete_local_stream_inner(
+        self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
+    ):
         """Complete using local model with streaming."""
         model = self.registry.get_model(model_id or "default")
         if model is None:

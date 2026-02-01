@@ -32,11 +32,20 @@ class TrainingService:
     - Stopping running jobs
     - Querying run status
     - Listing historical runs
+    - Deploying trained models as inference tools
+    - Running predictions on deployed models
     """
 
-    def __init__(self, output_dir: str = "~/.pi-assistant/models") -> None:
+    def __init__(
+        self,
+        output_dir: str = "~/.pi-assistant/models",
+        registry: Any | None = None,
+        device_manager: Any | None = None,
+    ) -> None:
         self.output_dir = Path(output_dir).expanduser()
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.registry = registry
+        self.device_manager = device_manager
 
         # Active runs
         self._runs: dict[str, RunInfo] = {}
@@ -69,6 +78,10 @@ class TrainingService:
                         metrics=run_data.get("metrics", {}),
                         error=run_data.get("error"),
                         model_path=run_data.get("model_path"),
+                        tool_name=run_data.get("tool_name"),
+                        deployed=run_data.get("deployed", False),
+                        deploy_device=run_data.get("deploy_device"),
+                        task_type=run_data.get("task_type"),
                     )
             except Exception as e:
                 logger.warning(f"Failed to load run history: {e}")
@@ -89,6 +102,10 @@ class TrainingService:
                     "metrics": run.metrics,
                     "error": run.error,
                     "model_path": run.model_path,
+                    "tool_name": run.tool_name,
+                    "deployed": run.deployed,
+                    "deploy_device": run.deploy_device,
+                    "task_type": run.task_type,
                 }
                 for run in self._runs.values()
             ]
@@ -196,6 +213,18 @@ class TrainingService:
             run_info.completed_at = datetime.now()
             run_info.metrics = result
             run_info.model_path = str(self.output_dir / run_id / "best_model.pt")
+            run_info.task_type = config.get("head", "classification")
+
+            # Cleanup GPU memory after training
+            del model, trainer
+            import gc
+
+            gc.collect()
+            try:
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except Exception:
+                pass
 
             logger.info(f"Training completed: {run_id}")
 
@@ -260,6 +289,10 @@ class TrainingService:
             "metrics": run.metrics,
             "error": run.error,
             "model_path": run.model_path,
+            "tool_name": run.tool_name,
+            "deployed": run.deployed,
+            "deploy_device": run.deploy_device,
+            "task_type": run.task_type,
         }
 
     async def list_runs(self) -> list[dict[str, Any]]:
@@ -270,3 +303,185 @@ class TrainingService:
             List of run status dicts
         """
         return [await self.status(run_id) for run_id in sorted(self._runs.keys(), reverse=True)]
+
+    async def deploy(
+        self, run_id: str, tool_name: str, device: str | None = None
+    ) -> dict[str, Any]:
+        """
+        Deploy a trained model as an inference tool.
+
+        Loads the checkpoint, rebuilds the model, and registers it in the model registry
+        so it can be used for predictions via the agent's tool system.
+
+        Args:
+            run_id: ID of the completed training run.
+            tool_name: Name to register the deployed model under.
+            device: Target device (e.g. "cpu", "cuda:0"). Auto-selected if None.
+
+        Returns:
+            Dict with deployment status.
+        """
+        if self.registry is None:
+            raise ValueError("ModelRegistry not available — cannot deploy")
+
+        run = self._runs.get(run_id)
+        if run is None:
+            raise ValueError(f"Run not found: {run_id}")
+        if run.status != RunStatus.COMPLETED:
+            raise ValueError(f"Run {run_id} is not completed (status={run.status.value})")
+        if not run.model_path:
+            raise ValueError(f"Run {run_id} has no saved model path")
+
+        import torch
+
+        from pi_sidecar.models.composed import build_model
+
+        checkpoint_path = Path(run.model_path)
+        if not checkpoint_path.exists():
+            raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
+
+        # Rebuild model architecture from run config
+        model = build_model(
+            backbone_name=run.config.get("backbone", "transformer"),
+            head_name=run.config.get("head", "classification"),
+            backbone_config=run.config.get("backbone_config", {}),
+            head_config=run.config.get("head_config", {}),
+        )
+
+        # Load trained weights
+        state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        model.load_state_dict(state_dict)
+        model.eval()
+
+        # Determine target device
+        if device is None:
+            if self.device_manager:
+                size_mb = sum(
+                    p.nelement() * p.element_size() for p in model.parameters()
+                ) // (1024 * 1024)
+                device = self.device_manager.best_device_for("inference", size_mb)
+            else:
+                device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+        model = model.to(device)
+
+        # Register as a LoadedModel in the registry
+        try:
+            from ..configs.sidecar_model import LoadedModel
+        except ImportError:
+            from pi_sidecar.configs.sidecar_model import LoadedModel
+
+        size_mb = sum(
+            p.nelement() * p.element_size() for p in model.parameters()
+        ) // (1024 * 1024)
+
+        loaded = LoadedModel(
+            model_id=tool_name,
+            model=model,
+            tokenizer=None,
+            backend="transformers",
+            device=device,
+            model_size_mb=size_mb,
+            metadata={
+                "run_id": run_id,
+                "task_type": run.task_type,
+                "config": run.config,
+            },
+        )
+        self.registry._loaded[tool_name] = loaded
+
+        # Update run info
+        run.tool_name = tool_name
+        run.deployed = True
+        run.deploy_device = device
+        self._save_history()
+
+        logger.info("Deployed run %s as tool '%s' on %s (%d MB)", run_id, tool_name, device, size_mb)
+        return {
+            "status": "deployed",
+            "run_id": run_id,
+            "tool_name": tool_name,
+            "device": device,
+            "model_size_mb": size_mb,
+            "task_type": run.task_type,
+        }
+
+    async def predict(self, tool_name: str, input_data: Any) -> dict[str, Any]:
+        """
+        Run inference on a deployed model.
+
+        Args:
+            tool_name: Name of the deployed model tool.
+            input_data: Input data (list of numbers, list of lists, etc.).
+
+        Returns:
+            Dict with prediction results.
+        """
+        if self.registry is None:
+            raise ValueError("ModelRegistry not available — cannot predict")
+
+        loaded = self.registry.get_model(tool_name)
+        if loaded is None:
+            raise ValueError(f"Deployed model not found: {tool_name}")
+
+        import torch
+
+        model = loaded.model
+        model.eval()
+
+        # Convert input to tensor
+        if isinstance(input_data, list):
+            tensor_input = torch.tensor(input_data, dtype=torch.float32)
+        else:
+            raise ValueError(f"Unsupported input_data type: {type(input_data)}")
+
+        # Ensure correct shape (add batch dim if needed)
+        if tensor_input.dim() == 1:
+            tensor_input = tensor_input.unsqueeze(0)
+        elif tensor_input.dim() == 2:
+            tensor_input = tensor_input.unsqueeze(0)
+
+        tensor_input = tensor_input.to(loaded.device)
+
+        with torch.no_grad():
+            output = model(tensor_input)
+
+        # Post-process based on task type
+        task_type = loaded.metadata.get("task_type", "classification")
+        if task_type == "classification":
+            probs = torch.softmax(output, dim=-1)
+            predicted_class = int(torch.argmax(probs, dim=-1).item())
+            confidence = float(probs[0, predicted_class].item())
+            return {
+                "prediction": predicted_class,
+                "confidence": confidence,
+                "probabilities": probs[0].tolist(),
+                "tool_name": tool_name,
+                "task_type": task_type,
+            }
+        else:
+            # Regression or raw output
+            return {
+                "output": output.tolist(),
+                "tool_name": tool_name,
+                "task_type": task_type,
+            }
+
+    def list_deployed(self) -> list[dict[str, Any]]:
+        """List all deployed model tools."""
+        deployed = []
+        for run in self._runs.values():
+            if run.deployed and run.tool_name:
+                deployed.append({
+                    "run_id": run.run_id,
+                    "tool_name": run.tool_name,
+                    "deploy_device": run.deploy_device,
+                    "task_type": run.task_type,
+                    "metrics": run.metrics,
+                    "loaded": (
+                        self.registry.get_model(run.tool_name) is not None
+                        if self.registry
+                        else False
+                    ),
+                })
+        return deployed

@@ -8,6 +8,7 @@ from pi_sidecar.ipc.ndjson_transport import NdjsonTransport
 from pi_sidecar.inference.engine import InferenceEngine
 from pi_sidecar.models.sidecar_registry import ModelRegistry
 from pi_sidecar.training import TrainingService
+from pi_sidecar.device import DeviceManager
 
 logging.basicConfig(
     stream=sys.stderr,
@@ -18,10 +19,18 @@ logger = logging.getLogger(__name__)
 
 
 class MlRequestHandler:
-    def __init__(self, engine: InferenceEngine, registry: ModelRegistry):
+    def __init__(
+        self,
+        engine: InferenceEngine,
+        registry: ModelRegistry,
+        device_manager: DeviceManager,
+    ):
         self.engine = engine
         self.registry = registry
-        self.training = TrainingService()
+        self.device_manager = device_manager
+        self.training = TrainingService(
+            registry=registry, device_manager=device_manager
+        )
         self._handlers = {
             "health.ping": self._health_ping,
             "lifecycle.shutdown": self._lifecycle_shutdown,
@@ -33,10 +42,16 @@ class MlRequestHandler:
             "model.load": self._model_load,
             "model.unload": self._model_unload,
             "model.download": self._model_download,
+            "model.migrate": self._model_migrate,
+            "device.info": self._device_info,
+            "device.refresh": self._device_refresh,
             "training.start": self._training_start,
             "training.stop": self._training_stop,
             "training.status": self._training_status,
             "training.list": self._training_list,
+            "training.deploy": self._training_deploy,
+            "training.predict": self._training_predict,
+            "training.list_deployed": self._training_list_deployed,
             "voice.synthesize": self._voice_synthesize,
             "voice.transcribe": self._voice_transcribe,
             "personality.hatch_chat": self._personality_hatch_chat,
@@ -97,6 +112,25 @@ class MlRequestHandler:
         result = await self.registry.download_model(p["model_id"], progress_callback=cb)
         return result
 
+    # ── Device handlers ─────────────────────────────────────────
+
+    async def _device_info(self, p, _cb):
+        return self.device_manager.to_dict()
+
+    async def _device_refresh(self, p, _cb):
+        memory = self.device_manager.refresh_memory()
+        return {"memory": memory}
+
+    # ── Model migration handler ──────────────────────────────────
+
+    async def _model_migrate(self, p, _cb):
+        result = await self.registry.migrate_model(
+            p["model_id"], p["target_device"]
+        )
+        return result
+
+    # ── Training handlers ────────────────────────────────────────
+
     async def _training_start(self, p, _cb):
         return {"run_id": await self.training.start(p), "status": "started"}
 
@@ -108,6 +142,35 @@ class MlRequestHandler:
 
     async def _training_list(self, p, _cb):
         return {"runs": await self.training.list_runs()}
+
+    async def _training_deploy(self, p, _cb):
+        result = await self.training.deploy(
+            run_id=p["run_id"],
+            tool_name=p["tool_name"],
+            device=p.get("device"),
+        )
+        return result
+
+    async def _training_predict(self, p, _cb):
+        result = await self.training.predict(
+            tool_name=p["tool_name"],
+            input_data=p["input"],
+        )
+        return result
+
+    async def _training_list_deployed(self, p, _cb):
+        deployed = [
+            {
+                "run_id": r.run_id,
+                "tool_name": r.tool_name,
+                "device": r.deploy_device,
+                "task_type": r.task_type,
+                "metrics": r.metrics,
+            }
+            for r in self.training._runs.values()
+            if r.deployed
+        ]
+        return {"deployed_models": deployed}
 
     async def _voice_synthesize(self, p, _cb):
         from pi_sidecar.tts.elevenlabs import ElevenLabsTTS
@@ -156,9 +219,14 @@ class MlRequestHandler:
 
 async def main():
     logger.info("ML sidecar starting")
-    registry = ModelRegistry()
+
+    # Probe hardware before anything else
+    device_manager = DeviceManager()
+    device_manager.probe()
+
+    registry = ModelRegistry(device_manager=device_manager)
     engine = InferenceEngine(registry)
-    handler = MlRequestHandler(engine, registry)
+    handler = MlRequestHandler(engine, registry, device_manager)
     transport = NdjsonTransport()
     async for request in transport.read_requests():
         asyncio.create_task(_handle_request(handler, transport, request))
