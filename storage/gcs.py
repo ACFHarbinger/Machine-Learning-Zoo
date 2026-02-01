@@ -6,7 +6,7 @@ import json
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
 
-from python.src.storage.base import ModelMetadata, ModelStorage, StorageConfig
+from .base import ModelMetadata, ModelStorage, StorageConfig
 
 if TYPE_CHECKING:
     pass
@@ -25,9 +25,7 @@ class GCSStorage(ModelStorage):
     @property
     def client(
         self,
-    ) -> (
-        Any
-    ):  # Use Any to avoid mandatory google-cloud-storage dependency for type checking
+    ) -> Any:  # Use Any to avoid mandatory google-cloud-storage dependency for type checking
         """Lazy initialization of GCS client."""
         if self._client is None:
             try:
@@ -142,9 +140,7 @@ class GCSStorage(ModelStorage):
         # Download from GCS
         blob = self.bucket.blob(self._model_path(name, version))
         if not blob.exists():
-            raise FileNotFoundError(
-                f"Model '{name}' version '{version}' not found in GCS"
-            )
+            raise FileNotFoundError(f"Model '{name}' version '{version}' not found in GCS")
 
         compressed_data = blob.download_as_bytes()
         data = self._decompress(compressed_data)
@@ -225,9 +221,7 @@ class GCSStorage(ModelStorage):
 
         blob = self.bucket.blob(self._metadata_path(name, version))
         if not blob.exists():
-            raise FileNotFoundError(
-                f"Metadata for '{name}' version '{version}' not found in GCS"
-            )
+            raise FileNotFoundError(f"Metadata for '{name}' version '{version}' not found in GCS")
 
         data = json.loads(blob.download_as_text())
         return ModelMetadata(**data)

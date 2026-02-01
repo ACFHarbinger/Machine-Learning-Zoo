@@ -2,7 +2,7 @@
 Simple SMA Crossover strategy for backtest verification.
 """
 
-from python.src.backtesting.strategy import BaseStrategy
+from .strategy import BaseStrategy
 
 
 class SMACrossoverStrategy(BaseStrategy):

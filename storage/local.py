@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from python.src.storage.base import ModelMetadata, ModelStorage, StorageConfig
+from .base import ModelMetadata, ModelStorage, StorageConfig
 
 
 class LocalStorage(ModelStorage):
@@ -131,9 +131,7 @@ class LocalStorage(ModelStorage):
         if not self.base_path.exists():
             return []
         return [
-            d.name
-            for d in self.base_path.iterdir()
-            if d.is_dir() and not d.name.startswith(".")
+            d.name for d in self.base_path.iterdir() if d.is_dir() and not d.name.startswith(".")
         ]
 
     def list_versions(self, name: str) -> list[str]:
@@ -155,9 +153,7 @@ class LocalStorage(ModelStorage):
 
         meta_path = self._metadata_path(name, version)
         if not meta_path.exists():
-            raise FileNotFoundError(
-                f"Metadata for '{name}' version '{version}' not found"
-            )
+            raise FileNotFoundError(f"Metadata for '{name}' version '{version}' not found")
 
         with open(meta_path) as f:
             data = json.load(f)

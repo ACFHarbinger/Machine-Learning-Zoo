@@ -2,10 +2,10 @@
 Factory function for creating storage backends.
 """
 
-from python.src.storage.base import ModelStorage, StorageConfig
-from python.src.storage.gcs import GCSStorage
-from python.src.storage.local import LocalStorage
-from python.src.storage.s3 import S3Storage
+from .base import ModelStorage, StorageConfig
+from .gcs import GCSStorage
+from .local import LocalStorage
+from .s3 import S3Storage
 
 
 def create_storage(config: StorageConfig | None = None) -> ModelStorage:
@@ -37,6 +37,4 @@ def create_storage(config: StorageConfig | None = None) -> ModelStorage:
             raise ValueError("GCS bucket name is required for GCS storage")
         return GCSStorage(config)
     else:
-        raise ValueError(
-            f"Unknown storage type: {storage_type}. Supported types: local, s3, gcs"
-        )
+        raise ValueError(f"Unknown storage type: {storage_type}. Supported types: local, s3, gcs")

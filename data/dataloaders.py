@@ -12,7 +12,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from python.src.data.time_series_dataset import TimeSeriesDataset
+from .time_series_dataset import TimeSeriesDataset
 
 
 class FinancialDataset(TimeSeriesDataset):

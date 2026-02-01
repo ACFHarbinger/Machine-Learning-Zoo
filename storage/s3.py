@@ -6,7 +6,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any, cast
 
-from python.src.storage.base import ModelMetadata, ModelStorage, StorageConfig
+from .base import ModelMetadata, ModelStorage, StorageConfig
 
 
 class S3Storage(ModelStorage):
@@ -44,8 +44,7 @@ class S3Storage(ModelStorage):
                     self._client = boto3.client("s3", config=boto_config)
             except ImportError:
                 raise ImportError(
-                    "boto3 is required for S3 storage. "
-                    "Install it with: pip install boto3"
+                    "boto3 is required for S3 storage. Install it with: pip install boto3"
                 ) from None
         return self._client
 
@@ -146,9 +145,7 @@ class S3Storage(ModelStorage):
             response = self.client.get_object(Bucket=self._bucket, Key=model_key)
             compressed_data = response["Body"].read()
         except self.client.exceptions.NoSuchKey:
-            raise FileNotFoundError(
-                f"Model '{name}' version '{version}' not found in S3"
-            ) from None
+            raise FileNotFoundError(f"Model '{name}' version '{version}' not found in S3") from None
 
         data = self._decompress(compressed_data)
 

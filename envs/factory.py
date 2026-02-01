@@ -1,9 +1,8 @@
-
 from __future__ import annotations
 
 from typing import Any
 
-from python.src.utils.registry import ENV_REGISTRY
+from ..utils.registry import ENV_REGISTRY
 
 
 class EnvFactory:
