@@ -57,8 +57,18 @@ class MlRequestHandler:
         asyncio.get_event_loop().call_later(0.5, sys.exit, 0)
         return {"status": "shutting_down"}
 
-    async def _inference_complete(self, p, _cb):
-        return await self.engine.complete(**p)
+    async def _inference_complete(self, p, cb):
+        if p.get("stream"):
+            text = ""
+            async for token in self.engine.complete_stream(
+                **{k: v for k, v in p.items() if k != "stream"}
+            ):
+                text += token
+                if cb:
+                    await cb({"token": token, "is_streaming": True})
+            return {"text": text}
+        else:
+            return await self.engine.complete(**p)
 
     async def _inference_embed(self, p, _cb):
         vector = await self.engine.embed(
@@ -124,12 +134,24 @@ class MlRequestHandler:
             role = msg.get("role", "user")
             content = msg.get("content", "")
             prompt += f"[{role}]: {content}\n"
-        result = await self.engine.complete(
-            prompt=prompt,
-            provider=p.get("provider", "local"),
-            model_id=p.get("model_id"),
-        )
-        return {"text": result.get("text", "")}
+        if p.get("stream"):
+            text = ""
+            async for token in self.engine.complete_stream(
+                prompt=prompt,
+                provider=p.get("provider", "local"),
+                model_id=p.get("model_id"),
+            ):
+                text += token
+                if _cb:
+                    await _cb({"token": token, "is_streaming": True})
+            return {"text": text}
+        else:
+            result = await self.engine.complete(
+                prompt=prompt,
+                provider=p.get("provider", "local"),
+                model_id=p.get("model_id"),
+            )
+            return {"text": result.get("text", "")}
 
 
 async def main():

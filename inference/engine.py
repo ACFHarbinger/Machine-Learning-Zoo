@@ -9,7 +9,6 @@ Supports:
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 from pathlib import Path
@@ -122,14 +121,35 @@ class InferenceEngine:
     ) -> dict[str, Any]:
         """
         Generate text completion from specified provider.
-        Args:
-            prompt: The prompt to use for text completion.
-            provider: The provider to use for text completion.
-            model_id: The model ID to use for text completion.
-            max_tokens: The maximum number of tokens to generate.
-            temperature: The temperature to use for text completion.
-        Returns:
-            A dictionary containing the text completion.
+        """
+        # For backward compatibility, we await the full stream
+        text = ""
+        async for chunk in self.complete_stream(
+            prompt=prompt,
+            provider=provider,
+            model_id=model_id,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        ):
+            text += chunk
+
+        return {
+            "text": text,
+            "provider": provider,
+            "model": model_id,
+        }
+
+    async def complete_stream(
+        self,
+        prompt: str,
+        provider: str = "local",
+        model_id: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.7,
+    ):
+        """
+        Generate streaming text completion from specified provider.
+        Yields tokens one by one.
         """
         if provider == "anthropic":
             secrets = self._load_secrets()
@@ -139,27 +159,34 @@ class InferenceEngine:
             )
 
             if has_claude_max:
-                try:
-                    return await self._complete_claude_max(
-                        prompt, model_id, max_tokens, temperature
-                    )
-                except Exception as e:
-                    logger.warning("Claude Max direct API failed: %s", e)
-                    if has_antigravity_tokens:
-                        logger.info("Falling back to Antigravity Gateway")
-                        model = model_id or "claude-3-5-sonnet-v2@20241022"
-                        return await self._complete_gemini(prompt, model, max_tokens, temperature)
-                    raise
+                # Direct Claude Max streaming is complex due to httpx
+                # We'll fallback to non-streaming for now or implement if possible
+                async for token in self._complete_claude_max_stream(
+                    prompt, model_id, max_tokens, temperature
+                ):
+                    yield token
             elif has_antigravity_tokens:
                 logger.info("Routing Anthropic request via Antigravity Gateway")
                 model = model_id or "claude-3-5-sonnet-v2@20241022"
-                return await self._complete_gemini(prompt, model, max_tokens, temperature)
+                async for token in self._complete_gemini_stream(
+                    prompt, model, max_tokens, temperature
+                ):
+                    yield token
             else:
-                return await self._complete_anthropic(prompt, model_id, max_tokens, temperature)
+                async for token in self._complete_anthropic_stream(
+                    prompt, model_id, max_tokens, temperature
+                ):
+                    yield token
         elif provider == "google":
-            return await self._complete_gemini(prompt, model_id, max_tokens, temperature)
+            async for token in self._complete_gemini_stream(
+                prompt, model_id, max_tokens, temperature
+            ):
+                yield token
         else:
-            return await self._complete_local(prompt, model_id, max_tokens, temperature)
+            async for token in self._complete_local_stream(
+                prompt, model_id, max_tokens, temperature
+            ):
+                yield token
 
     async def plan(
         self,
@@ -168,6 +195,7 @@ class InferenceEngine:
         context: list[dict],
         tools: list[dict] = [],
         provider: str = "local",
+        model_id: str | None = None,
     ) -> dict[str, Any]:
         """
         Generate agent plan using structured output.
@@ -221,6 +249,7 @@ Available tools:
         result = await self.complete(
             prompt=f"{system_prompt}\n\n{prompt}",
             provider=provider,
+            model_id=model_id,
             max_tokens=1024,
             temperature=0.3,
         )
@@ -246,53 +275,41 @@ Available tools:
             "is_complete": False,
         }
 
-    async def _complete_anthropic(
+    async def _complete_anthropic_stream(
         self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
-    ) -> dict[str, Any]:
-        """
-        Complete using Anthropic Claude via standard SDK (API Key).
-        Note: OAuth traffic is routed via _complete_gemini.
-        """
-        import os
-
-        # If we got here, we are using standard API Key
+    ):
+        """Complete using Anthropic Claude via standard SDK with streaming."""
         if self._anthropic_client is None:
             import anthropic
 
             api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
-                secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
-                if secrets_path.exists():
-                    try:
-                        with open(secrets_path) as f:
-                            secrets = json.load(f)
-                            api_key = secrets.get("anthropic")
-                    except (json.JSONDecodeError, OSError):
-                        pass
-
+                secrets = self._load_secrets()
+                api_key = secrets.get("anthropic")
             if not api_key:
                 raise ValueError("ANTHROPIC_API_KEY not set")
-
             self._anthropic_client = anthropic.AsyncAnthropic(api_key=api_key)
 
         model = model_id or "claude-3-5-sonnet-latest"
-        logger.info("Calling Anthropic SDK: %s", model)
-
-        response = await self._anthropic_client.messages.create(
+        async with self._anthropic_client.messages.stream(
             model=model,
             max_tokens=max_tokens,
             messages=[{"role": "user", "content": prompt}],
-        )
+        ) as stream:
+            async for event in stream:
+                if event.type == "content_block_delta" and event.delta.type == "text_delta":
+                    yield event.delta.text
 
-        return {
-            "text": response.content[0].text,
-            "provider": "anthropic",
-            "model": model,
-            "usage": {
-                "input_tokens": response.usage.input_tokens,
-                "output_tokens": response.usage.output_tokens,
-            },
-        }
+    async def _complete_anthropic(
+        self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
+    ) -> dict[str, Any]:
+        """Backward compatible non-streaming call."""
+        text = ""
+        async for chunk in self._complete_anthropic_stream(
+            prompt, model_id, max_tokens, temperature
+        ):
+            text += chunk
+        return {"text": text, "provider": "anthropic", "model": model_id}
 
     async def _refresh_claude_max_token(self) -> str:
         """Refresh Claude Max OAuth token and return new access token."""
@@ -332,6 +349,12 @@ Available tools:
 
             logger.info("Claude Max token refreshed successfully")
             return new_token
+
+    async def _complete_claude_max_stream(self, prompt, model_id, max_tokens, temperature):
+        """Simulate streaming for Claude Max by just yielding the full response for now."""
+        # TODO: Implement true streaming for Claude Max using httpx-sse if needed
+        res = await self._complete_claude_max(prompt, model_id, max_tokens, temperature)
+        yield res.get("text", "")
 
     async def _complete_claude_max(
         self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
@@ -417,6 +440,15 @@ Available tools:
                     "output_tokens": usage.get("output_tokens", 0),
                 },
             }
+
+    async def _complete_gemini_stream(
+        self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
+    ):
+        """Antigravity streaming - if supported, otherwise yields full response."""
+        # For now, Antigravity doesn't have a known public SSE endpoint for this internal API
+        # We'll just yield the full response to keep the interface consistent
+        res = await self._complete_gemini(prompt, model_id, max_tokens, temperature)
+        yield res.get("text", "")
 
     async def _complete_gemini(
         self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
@@ -546,57 +578,56 @@ Available tools:
                 logger.error(f"Antigravity call failed: {e}")
                 raise
 
-    async def _complete_local(
+    async def _complete_local_stream(
         self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
-    ) -> dict[str, Any]:
-        """
-        Complete using local model (transformers or llama.cpp).
-        Args:
-            prompt: The prompt to use for text completion.
-            model_id: The model ID to use for text completion.
-            max_tokens: The maximum number of tokens to generate.
-            temperature: The temperature to use for text completion.
-        Returns:
-            A dictionary containing the text completion.
-        """
+    ):
+        """Complete using local model with streaming."""
         model = self.registry.get_model(model_id or "default")
         if model is None:
-            logger.warning("No local model loaded, returning placeholder")
-            return {
-                "text": "[Local model not loaded. Please load a model first.]",
-                "provider": "local",
-                "model": None,
-            }
+            yield "[Local model not loaded]"
+            return
 
         if model.backend == "llama.cpp":
-            # Use llama.cpp
-            response = model.model(
+            # Use llama.cpp with stream=True
+            stream = model.model(
                 prompt,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                stop=["</s>", "User:", "Assistant:"],  # Basic stop tokens
+                stop=["</s>", "User:", "Assistant:"],
+                stream=True,
             )
-            return {
-                "text": response["choices"][0]["text"],
-                "provider": "local",
-                "model": model_id,
-                "backend": "llama.cpp",
-            }
+            for chunk in stream:
+                token = chunk["choices"][0].get("text", "")
+                if token:
+                    yield token
         else:
-            # Use transformers pipeline
-            from transformers import pipeline
+            # For transformers, use TextIteratorStreamer
+            from transformers import TextIteratorStreamer
+            from threading import Thread
 
-            generator = pipeline("text-generation", model=model.model, tokenizer=model.tokenizer)
-            result = generator(
-                prompt,
+            assert model.tokenizer is not None, "Tokenizer must be loaded for transformers backend"
+            assert model.model is not None, "Model must be loaded for transformers backend"
+
+            streamer = TextIteratorStreamer(model.tokenizer, skip_prompt=True)
+            generation_kwargs = dict(
+                input_ids=model.tokenizer(prompt, return_tensors="pt").input_ids.to(
+                    model.model.device
+                ),
+                streamer=streamer,
                 max_new_tokens=max_tokens,
                 temperature=temperature,
                 do_sample=True,
             )
+            thread = Thread(target=model.model.generate, kwargs=generation_kwargs)
+            thread.start()
+            for token in streamer:
+                yield token
 
-            return {
-                "text": result[0]["generated_text"][len(prompt) :],
-                "provider": "local",
-                "model": model_id,
-                "backend": "transformers",
-            }
+    async def _complete_local(
+        self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
+    ) -> dict[str, Any]:
+        """Backward compatible non-streaming local call."""
+        text = ""
+        async for chunk in self._complete_local_stream(prompt, model_id, max_tokens, temperature):
+            text += chunk
+        return {"text": text, "provider": "local", "model": model_id}
