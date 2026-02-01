@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import sys
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from pi_sidecar.ipc.ndjson_transport import NdjsonTransport
 from pi_sidecar.ml.inference.engine import InferenceEngine

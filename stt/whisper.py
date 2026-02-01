@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+
 from faster_whisper import WhisperModel
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ class WhisperSTT:
         self.model_size = model_size
         self.device = device
         self.compute_type = compute_type
-        self._model: Optional[WhisperModel] = None
+        self._model: WhisperModel | None = None
 
     def _ensure_model(self):
         if self._model is None:
@@ -26,7 +26,7 @@ class WhisperSTT:
                 self.model_size, device=self.device, compute_type=self.compute_type
             )
 
-    async def transcribe(self, audio_path: str) -> Optional[str]:
+    async def transcribe(self, audio_path: str) -> str | None:
         """
         Transcribe an audio file.
         """

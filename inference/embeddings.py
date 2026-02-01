@@ -1,6 +1,5 @@
 """Embedding generation using sentence-transformers."""
 
-from typing import List, Optional
 
 
 class EmbeddingEngine:
@@ -34,7 +33,7 @@ class EmbeddingEngine:
         except ImportError:
             raise RuntimeError("sentence-transformers not installed")
 
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         """
         Generate embedding for a single text.
         Args:
@@ -49,7 +48,7 @@ class EmbeddingEngine:
         embedding = self.model.encode(text, convert_to_numpy=True)
         return embedding.tolist()
 
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """
         Generate embeddings for multiple texts.
         Args:
@@ -79,7 +78,7 @@ class EmbeddingEngine:
 
 
 # Singleton instance
-_embedding_engine: Optional[EmbeddingEngine] = None
+_embedding_engine: EmbeddingEngine | None = None
 
 
 def get_embedding_engine() -> EmbeddingEngine:

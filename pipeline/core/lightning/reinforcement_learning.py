@@ -1,3 +1,4 @@
+
 """
 Reinforcement Learning Module for NGLab.
 
@@ -14,7 +15,8 @@ from torchrl.collectors import SyncDataCollector
 from torchrl.data import LazyTensorStorage, ReplayBuffer
 from torchrl.objectives import ClipPPOLoss, ValueEstimators
 
-from pi_sidecar.ml.utils.registry import register_pipeline
+from python.src.utils.registry import register_pipeline
+
 from .base import BaseModule
 
 

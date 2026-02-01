@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import functools
-import time
 import logging
-import psutil
 import os
-from typing import Any, Callable, TypeVar
+import time
+from collections.abc import Callable
+from typing import Any, TypeVar
+
+import psutil
 
 logger = logging.getLogger(__name__)
 

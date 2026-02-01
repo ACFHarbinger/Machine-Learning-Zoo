@@ -10,12 +10,12 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from .base import Backbone, BackboneConfig, register_backbone
 
-__all__ = ["LSTMBackboneConfig", "LSTMBackbone"]
+__all__ = ["LSTMBackbone", "LSTMBackboneConfig"]
 
 
 @dataclass

@@ -12,9 +12,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import torch
-import torch.nn as nn
+from torch import nn
 
-__all__ = ["BackboneConfig", "Backbone", "BACKBONE_REGISTRY", "register_backbone"]
+__all__ = ["BACKBONE_REGISTRY", "Backbone", "BackboneConfig", "register_backbone"]
 
 
 @dataclass

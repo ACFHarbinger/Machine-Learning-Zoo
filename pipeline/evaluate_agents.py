@@ -12,7 +12,7 @@ import numpy as np
 from stable_baselines3 import PPO, SAC
 
 from pipeline.core.train_sac import ContinuousActionWrapper
-from pi_sidecar.ml.envs import TradingEnv
+from python.src.envs import TradingEnv
 
 
 def calculate_metrics(portfolio_values: list[float]) -> dict[str, Any]:
@@ -61,7 +61,9 @@ def evaluate_agent(
         env = TradingEnv(lookback=lookback, max_steps=max_steps)
     elif agent_type.lower() == "sac":
         model = SAC.load(model_path)
-        env = ContinuousActionWrapper(TradingEnv(lookback=lookback, max_steps=max_steps))
+        env = ContinuousActionWrapper(
+            TradingEnv(lookback=lookback, max_steps=max_steps)
+        )
     else:
         raise ValueError(f"Unknown agent type: {agent_type}")
 
@@ -139,7 +141,9 @@ def main(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate trained agents")
-    parser.add_argument("--model_path", type=str, required=True, help="Path to the trained model")
+    parser.add_argument(
+        "--model_path", type=str, required=True, help="Path to the trained model"
+    )
     parser.add_argument(
         "--agent_type",
         type=str,
@@ -147,9 +151,15 @@ if __name__ == "__main__":
         choices=["ppo", "sac"],
         help="Agent type",
     )
-    parser.add_argument("--n_episodes", type=int, default=10, help="Number of evaluation episodes")
-    parser.add_argument("--lookback", type=int, default=30, help="Lookback window for observations")
-    parser.add_argument("--max_steps", type=int, default=1000, help="Max steps per episode")
+    parser.add_argument(
+        "--n_episodes", type=int, default=10, help="Number of evaluation episodes"
+    )
+    parser.add_argument(
+        "--lookback", type=int, default=30, help="Lookback window for observations"
+    )
+    parser.add_argument(
+        "--max_steps", type=int, default=1000, help="Max steps per episode"
+    )
 
     args = parser.parse_args()
     main(args)

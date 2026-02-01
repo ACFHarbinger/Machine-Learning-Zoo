@@ -54,7 +54,9 @@ class DCIGN(nn.Module):
         last_channels = latent_dim
         for h_channels in reversed(hidden_channels):
             dec_layers.append(
-                nn.ConvTranspose1d(last_channels, h_channels, kernel_size=4, stride=2, padding=1)
+                nn.ConvTranspose1d(
+                    last_channels, h_channels, kernel_size=4, stride=2, padding=1
+                )
             )
             dec_layers.append(nn.BatchNorm1d(h_channels))
             dec_layers.append(nn.ReLU())
@@ -94,7 +96,9 @@ class DCIGN(nn.Module):
         intrinsic, extrinsic = self.encode(x)
 
         should_return_embedding = (
-            return_embedding if return_embedding is not None else (self.output_type == "embedding")
+            return_embedding
+            if return_embedding is not None
+            else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

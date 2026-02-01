@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import torch
 from torch import nn
 
-from pi_sidecar.ml.models.base import BaseModel
-from pi_sidecar.ml.models.spiking.snn import LIFCell, surrogate_heaviside
+from python.src.models.base import BaseModel
+from python.src.models.spiking.snn import LIFCell, surrogate_heaviside
 
 if TYPE_CHECKING:
     pass
@@ -104,17 +104,25 @@ class LiquidStateMachine(BaseModel):
             i_inj = torch.mm(u_in, win.t())
 
             # Potential update: decay * (mem - spk * threshold) + i_inj + i_rec
-            mem = self.liquid_cell.decay * (mem - spk * self.liquid_cell.threshold) + i_inj + i_rec
+            mem = (
+                self.liquid_cell.decay * (mem - spk * self.liquid_cell.threshold)
+                + i_inj
+                + i_rec
+            )
 
             # Fire
-            spk = surrogate_heaviside(mem - self.liquid_cell.threshold, self.liquid_cell.alpha)
+            spk = surrogate_heaviside(
+                mem - self.liquid_cell.threshold, self.liquid_cell.alpha
+            )
             state = (mem, spk)
             outputs.append(spk)
 
         stacked = torch.stack(outputs, dim=1)  # (Batch, Seq, Liquid_Size)
 
         should_return_embedding = (
-            return_embedding if return_embedding is not None else (self.output_type == "embedding")
+            return_embedding
+            if return_embedding is not None
+            else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

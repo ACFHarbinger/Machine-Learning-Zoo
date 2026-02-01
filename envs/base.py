@@ -1,14 +1,15 @@
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 import torch
 
 if TYPE_CHECKING:
     from tensordict import TensorDict
 
-__all__ = ["TradingEnvBase", "EnvironmentProtocol", "SimulationProtocol"]
+__all__ = ["EnvironmentProtocol", "SimulationProtocol", "TradingEnvBase"]
 
 
 @runtime_checkable
@@ -20,7 +21,7 @@ class EnvironmentProtocol(Protocol):
     @property
     def batch_size(self) -> torch.Size: ...
 
-    def reset(self, seed: Optional[int] = None) -> TensorDict: ...
+    def reset(self, seed: int | None = None) -> TensorDict: ...
 
     def step(self, action: TensorDict) -> TensorDict: ...
 
@@ -62,12 +63,14 @@ class TradingEnvBase(ABC):
                 )
 
         if any(v <= 0 for v in value):
-            raise ValueError(f"batch_size must contain positive values. Got: {value}")
+            raise ValueError(
+                f"batch_size must contain positive values. Got: {value}"
+            )
 
         self._batch_size = value
 
     @abstractmethod
-    def reset(self, seed: Optional[int] = None) -> TensorDict:
+    def reset(self, seed: int | None = None) -> TensorDict:
         """Reset environment and return initial state."""
         pass
 

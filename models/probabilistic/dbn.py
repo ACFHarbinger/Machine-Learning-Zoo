@@ -26,7 +26,10 @@ class DeepBeliefNetwork(nn.Module):
         self.output_type = output_type
 
         self.rbms = nn.ModuleList(
-            [RBM(layer_sizes[i], layer_sizes[i + 1]) for i in range(len(layer_sizes) - 1)]
+            [
+                RBM(layer_sizes[i], layer_sizes[i + 1])
+                for i in range(len(layer_sizes) - 1)
+            ]
         )
 
     def forward(

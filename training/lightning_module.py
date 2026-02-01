@@ -1,8 +1,9 @@
 """PyTorch Lightning Module for model training."""
 
-from typing import Any, Optional
-import torch
+from typing import Any
+
 import pytorch_lightning as pl
+import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
@@ -48,7 +49,7 @@ class PiLightningModule(pl.LightningModule):
         self,
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
-        labels: Optional[torch.Tensor] = None,
+        labels: torch.Tensor | None = None,
     ) -> Any:
         """
         Forward pass.

@@ -1,3 +1,4 @@
+
 """
 Self-Supervised Learning Module for NGLab.
 
@@ -11,7 +12,8 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import nn
 
-from pi_sidecar.ml.utils.registry import register_pipeline
+from python.src.utils.registry import register_pipeline
+
 from .base import BaseModule
 
 
@@ -31,7 +33,9 @@ class SelfSupervisedModule(BaseModule):
         """
         super().__init__(cfg)
         self.backbone = backbone
-        self.head = torch.nn.Linear(int(cfg.get("hidden_dim", 128)), int(cfg.get("input_dim", 1)))
+        self.head = torch.nn.Linear(
+            int(cfg.get("hidden_dim", 128)), int(cfg.get("input_dim", 1))
+        )
         self.mask_ratio = float(cfg.get("mask_ratio", 0.15))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

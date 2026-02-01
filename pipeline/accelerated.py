@@ -7,12 +7,13 @@ Multi-GPU training with Hugging Face Accelerate and optional DeepSpeed integrati
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import OneCycleLR
 from torch.utils.data import DataLoader
@@ -30,7 +31,7 @@ from pi_sidecar.ml.pipeline.base import BaseCallback, BaseTrainer
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["AcceleratedTrainerConfig", "AcceleratedTrainer"]
+__all__ = ["AcceleratedTrainer", "AcceleratedTrainerConfig"]
 
 
 @dataclass

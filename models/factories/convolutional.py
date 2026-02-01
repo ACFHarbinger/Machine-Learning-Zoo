@@ -1,16 +1,17 @@
+
 from __future__ import annotations
 
 from typing import Any
 
-import torch.nn as nn
+from torch import nn
 
-from pi_sidecar.ml.models.convolutional.cnn import CNN
-from pi_sidecar.ml.models.convolutional.resnet import ResNet
-from pi_sidecar.ml.models.convolutional.capsule import CapsuleNet
-from pi_sidecar.ml.models.convolutional.dcign import DCIGN
-from pi_sidecar.ml.models.convolutional.dcn import DCN
-from pi_sidecar.ml.models.convolutional.deconv import DeconvNet
-from pi_sidecar.ml.models.factories.base import NeuralComponentFactory
+from python.src.models.convolutional.capsule import CapsuleNet
+from python.src.models.convolutional.cnn import CNN
+from python.src.models.convolutional.dcign import DCIGN
+from python.src.models.convolutional.dcn import DCN
+from python.src.models.convolutional.deconv import DeconvNet
+from python.src.models.convolutional.resnet import ResNet
+from python.src.models.factories.base import NeuralComponentFactory
 
 
 class ConvolutionalFactory(NeuralComponentFactory):

@@ -8,6 +8,7 @@ Provides a unified interface for accessing secrets from multiple backends
 import logging
 import os
 from typing import Any
+
 from pi_sidecar.ml.configs.security import VaultConfig
 
 logger = logging.getLogger(__name__)

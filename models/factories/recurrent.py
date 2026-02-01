@@ -1,15 +1,16 @@
+
 from __future__ import annotations
 
 from typing import Any
 
-import torch.nn as nn
+from torch import nn
 
-from pi_sidecar.ml.models.recurrent.esn import EchoStateNetwork as ESN
-from pi_sidecar.ml.models.recurrent.lsm import LSM
-from pi_sidecar.ml.models.recurrent.rnn import LSTM, GRU
-from pi_sidecar.ml.models.recurrent.tsmamba import TSMamba
-from pi_sidecar.ml.models.recurrent.xlstm import xLSTM
-from pi_sidecar.ml.models.factories.base import NeuralComponentFactory
+from python.src.models.factories.base import NeuralComponentFactory
+from python.src.models.recurrent.esn import EchoStateNetwork as ESN
+from python.src.models.recurrent.lsm import LSM
+from python.src.models.recurrent.rnn import GRU, LSTM
+from python.src.models.recurrent.tsmamba import TSMamba
+from python.src.models.recurrent.xlstm import xLSTM
 
 
 class RecurrentFactory(NeuralComponentFactory):
@@ -33,5 +34,6 @@ class RecurrentFactory(NeuralComponentFactory):
             return LSM(**kwargs)
         else:
             raise ValueError(
-                f"Unknown recurrent model: {name}. Available: lstm, gru, xlstm, mamba, esn, lsm"
+                f"Unknown recurrent model: {name}. "
+                f"Available: lstm, gru, xlstm, mamba, esn, lsm"
             )

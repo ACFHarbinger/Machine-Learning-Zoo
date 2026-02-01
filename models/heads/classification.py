@@ -10,12 +10,12 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 from .base import Head, HeadConfig, register_head
 
-__all__ = ["ClassificationHeadConfig", "ClassificationHead"]
+__all__ = ["ClassificationHead", "ClassificationHeadConfig"]
 
 
 @dataclass

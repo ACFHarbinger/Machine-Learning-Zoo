@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from python.src.utils.registry import register_model
 
+from .base import BaseModel
 from .deep_factory import DEEP_MODEL_NAMES, create_deep_model
 from .mac_factory import MAC_MODEL_NAMES, create_mac_model
-from .base import BaseModel
-from pi_sidecar.ml.utils.registry import register_model
 
 if TYPE_CHECKING:
     from tensordict import TensorDict
@@ -43,17 +43,31 @@ class TimeSeriesBackbone(BaseModel):
 
         self.model = model
 
-    def forward(self, td: TensorDict, **kwargs: Any) -> TensorDict:
+    def forward(self, inputs: Any, **kwargs: Any) -> Any:
         """
-        Forward pass using TensorDict.
-
-        Args:
-            td: Input TensorDict containing 'observation'.
-            kwargs: Additional arguments (e.g., 'return_sequence').
-
-        Returns:
-            TensorDict with 'state_value' or 'embedding'.
+        Forward pass. Supports both Tensor and TensorDict.
         """
+        import torch
+
+        # Handle raw Tensor input (legacy/direct usage)
+        if isinstance(inputs, torch.Tensor):
+            obs = inputs
+
+            # Whitelist for models supporting return_sequence
+            sequence_supported = DEEP_MODEL_NAMES + MAC_MODEL_NAMES
+
+            # Merge kwargs with cfg defaults
+            forward_kwargs = {**kwargs}
+            if self.cfg.get("return_sequence", False):
+                forward_kwargs.setdefault("return_sequence", True)
+
+            if self.cfg.get("name") not in sequence_supported:
+                forward_kwargs.pop("return_sequence", None)
+
+            return self.model(obs, **forward_kwargs)
+
+        # Handle TensorDict input (RL usage)
+        td = inputs
         obs = td["observation"]
 
         # Whitelist for models supporting return_sequence

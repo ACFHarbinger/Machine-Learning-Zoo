@@ -91,7 +91,9 @@ class DifferentialEvolutionHyperbandBase:
 
         # Benchmark related variables
         self.cs = cs
-        self.use_configspace = True if isinstance(self.cs, CS.ConfigurationSpace) else False
+        self.use_configspace = (
+            True if isinstance(self.cs, CS.ConfigurationSpace) else False
+        )
         if self.use_configspace:
             assert self.cs is not None
             self.cs.seed(self._original_seed)
@@ -130,7 +132,9 @@ class DifferentialEvolutionHyperbandBase:
             or self.min_fidelity is None
             or self.max_fidelity <= self.min_fidelity
         ):
-            self.logger.error("Only (Max Fidelity > Min Fidelity) is supported for DEHB.")
+            self.logger.error(
+                "Only (Max Fidelity > Min Fidelity) is supported for DEHB."
+            )
             if self.max_fidelity == self.min_fidelity:
                 self.logger.error(
                     "If you have a fixed fidelity, "
@@ -160,7 +164,9 @@ class DifferentialEvolutionHyperbandBase:
         log_level: str = kwargs["log_level"] if "log_level" in kwargs else "WARNING"
         _logger_props["level"] = log_level
         logger.configure(handlers=[{"sink": sys.stdout, "level": log_level}])
-        self.output_path = Path(kwargs["output_path"]) if "output_path" in kwargs else Path("./")
+        self.output_path = (
+            Path(kwargs["output_path"]) if "output_path" in kwargs else Path("./")
+        )
         self.output_path.mkdir(parents=True, exist_ok=True)
         self.logger = logger
         # Only append to log if resuming an optimization run, else overwrite
@@ -186,7 +192,8 @@ class DifferentialEvolutionHyperbandBase:
             and self.eta > 1
         ):
             self.max_SH_iter = (
-                -int(np.log(self.min_fidelity / self.max_fidelity) / np.log(self.eta)) + 1
+                -int(np.log(self.min_fidelity / self.max_fidelity) / np.log(self.eta))
+                + 1
             )
             self.fidelities = self.max_fidelity * np.power(
                 self.eta,
@@ -198,7 +205,9 @@ class DifferentialEvolutionHyperbandBase:
                     for s in range(self.max_SH_iter)
                 ]
             )
-            self.rungs = -np.linspace(start=self.max_SH_iter - 1, stop=0, num=self.max_SH_iter)
+            self.rungs = -np.linspace(
+                start=self.max_SH_iter - 1, stop=0, num=self.max_SH_iter
+            )
 
     def reset(self, *, reset_seeds: bool = True) -> None:
         """Reset optimization state, trackers, and RNG."""

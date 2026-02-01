@@ -7,7 +7,7 @@ import numpy as np
 from gymnasium import spaces
 from numpy.typing import NDArray
 
-__all__ = ["TradingEnv", "ClobEnv", "PolymarketEnv", "HAS_RUST"]
+__all__ = ["HAS_RUST", "ClobEnv", "PolymarketEnv", "TradingEnv"]
 
 # Use Any for Rust objects to avoid complex type issues with optional imports
 RustTradingEnv: Any = None
@@ -144,7 +144,9 @@ class TradingEnv(gym.Env[NDArray[np.float64], int]):
 
         return self._get_observation(), {}
 
-    def step(self, action: int) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
+    def step(
+        self, action: int
+    ) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
         """
         Execute one step in the environment.
 
@@ -282,6 +284,24 @@ class TradingEnv(gym.Env[NDArray[np.float64], int]):
                 asset, side, quantity, duration, algo_type, urgency, participation_rate
             )
 
+    def submit_algo_order(
+        self,
+        asset: str,
+        side: int,  # 0=Bid, 1=Ask
+        quantity: float,
+        algo_type: str,
+        duration: int = 100,
+        urgency: float | None = None,
+        participation_rate: float | None = None,
+    ) -> None:
+        """
+        Submit an algorithmic order.
+        """
+        if self._rust_env is not None:
+            self._rust_env.submit_algo_order_py(
+                asset, side, quantity, duration, algo_type, urgency, participation_rate
+            )
+
 
 class ClobEnv(TradingEnv):
     """
@@ -369,7 +389,9 @@ class PolymarketEnv(gym.Env[NDArray[Any], NDArray[Any]]):
 
         return self._get_observation(), {}
 
-    def step(self, action: NDArray[Any]) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
+    def step(
+        self, action: NDArray[Any]
+    ) -> tuple[NDArray[Any], float, bool, bool, dict[str, Any]]:
         """
         Execute actions across multiple prediction markets.
         """
@@ -389,7 +411,9 @@ class PolymarketEnv(gym.Env[NDArray[Any], NDArray[Any]]):
         info = {
             "account_value": current_value,
             "collateral": (
-                self._collateral if self._arena is None else float(self._arena.collateral())
+                self._collateral
+                if self._arena is None
+                else float(self._arena.collateral())
             ),
         }
 

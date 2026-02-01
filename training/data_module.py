@@ -1,9 +1,9 @@
 """PyTorch Lightning DataModule for training data."""
 
-from typing import Optional, List
 from pathlib import Path
-from torch.utils.data import Dataset, DataLoader
+
 import pytorch_lightning as pl
+from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
 
@@ -12,7 +12,7 @@ class TextDataset(Dataset):
 
     def __init__(
         self,
-        texts: List[str],
+        texts: list[str],
         tokenizer: AutoTokenizer,
         max_length: int = 512,
     ):
@@ -72,9 +72,9 @@ class PiDataModule(pl.LightningDataModule):
     def __init__(
         self,
         tokenizer: AutoTokenizer,
-        train_texts: Optional[List[str]] = None,
-        val_texts: Optional[List[str]] = None,
-        data_path: Optional[Path] = None,
+        train_texts: list[str] | None = None,
+        val_texts: list[str] | None = None,
+        data_path: Path | None = None,
         max_length: int = 512,
         batch_size: int = 8,
         num_workers: int = 4,
@@ -102,10 +102,10 @@ class PiDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        self.train_dataset: Optional[TextDataset] = None
-        self.val_dataset: Optional[TextDataset] = None
+        self.train_dataset: TextDataset | None = None
+        self.val_dataset: TextDataset | None = None
 
-    def setup(self, stage: Optional[str] = None) -> None:
+    def setup(self, stage: str | None = None) -> None:
         """
         Set up datasets.
         Args:
@@ -116,7 +116,7 @@ class PiDataModule(pl.LightningDataModule):
         """
         # Load from file if path provided
         if self.data_path and self.data_path.exists():
-            with open(self.data_path, "r") as f:
+            with open(self.data_path) as f:
                 lines = [line.strip() for line in f if line.strip()]
 
             split_idx = int(len(lines) * 0.9)
@@ -137,7 +137,7 @@ class PiDataModule(pl.LightningDataModule):
                     self.max_length,
                 )
 
-    def train_dataloader(self) -> Optional[DataLoader]:
+    def train_dataloader(self) -> DataLoader | None:
         """
         Create training dataloader.
         Args:
@@ -155,7 +155,7 @@ class PiDataModule(pl.LightningDataModule):
             pin_memory=True,
         )
 
-    def val_dataloader(self) -> Optional[DataLoader]:
+    def val_dataloader(self) -> DataLoader | None:
         """
         Create validation dataloader.
         Args:

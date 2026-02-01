@@ -113,7 +113,9 @@ class NeuralODE(nn.Module):
         for _ in range(num_layers - 1):
             layers.append(nn.Linear(hidden_dim, hidden_dim))
             layers.append(nn.Tanh())
-        layers.append(nn.Linear(hidden_dim, input_dim))  # Output must act on state space
+        layers.append(
+            nn.Linear(hidden_dim, input_dim)
+        )  # Output must act on state space
 
         self.diffeq = ODEFunc(nn.Sequential(*layers))
 

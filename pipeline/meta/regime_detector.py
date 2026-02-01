@@ -92,7 +92,9 @@ class RegimeDetector:
 
         # Use most recent window
         window = prices[-self.window_size :]
-        features = self.extract_features(np.concatenate([prices[-2 * self.window_size :], window]))
+        features = self.extract_features(
+            np.concatenate([prices[-2 * self.window_size :], window])
+        )
 
         regime = self.kmeans.predict(features[-1:])
         return int(regime[0])

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from .backbones import BACKBONE_REGISTRY, Backbone, BackboneConfig
 from .heads import HEAD_REGISTRY, Head, HeadConfig

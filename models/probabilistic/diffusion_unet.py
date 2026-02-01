@@ -57,11 +57,15 @@ class ResidualBlock1D(nn.Module):
         self.conv2 = nn.Conv1d(out_channels, out_channels, kernel_size=3, padding=1)
 
         if in_channels != out_channels:
-            self.shortcut: nn.Module = nn.Conv1d(in_channels, out_channels, kernel_size=1)
+            self.shortcut: nn.Module = nn.Conv1d(
+                in_channels, out_channels, kernel_size=1
+            )
         else:
             self.shortcut = nn.Identity()
 
-    def forward(self, x: torch.Tensor, time_emb: torch.Tensor | None = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, time_emb: torch.Tensor | None = None
+    ) -> torch.Tensor:
         """Forward pass."""
         h = self.conv1(F.silu(self.norm1(x)))
 
@@ -193,7 +197,9 @@ class DiffusionUNet1D(nn.Module):
             skip = skips.pop()
 
             if h.shape[-1] != skip.shape[-1]:
-                h = F.interpolate(h, size=skip.shape[-1], mode="linear", align_corners=False)
+                h = F.interpolate(
+                    h, size=skip.shape[-1], mode="linear", align_corners=False
+                )
 
             h = torch.cat([h, skip], dim=1)
             h = block1(h, t_emb)

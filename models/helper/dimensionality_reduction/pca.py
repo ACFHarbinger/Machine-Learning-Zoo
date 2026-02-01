@@ -1,3 +1,4 @@
+
 """Principal Component Analysis (PCA) algorithm implementation."""
 
 from typing import Any, cast
@@ -10,7 +11,9 @@ from sklearn.decomposition import PCA
 class PCAAlgorithm:
     """Principal Component Analysis (PCA) Algorithm wrapper."""
 
-    def __init__(self, n_components: int | float | str | None = None, **kwargs: Any) -> None:
+    def __init__(
+        self, n_components: int | float | str | None = None, **kwargs: Any
+    ) -> None:
         """Initialize PCA."""
         self.model = PCA(n_components=n_components, **kwargs)
 

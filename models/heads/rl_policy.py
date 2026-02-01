@@ -10,12 +10,12 @@ from dataclasses import dataclass
 from typing import Any, NamedTuple
 
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.distributions import Categorical, Normal
 
 from .base import Head, HeadConfig, register_head
 
-__all__ = ["RLPolicyHeadConfig", "RLPolicyHead", "PolicyOutput"]
+__all__ = ["PolicyOutput", "RLPolicyHead", "RLPolicyHeadConfig"]
 
 
 class PolicyOutput(NamedTuple):

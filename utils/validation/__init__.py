@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 T = TypeVar("T", bound=Callable[..., Any])
 
@@ -49,7 +50,7 @@ def log_execution(func: T) -> T:
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            logger.error(f"Error in {func.__name__}: {str(e)}")
+            logger.error(f"Error in {func.__name__}: {e!s}")
             raise
 
     return wrapper  # type: ignore

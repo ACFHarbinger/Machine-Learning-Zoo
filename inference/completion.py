@@ -1,6 +1,6 @@
 """Text completion using HuggingFace transformers."""
 
-from typing import Optional, List
+
 import torch
 
 
@@ -46,7 +46,7 @@ class CompletionEngine:
         max_tokens: int = 256,
         temperature: float = 0.7,
         top_p: float = 0.9,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: list[str] | None = None,
     ) -> str:
         """
         Generate a completion for the given prompt.
@@ -106,7 +106,7 @@ class CompletionEngine:
 
 
 # Singleton instance
-_completion_engine: Optional[CompletionEngine] = None
+_completion_engine: CompletionEngine | None = None
 
 
 def get_completion_engine() -> CompletionEngine:

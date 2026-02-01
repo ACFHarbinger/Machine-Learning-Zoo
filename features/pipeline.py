@@ -14,7 +14,7 @@ import torch
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
-from pi_sidecar.ml.utils.functions.gpu_features import GPUFeatureEngineer
+from python.src.utils.functions.gpu_features import GPUFeatureEngineer
 
 
 class FeaturePipeline(BaseEstimator, TransformerMixin):
@@ -48,11 +48,8 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         self.selection_params = selection_params or {}
 
         # Components
-        from pi_sidecar.ml.features.regime import MarketRegimeDetector
-
-        self.regime_detector = MarketRegimeDetector(
-            n_regimes=self.selection_params.get("n_regimes", 3)
-        )
+        from python.src.features.regime import MarketRegimeDetector
+        self.regime_detector = MarketRegimeDetector(n_regimes=self.selection_params.get("n_regimes", 3))
 
         # Components
         # Components
@@ -61,7 +58,9 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         self.selector: Any = None
         self.feature_names: list[str] = []
 
-    def fit(self, x: pd.DataFrame | np.ndarray[Any, Any], y: Any = None) -> "FeaturePipeline":
+    def fit(
+        self, x: pd.DataFrame | np.ndarray[Any, Any], y: Any = None
+    ) -> "FeaturePipeline":
         """
         Fit the pipeline components (e.g., scalers) on historical data.
 
@@ -75,12 +74,12 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         # 2. Fit Regime Detector
         self.regime_detector.fit(features_clean)
         regime_one_hot = self.regime_detector.get_regime_one_hot(features_clean)
-
+        
         # Combine base features and regimes
         regime_df = pd.DataFrame(
-            regime_one_hot,
-            index=features_clean.index,
-            columns=[f"regime_{i}" for i in range(regime_one_hot.shape[1])],
+            regime_one_hot, 
+            index=features_clean.index, 
+            columns=[f"regime_{i}" for i in range(regime_one_hot.shape[1])]
         )
         full_features = pd.concat([features_clean, regime_df], axis=1)
 
@@ -90,8 +89,7 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         elif self.scaler_type == "robust":
             self.scaler = RobustScaler()
         elif self.scaler_type == "online":
-            from pi_sidecar.ml.features.normalization import OnlineNormalizer
-
+            from python.src.features.normalization import OnlineNormalizer
             self.scaler = OnlineNormalizer(feature_dim=full_features.shape[1])
         else:
             raise ValueError(f"Unknown scaler type: {self.scaler_type}")
@@ -107,15 +105,19 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
             self.selector.fit(full_features)
         elif self.selection_method == "mi":
             from sklearn.feature_selection import SelectKBest, mutual_info_regression
-            from pi_sidecar.ml.features.feature_selection import TimeSeriesFeatureSelector
+
+            from python.src.features.feature_selection import TimeSeriesFeatureSelector
 
             self.selector = SelectKBest(
                 mutual_info_regression, k=self.selection_params.get("n_features", 10)
             )
-            self.selector.fit(full_features, y if y is not None else full_features.iloc[:, 0])
+            self.selector.fit(
+                full_features, y if y is not None else full_features.iloc[:, 0]
+            )
         elif self.selection_method == "rfecv":
             from sklearn.ensemble import RandomForestRegressor
-            from pi_sidecar.ml.features.feature_selection import TimeSeriesFeatureSelector
+
+            from python.src.features.feature_selection import TimeSeriesFeatureSelector
 
             estimator = self.selection_params.get(
                 "estimator", RandomForestRegressor(n_estimators=10, n_jobs=-1)
@@ -161,9 +163,9 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
         # Add Regimes
         regime_one_hot = self.regime_detector.get_regime_one_hot(features_filled)
         regime_df = pd.DataFrame(
-            regime_one_hot,
-            index=features_filled.index,
-            columns=[f"regime_{i}" for i in range(regime_one_hot.shape[1])],
+            regime_one_hot, 
+            index=features_filled.index, 
+            columns=[f"regime_{i}" for i in range(regime_one_hot.shape[1])]
         )
         full_features = pd.concat([features_filled, regime_df], axis=1)
 
@@ -226,18 +228,10 @@ class FeaturePipeline(BaseEstimator, TransformerMixin):
             ask_v = torch.tensor(df["ask_v0"].values, dtype=torch.float32)
             bid_p = torch.tensor(df["bid_p0"].values, dtype=torch.float32)
             ask_p = torch.tensor(df["ask_p0"].values, dtype=torch.float32)
-
-            lob_features["imbalance"] = (
-                self.gpu_engineer.compute_imbalance(bid_v, ask_v).cpu().numpy()
-            )
+            
+            lob_features["imbalance"] = self.gpu_engineer.compute_imbalance(bid_v, ask_v).cpu().numpy()
             lob_features["spread"] = self.gpu_engineer.compute_spread(bid_p, ask_p).cpu().numpy()
-            lob_features["vwap"] = (
-                self.gpu_engineer.compute_vwap(
-                    close_tensor, df["volume"].values if "volume" in df.columns else bid_v
-                )
-                .cpu()
-                .numpy()
-            )
+            lob_features["vwap"] = self.gpu_engineer.compute_vwap(close_tensor, df["volume"].values if "volume" in df.columns else bid_v).cpu().numpy()
 
         # Move back to CPU/Pandas for alignment
         # (For pure GPU pipeline we'd stay in tensor, but we need sklearn for now)

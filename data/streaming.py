@@ -65,7 +65,9 @@ class StreamingFinancialDataset(IterableDataset[dict[str, Any]]):
     def _get_iterator(self) -> Iterator[pd.DataFrame]:
         """Get an iterator over chunks of the dataframe."""
         if self.file_format == "csv":
-            reader = pd.read_csv(self.filepath, chunksize=self.chunk_size, **self.reader_kwargs)
+            reader = pd.read_csv(
+                self.filepath, chunksize=self.chunk_size, **self.reader_kwargs
+            )
             return cast(Iterator[pd.DataFrame], reader)
         elif self.file_format == "parquet":
             # Parquet file reading is typically not chunked by lines in the same way as CSV
@@ -95,7 +97,9 @@ class StreamingFinancialDataset(IterableDataset[dict[str, Any]]):
         # If we have a huge shuffle buffer, we would add to buffer here.
         # For simplicity, we iterate rows.
         for _, row in chunk.iterrows():
-            item = cast(dict[str, Any], row.to_dict())  # Or convert to Tensor directly if faster
+            item = cast(
+                dict[str, Any], row.to_dict()
+            )  # Or convert to Tensor directly if faster
             # Simple numeric conversion could happen here
             if self.transform:
                 item = self.transform(item)

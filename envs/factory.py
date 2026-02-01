@@ -1,8 +1,9 @@
+
 from __future__ import annotations
 
 from typing import Any
 
-from pi_sidecar.ml.utils.registry import ENV_REGISTRY
+from python.src.utils.registry import ENV_REGISTRY
 
 
 class EnvFactory:

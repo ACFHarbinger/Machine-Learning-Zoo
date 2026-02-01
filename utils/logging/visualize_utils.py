@@ -21,10 +21,9 @@ from torch import nn
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from pi_sidecar.ml.utils.functions.functions import load_model
 from sklearn.decomposition import PCA
 from torch.utils.tensorboard.writer import SummaryWriter
-
-from pi_sidecar.ml.utils.functions.functions import load_model
 
 # --- UTILS ---
 

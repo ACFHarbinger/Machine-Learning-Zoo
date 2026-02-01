@@ -10,7 +10,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 try:
     import torch
@@ -35,7 +35,7 @@ except ImportError as e:
     print(f"Warning: Could not import local modules: {e}")
 
 
-def load_config(config_path: str) -> Dict[str, Any]:
+def load_config(config_path: str) -> dict[str, Any]:
     """
     Load configuration from YAML file.
 
@@ -58,7 +58,7 @@ def load_config(config_path: str) -> Dict[str, Any]:
     return deep_sanitize(cfg)
 
 
-def build_model_from_config(config: Dict[str, Any]) -> Any:
+def build_model_from_config(config: dict[str, Any]) -> Any:
     """
     Build a model from configuration.
 
@@ -93,7 +93,7 @@ def build_model_from_config(config: Dict[str, Any]) -> Any:
     return model
 
 
-def demonstrate_model(model: Any, config: Dict[str, Any]) -> None:
+def demonstrate_model(model: Any, config: dict[str, Any]) -> None:
     """
     Demonstrate the built model with dummy data.
 

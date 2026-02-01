@@ -36,7 +36,7 @@ class MixedPrecisionConfig:
     opt_level: str = "O1"  # O0, O1, O2, O3 (if using apex)
 
     @classmethod
-    def from_env(cls) -> "MixedPrecisionConfig":
+    def from_env(cls) -> MixedPrecisionConfig:
         """Create config from environment variables."""
         precision = os.getenv("NGLAB_PRECISION", "16-mixed")
         enabled = os.getenv("NGLAB_MIXED_PRECISION", "true").lower() == "true"

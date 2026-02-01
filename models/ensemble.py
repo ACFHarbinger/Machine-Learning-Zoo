@@ -92,7 +92,9 @@ class EnsembleModel(nn.Module):
             if self.meta_learner is None:
                 raise ValueError("Stacking requires a meta_learner")
             # Concatenate predictions as features for meta-learner
-            concat = stacked.permute(1, 0, 2).flatten(start_dim=1)  # [batch, n_models * output_dim]
+            concat = stacked.permute(1, 0, 2).flatten(
+                start_dim=1
+            )  # [batch, n_models * output_dim]
             return cast(torch.Tensor, self.meta_learner(concat))
 
         else:
@@ -146,7 +148,11 @@ def create_ensemble_from_configs(
     # Cast strategy string to Literal
     strat_literal = cast(
         Literal["average", "weighted", "voting", "stacking"],
-        (strategy if strategy in ["average", "weighted", "voting", "stacking"] else "average"),
+        (
+            strategy
+            if strategy in ["average", "weighted", "voting", "stacking"]
+            else "average"
+        ),
     )
 
     return EnsembleModel(models, strategy=strat_literal, weights=weights)

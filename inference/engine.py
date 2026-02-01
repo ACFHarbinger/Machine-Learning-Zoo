@@ -97,7 +97,7 @@ class InferenceEngine:
         secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
         if secrets_path.exists():
             try:
-                with open(secrets_path, "r") as f:
+                with open(secrets_path) as f:
                     return json.load(f)
             except Exception:
                 pass
@@ -264,7 +264,7 @@ Available tools:
                 secrets_path = Path.home() / ".pi-assistant" / "secrets.json"
                 if secrets_path.exists():
                     try:
-                        with open(secrets_path, "r") as f:
+                        with open(secrets_path) as f:
                             secrets = json.load(f)
                             api_key = secrets.get("anthropic")
                     except (json.JSONDecodeError, OSError):
@@ -339,8 +339,9 @@ Available tools:
         """
         Complete using Claude Pro/Max subscription via direct Anthropic API with OAuth token.
         """
-        import httpx
         import time
+
+        import httpx
 
         secrets = self._load_secrets()
         access_token = secrets.get("claude_max_oauth")
@@ -436,7 +437,7 @@ Available tools:
                 import json
 
                 try:
-                    with open(secrets_path, "r") as f:
+                    with open(secrets_path) as f:
                         secrets = json.load(f)
                         api_key = (
                             secrets.get("anthropic_oauth")

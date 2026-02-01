@@ -92,7 +92,9 @@ class MAMLLightningModule(pl.LightningModule):
 
     def training_step(
         self,
-        batch: dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]],
+        batch: dict[
+            str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]
+        ],
         batch_idx: int,
     ) -> torch.Tensor:
         """
@@ -124,7 +126,9 @@ class MAMLLightningModule(pl.LightningModule):
 
     def validation_step(
         self,
-        batch: dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]],
+        batch: dict[
+            str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]
+        ],
         batch_idx: int,
     ) -> torch.Tensor:
         """
@@ -259,7 +263,9 @@ class MAMLDataModule(pl.LightningDataModule):
 
     def train_dataloader(
         self,
-    ) -> Iterator[dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]]]:
+    ) -> Iterator[
+        dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]]
+    ]:
         """Create training dataloader with task batches."""
         # For simplicity, create a static list of task batches
         # In practice, you'd implement a proper Dataset/DataLoader
@@ -269,7 +275,9 @@ class MAMLDataModule(pl.LightningDataModule):
             batch = []
             for _ in range(self.meta_batch_size):
                 # Sample random regime
-                regime_id = int(torch.randint(0, len(self.regime_datasets), (1,)).item())
+                regime_id = int(
+                    torch.randint(0, len(self.regime_datasets), (1,)).item()
+                )
                 regime_data = self.regime_datasets[regime_id]
                 task = self.create_task(regime_data)
                 batch.append(task)
@@ -279,7 +287,9 @@ class MAMLDataModule(pl.LightningDataModule):
 
     def val_dataloader(
         self,
-    ) -> Iterator[dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]]]:
+    ) -> Iterator[
+        dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]]
+    ]:
         """Create validation dataloader."""
         # Similar to train but with fewer batches
         task_batches = []
@@ -287,7 +297,9 @@ class MAMLDataModule(pl.LightningDataModule):
         for _ in range(20):  # 20 validation batches
             batch = []
             for _ in range(self.meta_batch_size):
-                regime_id = int(torch.randint(0, len(self.regime_datasets), (1,)).item())
+                regime_id = int(
+                    torch.randint(0, len(self.regime_datasets), (1,)).item()
+                )
                 regime_data = self.regime_datasets[regime_id]
                 task = self.create_task(regime_data)
                 batch.append(task)

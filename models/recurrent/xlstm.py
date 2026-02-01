@@ -1,225 +1,122 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 import torch
 from torch import nn
 
+from python.src.models.base import BaseModel
+from python.src.models.modules.xlstm_block import xLSTMBlock
+from python.src.utils.registry import register_model
 
 if TYPE_CHECKING:
     pass
 
 
-class sLSTMCell(nn.Module):  # noqa: N801
+@register_model("xlstm")
+class xLSTM(BaseModel):  # noqa: N801
     """
-    Scalar LSTM (sLSTM) Cell with exponential gating and normalization.
-    """
-
-    def __init__(self, input_dim: int, hidden_dim: int) -> None:
-        """Initialize sLSTM Cell."""
-        super().__init__()
-        self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
-
-        # Weights for [z, i, f, o]
-        self.weight_ih = nn.Linear(input_dim, 4 * hidden_dim)
-        self.weight_hh = nn.Linear(hidden_dim, 4 * hidden_dim)
-
-    def forward(
-        self,
-        x: torch.Tensor,
-        state: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
-    ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]:
-        """
-        Forward pass for a single time step.
-
-        Args:
-            x: Input tensor (Batch, Input_Dim)
-            state: Tuple of (c, n, m, h)
-                   c: Cell state (Batch, Hidden_Dim)
-                   n: Normalizer state (Batch, Hidden_Dim)
-                   m: Stabilizer state (Batch, Hidden_Dim) - log scale
-                   h: Hidden state (Batch, Hidden_Dim)
-        """
-        # Unpack state
-        c_prev, n_prev, m_prev, h_prev = state
-
-        # Project inputs
-        gates = self.weight_ih(x) + self.weight_hh(h_prev)
-        z_gate, i_gate, f_gate, o_gate = gates.chunk(4, dim=1)
-
-        # Activations
-        z_t = torch.tanh(z_gate)
-        o_t = torch.sigmoid(o_gate)
-
-        m_t = torch.max(f_gate + m_prev, i_gate)
-
-        i_prime = torch.exp(i_gate - m_t)
-        f_prime = torch.exp(f_gate + m_prev - m_t)
-
-        # State updates
-        c_t = f_prime * c_prev + i_prime * z_t
-        n_t = f_prime * n_prev + i_prime
-
-        h_t = o_t * (c_t / (n_t + 1e-6))  # Small epsilon for safety
-
-        return h_t, (c_t, n_t, m_t, h_t)
-
-
-class mLSTMCell(nn.Module):  # noqa: N801
-    """
-    Matrix LSTM (mLSTM) Cell.
-    Uses a matrix memory C_t (d x d) updated via outer product of keys and values.
-    Equivalent to linear attention with a recurrence.
-    """
-
-    def __init__(self, input_dim: int, hidden_dim: int, num_heads: int = 4) -> None:
-        """Initialize mLSTM Cell."""
-        super().__init__()
-        self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
-        self.num_heads = num_heads
-        self.head_dim = hidden_dim // num_heads
-        is_divisible = self.head_dim * num_heads == hidden_dim
-        assert is_divisible, "Hidden dim must be divisible by num_heads"
-
-        self.weight_ih = nn.Linear(input_dim, 3 * hidden_dim + 2 * num_heads + hidden_dim)
-
-    def forward(
-        self,
-        x: torch.Tensor,
-        state: tuple[torch.Tensor, torch.Tensor, torch.Tensor] | None,
-    ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
-        """
-        Forward step.
-        State: (C, n, m)
-           C: (B, H, D_head, D_head) - Matrix state
-           n: (B, H, D_head) - Normalizer state
-           m: (B, H, 1) - Max state for stabilization
-        """
-        batch_size = x.size(0)
-
-        projected = self.weight_ih(x)  # (B, 3*H*D + 2*H + H*D)
-
-        # Split
-        base_split = [self.hidden_dim] * 3  # q, k, v
-        gate_split = [self.num_heads] * 2  # i, f scalars
-        out_split = [self.hidden_dim]  # o
-
-        splits = projected.split(base_split + gate_split + out_split, dim=-1)
-        q, k, v, i_gate, f_gate, o_gate = splits
-
-        # Reshape for heads
-        q = q.view(batch_size, self.num_heads, self.head_dim)
-        k = k.view(batch_size, self.num_heads, self.head_dim)
-        v = v.view(batch_size, self.num_heads, self.head_dim)
-
-        # Gates: (B, Heads, 1)
-        i_gate = i_gate.view(batch_size, self.num_heads, 1)
-        f_gate = f_gate.view(batch_size, self.num_heads, 1)
-
-        o_gate = torch.sigmoid(o_gate)  # (B, Hidden)
-        o_gate_view = o_gate.view(batch_size, self.num_heads, self.head_dim)
-
-        # State unpacking
-        if state is None:
-            # Init state
-            dev = x.device
-            C_prev = torch.zeros(
-                batch_size, self.num_heads, self.head_dim, self.head_dim, device=dev
-            )
-            n_prev = torch.zeros(batch_size, self.num_heads, self.head_dim, device=dev)
-            m_prev = torch.zeros(batch_size, self.num_heads, 1, device=dev)
-        else:
-            C_prev, n_prev, m_prev = state
-
-        m_t = torch.max(f_gate + m_prev, i_gate)
-
-        i_prime = torch.exp(i_gate - m_t)  # (B, H, 1)
-        f_prime = torch.exp(f_gate + m_prev - m_t)  # (B, H, 1)
-
-        kvT = torch.matmul(v.unsqueeze(-1), k.unsqueeze(-2))
-        C_t = f_prime.unsqueeze(-1) * C_prev + i_prime.unsqueeze(-1) * kvT
-        n_t = f_prime * n_prev + i_prime * k
-
-        q_uns = q.unsqueeze(-1)
-        num = torch.matmul(C_t, q_uns).squeeze(-1)  # (B, H, D)
-
-        den = torch.sum(n_t * q, dim=-1, keepdim=True)  # Dot product per head
-        den = torch.abs(den)
-
-        h_tilde = num / (den + 1e-6)
-
-        # Gating
-        h_t = o_gate_view * h_tilde
-        h_t = h_t.reshape(batch_size, self.hidden_dim)  # Flatten heads
-
-        return h_t, (C_t, n_t, m_t)
-
-
-class xLSTMBlock(nn.Module):  # noqa: N801
-    """
-    xLSTM Block layer (wrapping sLSTMCell or mLSTMCell).
+    xLSTM Model (stacked sLSTM/mLSTM blocks) for Time Series or Sequence tasks.
     """
 
     def __init__(  # noqa: PLR0913
         self,
         input_dim: int,
         hidden_dim: int,
-        batch_first: bool = True,
+        n_layers: int,
+        output_dim: int,
         dropout: float = 0.0,
-        cell_type: str = "slstm",
+        output_type: str = "prediction",
+        cell_type: str | list[str] = "slstm",
         num_heads: int = 4,
     ) -> None:
-        """Initialize xLSTM Block."""
+        """
+        Initialize the xLSTM.
+
+        Args:
+            input_dim (int): Input feature dimension.
+            hidden_dim (int): Hidden state dimension.
+            n_layers (int): Number of xLSTM layers.
+            output_dim (int): Output dimension.
+            dropout (float): Dropout probability.
+            output_type (str): 'prediction' or 'embedding'.
+            cell_type (str or list): 'slstm', 'mlstm', or list of types.
+            num_heads (int): Number of heads for mLSTM cells.
+        """
         super().__init__()
+        self.output_type = output_type
         self.hidden_dim = hidden_dim
-        self.batch_first = batch_first
-        self.cell_type = cell_type.lower()
+        self.n_layers = n_layers
 
-        if self.cell_type == "slstm":
-            self.cell: nn.Module = sLSTMCell(input_dim, hidden_dim)
-        elif self.cell_type == "mlstm":
-            self.cell = mLSTMCell(input_dim, hidden_dim, num_heads=num_heads)
+        # Determine cell types per layer
+        cell_types: list[str]
+        if isinstance(cell_type, str):
+            cell_types = [cell_type] * n_layers
         else:
-            raise ValueError(f"Unknown cell type: {cell_type}")
+            msg = "cell_type list length must match n_layers"
+            assert len(cell_type) == n_layers, msg
+            cell_types = cell_type
 
-        self.dropout = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
+        # We can implement stacking manually or use a loop
+        self.layers = nn.ModuleList(
+            [
+                xLSTMBlock(
+                    input_dim=input_dim if i == 0 else hidden_dim,
+                    hidden_dim=hidden_dim,
+                    batch_first=True,
+                    dropout=dropout,
+                    cell_type=cell_types[i],
+                    num_heads=num_heads,
+                )
+                for i in range(n_layers)
+            ]
+        )
+
+        self.norm = nn.LayerNorm(hidden_dim)
+        self.fc = nn.Linear(hidden_dim, output_dim)
 
     def forward(
-        self, x: torch.Tensor, state: tuple[torch.Tensor, ...] | None = None
-    ) -> tuple[torch.Tensor, tuple[torch.Tensor, ...] | None]:
+        self,
+        x: torch.Tensor,
+        return_embedding: bool | None = None,
+        return_sequence: bool = False,
+    ) -> torch.Tensor:
         """
-        Process sequence.
-        x: (Batch, Seq, Feat) if batch_first
+        Forward pass.
+
+        Args:
+            x (Tensor): Input sequence [batch, seq_len, input_dim].
+            return_embedding (bool, optional): Override output type.
+            return_sequence (bool, optional): If True, return full sequence.
         """
-        if self.batch_first:
-            x = x.transpose(0, 1)  # -> (Seq, Batch, Feat)
+        # x is [Batch, Seq, Feat] (since batch_first=True in blocks)
 
-        seq_len, batch_size, _ = x.shape
+        current_state_list: list[Any] = [None] * self.n_layers
 
-        outputs = []
-        current_state = state
+        x_out = x
+        for i, layer_module in enumerate(self.layers):
+            layer = cast(xLSTMBlock, layer_module)
+            x_out, state_val = layer(x_out, current_state_list[i])
+            # x_out is output sequence of this layer
+            current_state_list[i] = state_val
 
-        # Initial state for sLSTM if None
-        if current_state is None and self.cell_type == "slstm":
-            dev = x.device
-            current_state = (
-                torch.zeros(batch_size, self.hidden_dim, device=dev),
-                torch.zeros(batch_size, self.hidden_dim, device=dev),
-                torch.full((batch_size, self.hidden_dim), -100.0, device=dev),  # log scale
-                torch.zeros(batch_size, self.hidden_dim, device=dev),
-            )
+        # x_out is now the output sequence of the last layer
+        x_norm = cast(torch.Tensor, self.norm(x_out))
 
-        for t in range(seq_len):
-            inp = x[t]
-            h_t, current_state = self.cell(inp, current_state)
-            h_t = self.dropout(h_t)
-            outputs.append(h_t)
+        # Determine output state
+        out_state: torch.Tensor
+        if return_sequence:
+            out_state = x_norm
+        else:
+            out_state = x_norm[:, -1, :]
 
-        result_outputs = torch.stack(outputs, dim=0)  # (Seq, Batch, Hidden)
+        should_return_embedding = (
+            return_embedding
+            if return_embedding is not None
+            else (self.output_type == "embedding")
+        )
 
-        if self.batch_first:
-            result_outputs = result_outputs.transpose(0, 1)
+        if should_return_embedding:
+            return out_state
 
-        return result_outputs, current_state
+        return cast(torch.Tensor, self.fc(out_state))

@@ -25,7 +25,9 @@ class PolymarketDataset(torch.utils.data.Dataset[dict[str, torch.Tensor]]):
         seq_len: int,
         pred_len: int,
         download: bool = False,
-        transform: (Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] | None) = None,
+        transform: (
+            Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] | None
+        ) = None,
     ) -> None:
         """
         Initialize the dataset.
@@ -99,7 +101,9 @@ class PolymarketDataset(torch.utils.data.Dataset[dict[str, torch.Tensor]]):
         # using outer join to capture all time steps, then forward fill
         merged_df = pd.concat(data_frames, axis=1)  # concat on axis 1 aligns on index
         merged_df = merged_df.sort_index()
-        merged_df = merged_df.fillna(method="ffill").fillna(method="bfill")  # Handle initial NaNs
+        merged_df = merged_df.fillna(method="ffill").fillna(
+            method="bfill"
+        )  # Handle initial NaNs
 
         # Convert to tensor [TotalSteps, NumCandidates]
         price_tensor = torch.tensor(merged_df.values, dtype=torch.float32)

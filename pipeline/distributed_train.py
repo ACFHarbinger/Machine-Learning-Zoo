@@ -21,7 +21,9 @@ def setup_distributed() -> int:
         local_rank: The rank of the current process on the local node.
     """
     if "RANK" not in os.environ or "WORLD_SIZE" not in os.environ:
-        logger.warning("Distributed environment variables not set. Defaulting to single-process.")
+        logger.warning(
+            "Distributed environment variables not set. Defaulting to single-process."
+        )
         return 0
 
     dist.init_process_group(backend="nccl" if torch.cuda.is_available() else "gloo")

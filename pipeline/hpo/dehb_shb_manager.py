@@ -48,7 +48,9 @@ class SynchronousHalvingBracketManager:
             #   or all jobs for that fidelity/rung are over
             # (sh_bracket[i] + _sh_bracket[i]) < n_configs[i] indicates a job has been scheduled
             #   and is queued/running and the bracket needs to be paused till results are retrieved
-            self.sh_bracket[float(fidelity)] = int(n_configs[i])  # each scheduled job does -= 1
+            self.sh_bracket[float(fidelity)] = int(
+                n_configs[i]
+            )  # each scheduled job does -= 1
             self._sh_bracket[float(fidelity)] = 0  # each retrieved job does +=1
         self.n_rungs = len(fidelities)
         self.current_rung = 0
@@ -146,11 +148,15 @@ class SynchronousHalvingBracketManager:
 
     def is_pending(self) -> bool:
         """Returns True if any of the rungs/fidelities have still a configuration to submit"""
-        return bool(np.any([self._is_rung_pending(i) for i, _ in enumerate(self.fidelities)]))
+        return bool(
+            np.any([self._is_rung_pending(i) for i, _ in enumerate(self.fidelities)])
+        )
 
     def is_waiting(self) -> bool:
         """Returns True if any of the rungs/fidelities have a configuration pending/running"""
-        return bool(np.any([self._is_rung_waiting(i) for i, _ in enumerate(self.fidelities)]))
+        return bool(
+            np.any([self._is_rung_waiting(i) for i, _ in enumerate(self.fidelities)])
+        )
 
     def reset_waiting_jobs(self) -> None:
         """Resets all waiting jobs and updates the current_rung pointer accordingly."""

@@ -1,10 +1,10 @@
 import os
+
 import httpx
-from typing import Optional
 
 
 class ElevenLabsTTS:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.getenv("ELEVENLABS_API_KEY")
         self.base_url = "https://api.elevenlabs.io/v1"
         self.voice_id = "pNInz6ovAn45no7UM98t"  # Default "Rachel" or similar

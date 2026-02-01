@@ -1,3 +1,4 @@
+
 """Eclat algorithm implementation for association rule learning."""
 
 import itertools
@@ -17,7 +18,9 @@ class EclatAlgorithm:
         self.min_support = min_support
         self.min_confidence = min_confidence
         self.rules: list[dict[str, Any]] = []
-        self.frequent_itemsets: dict[frozenset[Any], int] = {}  # itemset -> support_count
+        self.frequent_itemsets: dict[frozenset[Any], int] = (
+            {}
+        )  # itemset -> support_count
 
     def fit(self, X: NDArray[Any] | Any) -> "EclatAlgorithm":  # noqa: N803
         """Fit the model."""
@@ -100,7 +103,9 @@ class EclatAlgorithm:
 
                     confidence = support_count / ant_support_count
                     if confidence >= self.min_confidence:
-                        consequent_support_count = self.frequent_itemsets.get(consequent_set, 0)
+                        consequent_support_count = self.frequent_itemsets.get(
+                            consequent_set, 0
+                        )
                         lift = (
                             (confidence / (consequent_support_count / n_transactions))
                             if (consequent_support_count > 0)

@@ -1,3 +1,4 @@
+
 """
 Dimensionality reduction models for NGLab.
 """
@@ -220,7 +221,11 @@ class QDAModel(DimReductionModel):
         if x_np.ndim == 3:
             x_np = x_np[:, -1, :]
         out = self.model.predict_proba(x_np)
-        return torch.from_numpy(out).to(x.device if hasattr(x, "device") else "cpu").float()
+        return (
+            torch.from_numpy(out)
+            .to(x.device if hasattr(x, "device") else "cpu")
+            .float()
+        )
 
 
 class MDAModel(DimReductionModel):
@@ -229,7 +234,9 @@ class MDAModel(DimReductionModel):
     def __init__(self, n_components_per_class: int = 1, **kwargs: Any) -> None:
         """Initialize MDAModel."""
         super().__init__()
-        self.model = MDAAlgorithm(n_components_per_class=n_components_per_class, **kwargs)
+        self.model = MDAAlgorithm(
+            n_components_per_class=n_components_per_class, **kwargs
+        )
 
 
 class FDAModel(DimReductionModel):
@@ -397,5 +404,7 @@ class UMAPModel(DimReductionModel):
             # Fallback or error
             # For helper integration, better to have a dummy valid object or raise
             # Raising warning and fallback to PCA?
-            print("Warning: umap-learn not installed. Using PCA as fallback for UMAPModel.")
+            print(
+                "Warning: umap-learn not installed. Using PCA as fallback for UMAPModel."
+            )
             self.model = PCA(n_components=n_components)

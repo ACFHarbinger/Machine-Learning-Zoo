@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -9,13 +10,11 @@ from .base import BaseConfig
 from .data import DataConfig, PolymarketConfig
 from .env import EnvConfig, TradingEnvConfig
 from .model import LSTMConfig, ModelConfig
-from .run import RunInfo
 
 
 @dataclass
 class TrainConfig(BaseConfig):
     """Root configuration for training."""
-
     seed: int = 42
     task: str = "rl"
     device: str = "cpu"
@@ -33,7 +32,7 @@ class TrainConfig(BaseConfig):
 def register_configs() -> None:
     """Register structured configs with Hydra ConfigStore."""
     cs = ConfigStore.instance()
-
+    
     # Root config
     cs.store(name="config", node=TrainConfig)
 
@@ -59,18 +58,17 @@ def register_configs() -> None:
 Config = TrainConfig
 
 __all__ = [
-    "TrainConfig",
-    "Config",
-    "register_configs",
     "AlgorithmConfig",
-    "PPOConfig",
-    "SACConfig",
     "BaseConfig",
+    "Config",
     "DataConfig",
-    "PolymarketConfig",
     "EnvConfig",
-    "TradingEnvConfig",
-    "ModelConfig",
     "LSTMConfig",
-    "RunInfo",
+    "ModelConfig",
+    "PPOConfig",
+    "PolymarketConfig",
+    "SACConfig",
+    "TradingEnvConfig",
+    "TrainConfig",
+    "register_configs",
 ]

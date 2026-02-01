@@ -72,7 +72,9 @@ class RollingWindowCNN(nn.Module):
         self.fc1 = nn.Linear(flat_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x: torch.Tensor, return_embedding: bool | None = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, return_embedding: bool | None = None
+    ) -> torch.Tensor:
         """
         Forward pass.
         x: (Batch, Seq_Len, Features)
@@ -102,7 +104,9 @@ class RollingWindowCNN(nn.Module):
         x_emb = F.relu(x_emb)
 
         should_return_embedding = (
-            return_embedding if return_embedding is not None else (self.output_type == "embedding")
+            return_embedding
+            if return_embedding is not None
+            else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

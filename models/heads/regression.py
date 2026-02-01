@@ -10,11 +10,11 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from .base import Head, HeadConfig, register_head
 
-__all__ = ["RegressionHeadConfig", "RegressionHead"]
+__all__ = ["RegressionHead", "RegressionHeadConfig"]
 
 
 @dataclass

@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
+from pi_sidecar.ml.configs.optimization import ProfilerConfig
 from torch import nn
 from torch.profiler import (
     ProfilerActivity,
@@ -27,9 +28,6 @@ from torch.profiler import (
 from torch.profiler import (
     profile as torch_profile,
 )
-
-
-from pi_sidecar.ml.configs.optimization import ProfilerConfig
 
 
 @dataclass

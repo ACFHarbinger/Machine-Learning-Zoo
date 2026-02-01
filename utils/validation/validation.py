@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 from omegaconf import DictConfig
+
 from ..exceptions import ConfigurationError
 
 logger = logging.getLogger(__name__)
@@ -50,10 +52,9 @@ def _perform_validation(cfg: Any, schema: Any = None) -> None:
     elif isinstance(cfg, DictConfig):
         # OmegaConf config
         pass
-    else:
-        # Possibly a dataclass
-        if not hasattr(cfg, "__dataclass_fields__"):
-            return
+    # Possibly a dataclass
+    elif not hasattr(cfg, "__dataclass_fields__"):
+        return
 
     if schema:
         # TODO: Implement schema-based validation (e.g. using pydantic or cerberus)

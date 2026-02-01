@@ -3,12 +3,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-import torch.nn as nn
+from torch import nn
 
 if TYPE_CHECKING:
     from tensordict import TensorDict
 
-__all__ = ["ModelProtocol", "BaseModel", "BaseEncoder", "BaseDecoder"]
+__all__ = ["BaseDecoder", "BaseEncoder", "BaseModel", "ModelProtocol"]
 
 
 @runtime_checkable
@@ -47,11 +47,9 @@ class BaseModel(nn.Module, ABC):
 
 class BaseEncoder(BaseModel, ABC):
     """Abstract base class for all encoders (e.g., VAE encoders)."""
-
     pass
 
 
 class BaseDecoder(BaseModel, ABC):
     """Abstract base class for all decoders (e.g., VAE decoders)."""
-
     pass

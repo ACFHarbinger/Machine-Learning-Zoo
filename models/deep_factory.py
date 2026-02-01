@@ -31,10 +31,10 @@ from .convolutional import (
 from .general import (
     ELM,
     MLP,
-    NeuralODE,
-    Perceptron,
     PINN,
     RBF,
+    NeuralODE,
+    Perceptron,
 )
 from .memory import DNC, NTM
 from .probabilistic import (

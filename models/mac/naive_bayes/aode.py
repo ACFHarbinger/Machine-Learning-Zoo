@@ -36,7 +36,9 @@ class AODEModel(ClassicalModel):
 
         candidates = list(range(n_features))
         if n_features > self.n_estimators:
-            candidates = list(np.random.choice(candidates, self.n_estimators, replace=False))
+            candidates = list(
+                np.random.choice(candidates, self.n_estimators, replace=False)
+            )
 
         for _ in candidates:
             clf = GaussianNB()

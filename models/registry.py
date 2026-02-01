@@ -7,5 +7,4 @@ def get_model(name: str) -> type:
     """Get model class by name."""
     return MODEL_REGISTRY.get(name)
 
-
-__all__ = ["MODEL_REGISTRY", "register_model", "get_model"]
+__all__ = ["MODEL_REGISTRY", "get_model", "register_model"]

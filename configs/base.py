@@ -1,8 +1,10 @@
+
 from __future__ import annotations
 
-import yaml
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, TypeVar
+
+import yaml
 
 T = TypeVar("T", bound="BaseConfig")
 
@@ -14,9 +16,9 @@ class BaseConfig:
     """Base configuration class with utility methods."""
 
     @classmethod
-    def from_yaml(cls: Type[T], path: str) -> T:
+    def from_yaml(cls: type[T], path: str) -> T:
         """Load configuration from a YAML file."""
-        with open(path, "r") as f:
+        with open(path) as f:
             data = yaml.safe_load(f)
         return cls.from_dict(data)
 
@@ -38,7 +40,7 @@ class BaseConfig:
                     kwargs[k] = v
         return cls(**kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert configuration to a dictionary."""
         return asdict(self)
 
@@ -46,7 +48,6 @@ class BaseConfig:
 def deep_sanitize(cfg: Any) -> Any:
     """Recursively convert DictConfig/ListConfig to primitives."""
     from omegaconf import DictConfig, ListConfig
-
     if isinstance(cfg, DictConfig):
         return {k: deep_sanitize(v) for k, v in cfg.items()}
     if isinstance(cfg, ListConfig):

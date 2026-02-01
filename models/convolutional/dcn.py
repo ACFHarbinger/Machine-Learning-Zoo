@@ -36,7 +36,9 @@ class DeepConvNet(nn.Module):
 
         last_channels = input_dim
         for h_channels in hidden_channels:
-            layers.append(nn.Conv1d(last_channels, h_channels, kernel_size=3, padding=1))
+            layers.append(
+                nn.Conv1d(last_channels, h_channels, kernel_size=3, padding=1)
+            )
             layers.append(nn.BatchNorm1d(h_channels))
             layers.append(nn.ReLU())
             layers.append(nn.MaxPool1d(kernel_size=2, stride=2))
@@ -62,7 +64,9 @@ class DeepConvNet(nn.Module):
         pooled = cast(torch.Tensor, self.pool(feat)).squeeze(-1)
 
         should_return_embedding = (
-            return_embedding if return_embedding is not None else (self.output_type == "embedding")
+            return_embedding
+            if return_embedding is not None
+            else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

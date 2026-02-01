@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import nn
 
-from pi_sidecar.ml.models.base import BaseModel
-from pi_sidecar.ml.utils.registry import register_model
+from python.src.models.base import BaseModel
+from python.src.utils.registry import register_model
 
 if TYPE_CHECKING:
     pass
@@ -66,7 +66,9 @@ class LSTM(BaseModel):
             state = out[:, -1, :]  # (B, H)
 
         should_return_embedding = (
-            return_embedding if return_embedding is not None else (self.output_type == "embedding")
+            return_embedding
+            if return_embedding is not None
+            else (self.output_type == "embedding")
         )
 
         if should_return_embedding:
@@ -131,7 +133,9 @@ class GRU(BaseModel):
             state = out[:, -1, :]
 
         should_return_embedding = (
-            return_embedding if return_embedding is not None else (self.output_type == "embedding")
+            return_embedding
+            if return_embedding is not None
+            else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

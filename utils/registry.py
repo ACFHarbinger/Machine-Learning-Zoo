@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Callable, Dict, Generic, Type, TypeVar
+from collections.abc import Callable
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -12,14 +13,14 @@ class Registry(Generic[T]):
 
     def __init__(self, name: str) -> None:
         self._name = name
-        self._registry: Dict[str, Type[T]] = {}
+        self._registry: dict[str, type[T]] = {}
 
-    def register(self, name: str | None = None) -> Callable[[Type[T]], Type[T]]:
+    def register(self, name: str | None = None) -> Callable[[type[T]], type[T]]:
         """
         Decorator to register a class.
         """
 
-        def wrapper(cls: Type[T]) -> Type[T]:
+        def wrapper(cls: type[T]) -> type[T]:
             reg_name = name or cls.__name__
             if reg_name in self._registry:
                 # We could log a warning here if overwriting is intended
@@ -29,7 +30,7 @@ class Registry(Generic[T]):
 
         return wrapper
 
-    def get(self, name: str) -> Type[T]:
+    def get(self, name: str) -> type[T]:
         """
         Retrieve a class from the registry.
         """
@@ -48,7 +49,7 @@ class Registry(Generic[T]):
         return sorted(list(self._registry.keys()))
 
     @property
-    def registry(self) -> Dict[str, Type[T]]:
+    def registry(self) -> dict[str, type[T]]:
         """
         Get the internal registry dictionary.
         """

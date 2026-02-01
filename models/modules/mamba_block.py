@@ -16,7 +16,9 @@ class MambaBlock(nn.Module):
     Ref: Section 4.3.1 of the provided text.
     """
 
-    def __init__(self, d_model: int, d_state: int = 16, d_conv: int = 4, expand: int = 2) -> None:
+    def __init__(
+        self, d_model: int, d_state: int = 16, d_conv: int = 4, expand: int = 2
+    ) -> None:
         """
         Initialize the Mamba block.
 
@@ -53,7 +55,9 @@ class MambaBlock(nn.Module):
 
         # 4. S4D (Structured State Space) Parameters
         # a_mat is learnable, initializing the state transition matrix a
-        a_init = torch.arange(1, d_state + 1, dtype=torch.float32).repeat(self.d_inner, 1)
+        a_init = torch.arange(1, d_state + 1, dtype=torch.float32).repeat(
+            self.d_inner, 1
+        )
         self.A_log = nn.Parameter(torch.log(a_init))
         self.D = nn.Parameter(torch.ones(self.d_inner))
 

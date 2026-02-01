@@ -5,7 +5,6 @@ Provides S3 and GCS backends for storing model checkpoints with
 automatic compression, versioning, and fallback support.
 """
 
-from pi_sidecar.ml.configs.storage import CloudStorageConfig
 import logging
 import os
 import tempfile
@@ -16,6 +15,7 @@ from typing import Any, cast
 
 import torch
 import zstandard as zstd
+from pi_sidecar.ml.configs.storage import CloudStorageConfig
 
 logger = logging.getLogger(__name__)
 

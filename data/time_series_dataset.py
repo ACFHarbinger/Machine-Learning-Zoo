@@ -47,7 +47,9 @@ class TimeSeriesDataset(Dataset[dict[str, torch.Tensor]]):
 
         # Find target column
         if target_column not in df.columns:
-            raise ValueError(f"Column '{target_column}' not found. Available: {list(df.columns)}")
+            raise ValueError(
+                f"Column '{target_column}' not found. Available: {list(df.columns)}"
+            )
 
         # Extract target values
         values = df[target_column].astype(float).to_numpy()

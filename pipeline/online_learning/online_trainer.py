@@ -16,7 +16,9 @@ class ExperienceReplayBuffer:
 
     def __init__(self, capacity: int = 1000) -> None:
         """Initialize ExperienceReplayBuffer."""
-        self.buffer: collections.deque[dict[str, NDArray[Any]]] = collections.deque(maxlen=capacity)
+        self.buffer: collections.deque[dict[str, NDArray[Any]]] = collections.deque(
+            maxlen=capacity
+        )
 
     def add(self, X: NDArray[Any], y: NDArray[Any]) -> None:  # noqa: N803
         """Add a batch of experience to the buffer."""

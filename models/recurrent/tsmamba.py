@@ -7,7 +7,7 @@ from typing import cast
 import torch
 from torch import nn
 
-from pi_sidecar.ml.models.modules.mamba_block import MambaBlock
+from python.src.models.modules.mamba_block import MambaBlock
 
 
 class TSMamba(nn.Module):
@@ -36,7 +36,10 @@ class TSMamba(nn.Module):
 
         # Stack Mamba blocks
         self.layers = nn.ModuleList(
-            [MambaBlock(d_model=d_model, d_state=16, d_conv=4, expand=2) for _ in range(n_layers)]
+            [
+                MambaBlock(d_model=d_model, d_state=16, d_conv=4, expand=2)
+                for _ in range(n_layers)
+            ]
         )
 
         # Normalization
@@ -64,7 +67,9 @@ class TSMamba(nn.Module):
 
         for layer_module in self.layers:
             layer = cast(MambaBlock, layer_module)
-            x_enc = x_enc + cast(torch.Tensor, layer(x_enc))  # Residual connection per block
+            x_enc = x_enc + cast(
+                torch.Tensor, layer(x_enc)
+            )  # Residual connection per block
 
         x_norm = cast(torch.Tensor, self.norm(x_enc))
 
@@ -76,7 +81,9 @@ class TSMamba(nn.Module):
             state = x_norm[:, -1, :]
 
         should_return_embedding = (
-            return_embedding if return_embedding is not None else (self.output_type == "embedding")
+            return_embedding
+            if return_embedding is not None
+            else (self.output_type == "embedding")
         )
 
         if should_return_embedding:

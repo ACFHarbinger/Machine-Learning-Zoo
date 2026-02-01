@@ -24,7 +24,7 @@ from typing import Any, TypeVar, cast
 
 import psutil
 
-__all__ = ["profile", "timeit", "memory_profile"]
+__all__ = ["memory_profile", "profile", "timeit"]
 
 logger = logging.getLogger(__name__)
 

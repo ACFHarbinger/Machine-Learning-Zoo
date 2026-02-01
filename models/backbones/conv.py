@@ -10,11 +10,11 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from .base import Backbone, BackboneConfig, register_backbone
 
-__all__ = ["ConvBackboneConfig", "ConvBackbone"]
+__all__ = ["ConvBackbone", "ConvBackboneConfig"]
 
 
 @dataclass

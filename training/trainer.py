@@ -1,19 +1,21 @@
 """Training orchestration with progress streaming."""
 
-from typing import Optional, Callable, Any
+from collections.abc import Callable
 from pathlib import Path
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import Callback, ModelCheckpoint
-import torch
+from typing import Any
 
-from .lightning_module import PiLightningModule
+import pytorch_lightning as pl
+import torch
+from pytorch_lightning.callbacks import Callback, ModelCheckpoint
+
 from .data_module import PiDataModule
+from .lightning_module import PiLightningModule
 
 
 class ProgressCallback(Callback):
     """Callback for streaming training progress."""
 
-    def __init__(self, progress_fn: Optional[Callable[[dict], None]] = None):
+    def __init__(self, progress_fn: Callable[[dict], None] | None = None):
         """
         Initialize the callback.
         Args:
@@ -135,8 +137,8 @@ class TrainingOrchestrator:
     def __init__(
         self,
         model_name: str = "gpt2",
-        output_dir: Optional[Path] = None,
-        progress_fn: Optional[Callable[[dict], None]] = None,
+        output_dir: Path | None = None,
+        progress_fn: Callable[[dict], None] | None = None,
     ):
         """
         Initialize the trainer.
@@ -152,8 +154,8 @@ class TrainingOrchestrator:
         self.output_dir = output_dir or Path("./checkpoints")
         self.progress_fn = progress_fn
 
-        self.module: Optional[PiLightningModule] = None
-        self.trainer: Optional[pl.Trainer] = None
+        self.module: PiLightningModule | None = None
+        self.trainer: pl.Trainer | None = None
 
     def prepare(
         self,
@@ -178,7 +180,7 @@ class TrainingOrchestrator:
     def train(
         self,
         train_texts: list[str],
-        val_texts: Optional[list[str]] = None,
+        val_texts: list[str] | None = None,
         epochs: int = 3,
         batch_size: int = 8,
         accelerator: str = "auto",
@@ -236,7 +238,7 @@ class TrainingOrchestrator:
             "checkpoint_dir": str(self.output_dir),
         }
 
-    def save(self, path: Optional[Path] = None) -> Path:
+    def save(self, path: Path | None = None) -> Path:
         """
         Save the trained model.
         Args:

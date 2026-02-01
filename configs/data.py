@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pi_sidecar.ml.configs.base import BaseConfig
+from python.src.configs.base import BaseConfig
 
 __all__ = ["DataConfig", "PolymarketConfig"]
 

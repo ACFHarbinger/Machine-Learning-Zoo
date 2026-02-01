@@ -62,7 +62,9 @@ class ConfigRepository:
         self.configs = []
         self.initial_configs: list[ConfigItem] = []
 
-    def announce_config(self, config: np.ndarray[Any, Any], fidelity: float | None = None) -> int:
+    def announce_config(
+        self, config: np.ndarray[Any, Any], fidelity: float | None = None
+    ) -> int:
         """Announces a new configuration with the respective fidelity it should be evaluated on.
 
         The configuration is then added to the list of so far seen configurations and the ID of the

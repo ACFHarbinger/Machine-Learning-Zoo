@@ -17,8 +17,8 @@ from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
-from pi_sidecar.ml.configs import register_configs
-from pi_sidecar.ml.envs import TradingEnv
+from python.src.configs import register_configs
+from python.src.envs import TradingEnv
 
 # Register structured configs
 register_configs()
@@ -59,7 +59,9 @@ def train_ppo(cfg: DictConfig) -> None:
         env = DummyVecEnv([make_env(0, cfg.seed, cfg.env.lookback, cfg.env.max_steps)])
 
     # Evaluation environment
-    eval_env = DummyVecEnv([make_env(0, cfg.seed + 100, cfg.env.lookback, cfg.env.max_steps)])
+    eval_env = DummyVecEnv(
+        [make_env(0, cfg.seed + 100, cfg.env.lookback, cfg.env.max_steps)]
+    )
 
     # Define the PPO model
     model = PPO(

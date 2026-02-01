@@ -140,7 +140,9 @@ class DifferentialEvolution(DifferentialEvolutionBase):
             if not isinstance(x, CS.Configuration):
                 # converts [0, 1] vector to a CS object
                 assert isinstance(x, np.ndarray)
-                config: np.ndarray[Any, Any] | CS.Configuration = self.vector_to_configspace(x)
+                config: np.ndarray[Any, Any] | CS.Configuration = (
+                    self.vector_to_configspace(x)
+                )
             else:
                 config = x
         elif isinstance(x, np.ndarray):
@@ -148,7 +150,9 @@ class DifferentialEvolution(DifferentialEvolutionBase):
         else:
             config = x
 
-        if fidelity is not None:  # to be used when called by multi-fidelity based optimizers
+        if (
+            fidelity is not None
+        ):  # to be used when called by multi-fidelity based optimizers
             res = self.f(config, fidelity=fidelity, **kwargs)
         else:
             res = self.f(config, **kwargs)
@@ -163,7 +167,9 @@ class DifferentialEvolution(DifferentialEvolutionBase):
         """Creates new population of 'pop_size' and evaluates individuals."""
         assert self.pop_size is not None
         self.population = self.init_population(self.pop_size)
-        self.population_ids = self.config_repository.announce_population(self.population, fidelity)
+        self.population_ids = self.config_repository.announce_population(
+            self.population, fidelity
+        )
         self.fitness = np.array([np.inf for i in range(self.pop_size)])
         self.age = np.array([self.max_age] * self.pop_size)
 
@@ -204,7 +210,9 @@ class DifferentialEvolution(DifferentialEvolutionBase):
         population_ids: np.ndarray[Any, Any] | None = None,
         fidelity: float | None = None,
         **kwargs: Any,
-    ) -> tuple[list[float], list[float], list[Any], np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+    ) -> tuple[
+        list[float], list[float], list[Any], np.ndarray[Any, Any], np.ndarray[Any, Any]
+    ]:
         """Evaluates a population
 
         If population=None, the current population's fitness will be evaluated
@@ -499,12 +507,16 @@ class DifferentialEvolution(DifferentialEvolutionBase):
             donor = self.mutation(current=target, best=best, alt_pop=alt_pop)
             trial = self.crossover(target, donor)
             trial = self.boundary_check(trial)
-            trial_id = self.config_repository.announce_config(trial, float(fidelity or 0))
+            trial_id = self.config_repository.announce_config(
+                trial, float(fidelity or 0)
+            )
             trials.append(trial)
             trial_ids.append(trial_id)
         trials_arr = np.array(trials)
         trial_ids_arr = np.array(trial_ids)
-        traj, runtime, history = self.selection(trials_arr, trial_ids_arr, fidelity, **kwargs)
+        traj, runtime, history = self.selection(
+            trials_arr, trial_ids_arr, fidelity, **kwargs
+        )
         return traj, runtime, history
 
     def sample_mutants(
@@ -541,13 +553,17 @@ class DifferentialEvolution(DifferentialEvolutionBase):
             self.reset()
             if verbose:
                 print("Initializing and evaluating new population...")
-            self.traj, self.runtime, self.history = self.init_eval_pop(fidelity=fidelity, **kwargs)
+            self.traj, self.runtime, self.history = self.init_eval_pop(
+                fidelity=fidelity, **kwargs
+            )
 
         if verbose:
             print("Running evolutionary search...")
         for i in range(generations):
             if verbose:
-                print(f"Generation {i + 1:<2}/{generations:<2} -- {self.inc_score:<0.7}")
+                print(
+                    f"Generation {i + 1:<2}/{generations:<2} -- {self.inc_score:<0.7}"
+                )
             traj, runtime, history = self.evolve_generation(fidelity=fidelity, **kwargs)
             self.traj.extend(traj)
             self.runtime.extend(runtime)

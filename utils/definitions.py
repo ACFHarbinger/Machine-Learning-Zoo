@@ -1,7 +1,7 @@
 """
 Global constants and configuration definitions for NGLab.
 
-This module now re-exports constants from pi_sidecar.ml.constants to maintain
+This module now re-exports constants from python.src.constants to maintain
 backward compatibility.
 """
 
