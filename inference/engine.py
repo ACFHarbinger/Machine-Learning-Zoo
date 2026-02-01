@@ -473,8 +473,10 @@ Available tools:
         model_map = {
             "gemini-3-flash": "gemini-3-pro-low",
             "gemini-2.0-flash": "gemini-3-pro-low",
-            "claude-3-5-sonnet": "claude-sonnet-4-5",
-            # Add other mappings as needed
+            "claude-4-5-sonnet-latest": "claude-sonnet-4-5",
+            "claude-4-5-opus-latest": "claude-opus-4-0",  # Fallback to 4.0 if 4.5 not available
+            "claude-4-5-haiku-latest": "claude-haiku-4-5",
+            "claude-3-5-sonnet-latest": "claude-sonnet-4-5",  # Backward compatibility
         }
 
         target_model = model_map.get(model_name, model_name)

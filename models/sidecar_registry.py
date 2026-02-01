@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 MODEL_CONFIGS: dict[str, dict[str, Any]] = {
     "deepseek-r1-32b": {
         "path": "deepseek-r1-distill-qwen-32b.Q4_K_M.gguf",
-        "n_gpu_layers": -1,  # -1 = Full offload to GPU
-        "n_ctx": 2048,  # Reduced to 2048 to fit in 24GB VRAM with other apps
+        "n_gpu_layers": 50,  # Partial offload to leave room for KV cache and overhead
+        "n_ctx": 2048,
         "hf_repo": "bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
         "hf_file": "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
     },
@@ -165,17 +165,32 @@ class ModelRegistry:
                     "Loading configured model %s with n_gpu_layers=%s, n_ctx=%s",
                     model_id,
                     n_gpu_layers,
+                    n_ctx,
                 )
             else:
                 path = str(model_path) if model_path.exists() else model_id
                 logger.info("Loading GGUF model from %s", path)
 
-            model = Llama(
-                model_path=path,
-                n_gpu_layers=n_gpu_layers,
-                n_ctx=n_ctx,
-                verbose=True,  # Enable for debugging GPU offload
-            )
+            try:
+                model = Llama(
+                    model_path=path,
+                    n_gpu_layers=n_gpu_layers,
+                    n_ctx=n_ctx,
+                    verbose=True,
+                )
+            except ValueError as e:
+                if "Failed to create llama_context" in str(e) and n_gpu_layers != 0:
+                    logger.warning(
+                        "Failed to create Llama context with GPU acceleration. Falling back to CPU."
+                    )
+                    model = Llama(
+                        model_path=path,
+                        n_gpu_layers=0,
+                        n_ctx=n_ctx,
+                        verbose=True,
+                    )
+                else:
+                    raise e
 
             loaded = LoadedModel(
                 model_id=model_id,
