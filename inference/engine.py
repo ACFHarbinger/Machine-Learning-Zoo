@@ -193,6 +193,8 @@ class InferenceEngine:
         task: str,
         iteration: int,
         context: list[dict],
+        task_tree: list[dict] = [],
+        active_subtask_id: str | None = None,
         tools: list[dict] = [],
         provider: str = "local",
         model_id: str | None = None,
@@ -211,6 +213,7 @@ class InferenceEngine:
         # Get personality-aware base prompt
         personality = get_personality()
         personality_prompt = personality.system_prompt
+        import json
 
         tools_list_str = "\n".join(f"- {t.get('name')}: {t.get('description')}" for t in tools)
 
@@ -225,14 +228,25 @@ Given a task and context, decide:
 
 Respond with JSON:
 {{
-    "reasoning": "your chain of thought",
+    "reflection": "Analyze the previous tool result. Did it succeed? If not, why?",
+    "reasoning": "Based on the reflection, what is the next step?",
     "tool_calls": [{{"tool_name": "...", "parameters": {{...}}}}],
     "question": "optional question for user",
     "is_complete": false
 }}
 
+## TASK HIERARCHY
+You can break complex tasks into subtasks to track progress better.
+- If a task is complex, use the `manage_subtasks` tool to create a plan first.
+- `manage_subtasks(action="create", subtasks=[{{"title": "...", "description": "..."}}])`
+- `manage_subtasks(action="update", subtask_id="...", status="running|completed|failed")`
+
+Current Task Tree:
+{json.dumps(task_tree, indent=2) if task_tree else "[]"}
+Active Subtask ID: {active_subtask_id or "None"}
+
 Available tools:
-{tools_list_str if tools_list_str else "shell, code, browser"}"""
+{tools_list_str if tools_list_str else "shell, code, browser, manage_subtasks"}"""
 
         context_str = "\n".join(
             f"[{c.get('role', 'system')}]: {c.get('content', '')}" for c in context
@@ -254,25 +268,33 @@ Available tools:
             temperature=0.3,
         )
 
-        # Parse JSON from response
-        import json
-
         try:
             text = result.get("text", "{}")
+            usage = result.get("usage", {"input_tokens": 0, "output_tokens": 0})
+
             # Find JSON in response
             start = text.find("{")
             end = text.rfind("}") + 1
             if start >= 0 and end > start:
-                return json.loads(text[start:end])
+                plan = json.loads(text[start:end])
+                # Inject usage stats
+                plan["token_usage"] = {
+                    "prompt_tokens": usage.get("input_tokens", 0),
+                    "completion_tokens": usage.get("output_tokens", 0),
+                    "total_tokens": usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
+                }
+                return plan
         except json.JSONDecodeError:
             pass
 
         # Fallback
         return {
+            "reflection": "Failed to parse JSON",
             "reasoning": result.get("text", ""),
             "tool_calls": [],
             "question": None,
             "is_complete": False,
+            "token_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
         }
 
     async def _complete_anthropic_stream(
@@ -603,9 +625,11 @@ Available tools:
             )
 
             import gc
+
             gc.collect()
             try:
                 import torch
+
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
             except ImportError:
@@ -670,4 +694,14 @@ Available tools:
         text = ""
         async for chunk in self._complete_local_stream(prompt, model_id, max_tokens, temperature):
             text += chunk
-        return {"text": text, "provider": "local", "model": model_id}
+
+        # Estimate usage (vocab roughly 1 token per 3-4 chars)
+        prompt_tokens = len(prompt) // 3
+        output_tokens = len(text) // 3
+
+        return {
+            "text": text,
+            "provider": "local",
+            "model": model_id,
+            "usage": {"input_tokens": prompt_tokens, "output_tokens": output_tokens},
+        }
