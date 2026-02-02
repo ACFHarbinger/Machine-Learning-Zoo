@@ -27,7 +27,7 @@ except ImportError:
     HAS_ACCELERATE = False
     Accelerator = None  # type: ignore
 
-from pi_sidecar.pipeline.base import BaseCallback, BaseTrainer
+from .base import BaseCallback, BaseTrainer
 
 logger = logging.getLogger(__name__)
 
@@ -121,8 +121,8 @@ class AcceleratedTrainer(BaseTrainer):
         )
 
         # Prepare with accelerator
-        self.model, self.optimizer, self.train_loader, self.scheduler = self.accelerator.prepare(
-            model, optimizer, train_loader, scheduler
+        self.model, self.optimizer, self.train_loader, self.scheduler = (
+            self.accelerator.prepare(model, optimizer, train_loader, scheduler)
         )
 
         self.val_loader = self.accelerator.prepare(val_loader) if val_loader else None
@@ -131,7 +131,9 @@ class AcceleratedTrainer(BaseTrainer):
         self.loss_fn = loss_fn or nn.MSELoss()
 
         # Setup output directory
-        self.output_dir = Path(self.config.output_dir).expanduser() / self.config.run_name
+        self.output_dir = (
+            Path(self.config.output_dir).expanduser() / self.config.run_name
+        )
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Tracking

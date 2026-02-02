@@ -13,7 +13,7 @@ try:
 
     print(f"Successfully imported nglab from {nglab.__file__}")
 
-    from pi_sidecar.envs import TradingEnv
+    from src.envs import TradingEnv
 
     print("Successfully imported TradingEnv")
 
@@ -31,7 +31,9 @@ try:
         action = 1  # Buy
         obs, reward, terminated, truncated, info = env.step(action)
         if i % 10 == 0:
-            print(f"Step {i}: Reward={reward:.4f}, Portfolio={info.get('portfolio_value'):.2f}")
+            print(
+                f"Step {i}: Reward={reward:.4f}, Portfolio={info.get('portfolio_value'):.2f}"
+            )
         if terminated or truncated:
             print("Episode finished")
             break

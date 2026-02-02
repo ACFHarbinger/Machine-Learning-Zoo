@@ -9,6 +9,9 @@ from .conv import ConvBackbone, ConvBackboneConfig
 from .lstm import LSTMBackbone, LSTMBackboneConfig
 from .mamba import MambaBackbone, MambaBackboneConfig
 from .transformer import TransformerBackbone, TransformerBackboneConfig
+from .hf_backbone import HuggingFaceBackbone
+from .vision import HuggingFaceVisionBackbone
+from .multimodal import MultiModalBackbone
 
 __all__ = [
     # Base
@@ -25,4 +28,7 @@ __all__ = [
     "MambaBackboneConfig",
     "ConvBackbone",
     "ConvBackboneConfig",
+    "HuggingFaceBackbone",
+    "HuggingFaceVisionBackbone",
+    "MultiModalBackbone",
 ]

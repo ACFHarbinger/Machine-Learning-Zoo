@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Any
 
-from pi_sidecar.configs.security import VaultConfig
+from ...configs.security import VaultConfig
 
 logger = logging.getLogger(__name__)
 

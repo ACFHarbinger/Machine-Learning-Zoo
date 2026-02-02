@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pi_sidecar.enums import RunStatus
+from ..enums import RunStatus
 
 from ..configs import RunInfo
 
@@ -97,8 +97,12 @@ class TrainingService:
                     "run_id": run.run_id,
                     "status": run.status.value,
                     "config": run.config,
-                    "started_at": run.started_at.isoformat() if run.started_at else None,
-                    "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+                    "started_at": run.started_at.isoformat()
+                    if run.started_at
+                    else None,
+                    "completed_at": run.completed_at.isoformat()
+                    if run.completed_at
+                    else None,
                     "metrics": run.metrics,
                     "error": run.error,
                     "model_path": run.model_path,
@@ -154,8 +158,8 @@ class TrainingService:
 
         try:
             # Import here to avoid circular deps and lazy load heavy modules
-            from pi_sidecar.models.composed import build_model
-            from pi_sidecar.pipeline.accelerated import (
+            from ..models.composed import build_model
+            from ..pipeline.accelerated import (
                 AcceleratedTrainer,
                 AcceleratedTrainerConfig,
             )
@@ -302,7 +306,10 @@ class TrainingService:
         Returns:
             List of run status dicts
         """
-        return [await self.status(run_id) for run_id in sorted(self._runs.keys(), reverse=True)]
+        return [
+            await self.status(run_id)
+            for run_id in sorted(self._runs.keys(), reverse=True)
+        ]
 
     async def deploy(
         self, run_id: str, tool_name: str, device: str | None = None
@@ -328,13 +335,15 @@ class TrainingService:
         if run is None:
             raise ValueError(f"Run not found: {run_id}")
         if run.status != RunStatus.COMPLETED:
-            raise ValueError(f"Run {run_id} is not completed (status={run.status.value})")
+            raise ValueError(
+                f"Run {run_id} is not completed (status={run.status.value})"
+            )
         if not run.model_path:
             raise ValueError(f"Run {run_id} has no saved model path")
 
         import torch
 
-        from pi_sidecar.models.composed import build_model
+        from ..models.composed import build_model
 
         checkpoint_path = Path(run.model_path)
         if not checkpoint_path.exists():
@@ -366,14 +375,11 @@ class TrainingService:
         model = model.to(device)
 
         # Register as a LoadedModel in the registry
-        try:
-            from ..configs.sidecar_model import LoadedModel
-        except ImportError:
-            from pi_sidecar.configs.sidecar_model import LoadedModel
+        from ..configs.sidecar_model import LoadedModel
 
-        size_mb = sum(
-            p.nelement() * p.element_size() for p in model.parameters()
-        ) // (1024 * 1024)
+        size_mb = sum(p.nelement() * p.element_size() for p in model.parameters()) // (
+            1024 * 1024
+        )
 
         loaded = LoadedModel(
             model_id=tool_name,
@@ -396,7 +402,13 @@ class TrainingService:
         run.deploy_device = device
         self._save_history()
 
-        logger.info("Deployed run %s as tool '%s' on %s (%d MB)", run_id, tool_name, device, size_mb)
+        logger.info(
+            "Deployed run %s as tool '%s' on %s (%d MB)",
+            run_id,
+            tool_name,
+            device,
+            size_mb,
+        )
         return {
             "status": "deployed",
             "run_id": run_id,
@@ -472,16 +484,18 @@ class TrainingService:
         deployed = []
         for run in self._runs.values():
             if run.deployed and run.tool_name:
-                deployed.append({
-                    "run_id": run.run_id,
-                    "tool_name": run.tool_name,
-                    "deploy_device": run.deploy_device,
-                    "task_type": run.task_type,
-                    "metrics": run.metrics,
-                    "loaded": (
-                        self.registry.get_model(run.tool_name) is not None
-                        if self.registry
-                        else False
-                    ),
-                })
+                deployed.append(
+                    {
+                        "run_id": run.run_id,
+                        "tool_name": run.tool_name,
+                        "deploy_device": run.deploy_device,
+                        "task_type": run.task_type,
+                        "metrics": run.metrics,
+                        "loaded": (
+                            self.registry.get_model(run.tool_name) is not None
+                            if self.registry
+                            else False
+                        ),
+                    }
+                )
         return deployed

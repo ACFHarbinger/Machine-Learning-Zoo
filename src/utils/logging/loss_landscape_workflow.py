@@ -8,7 +8,7 @@ import loss_landscapes
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from pi_sidecar.envs.trading_env import TradingEnv
+from ...envs.trading_env import TradingEnv
 from torch import nn
 
 
@@ -53,7 +53,9 @@ class SimplePolicy(nn.Module):
     Simple 2-layer MLP policy for landscape analysis.
     """
 
-    def __init__(self, input_dim: int = 12, hidden_dim: int = 64, output_dim: int = 1) -> None:
+    def __init__(
+        self, input_dim: int = 12, hidden_dim: int = 64, output_dim: int = 1
+    ) -> None:
         """
         Initialize.
         """

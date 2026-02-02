@@ -8,11 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-try:
-    from ..configs.sidecar_model import LoadedModel
-except ImportError:
-    # Handle direct execution or testing
-    from pi_sidecar.configs.sidecar_model import LoadedModel
+from ..configs.sidecar_model import LoadedModel
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +16,7 @@ logger = logging.getLogger(__name__)
 # Configurations for specific hardware (24GB VRAM)
 MODEL_CONFIGS: dict[str, dict[str, Any]] = {
     "deepseek-r1-32b": {
+        "loader": "gguf",
         "path": "deepseek-r1-distill-qwen-32b.Q4_K_M.gguf",
         "n_gpu_layers": 40,  # Safer partial offload for 24GB VRAM with system overhead
         "n_ctx": 2048,
@@ -27,11 +24,56 @@ MODEL_CONFIGS: dict[str, dict[str, Any]] = {
         "hf_file": "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
     },
     "llama-3.3-70b": {
+        "loader": "gguf",
         "path": "llama-3.3-70b-instruct.Q4_K_M.gguf",
         "n_gpu_layers": 35,  # Partial offload to fit in 24GB VRAM
         "n_ctx": 2048,
         "hf_repo": "bartowski/Llama-3.3-70B-Instruct-GGUF",
         "hf_file": "Llama-3.3-70B-Instruct-Q4_K_M.gguf",
+    },
+    # Llama 3 configurations
+    "llama-3-8b-instruct": {
+        "loader": "transformers",
+        "hf_repo": "meta-llama/Meta-Llama-3-8B-Instruct",
+        "device_map": "auto",
+        "torch_dtype": "float16",
+        "load_in_4bit": True,
+    },
+    "llama-3.1-8b-instruct": {
+        "loader": "transformers",
+        "hf_repo": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        "device_map": "auto",
+        "torch_dtype": "bfloat16",
+        "load_in_4bit": True,
+    },
+    # DeepSeek configurations
+    "deepseek-v3-small": {
+        "loader": "transformers",
+        "hf_repo": "deepseek-ai/DeepSeek-V3",  # Note: High VRAM requirements, usually needs distillation or quantization
+        "device_map": "auto",
+        "torch_dtype": "bfloat16",
+        "load_in_4bit": True,
+    },
+    "deepseek-r1-distill-llama-8b": {
+        "loader": "transformers",
+        "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+        "device_map": "auto",
+        "torch_dtype": "bfloat16",
+        "load_in_4bit": True,
+    },
+    "llava-v1.5-7b": {
+        "loader": "multimodal",
+        "vision_config": {
+            "hf_repo": "openai/clip-vit-large-patch14-336",
+            "device_map": "auto",
+            "torch_dtype": "float16",
+        },
+        "llm_config": {
+            "hf_repo": "lmsys/vicuna-7b-v1.5",
+            "device_map": "auto",
+            "torch_dtype": "float16",
+            "load_in_4bit": True,
+        },
     },
 }
 
@@ -118,15 +160,15 @@ class ModelRegistry:
         # Add configured models
         for model_id, cfg in MODEL_CONFIGS.items():
             if not any(m["model_id"] == model_id for m in models):
-                gguf_path = self.models_dir / str(cfg["path"])
                 info = _device_info(model_id)
                 models.append(
                     {
                         "model_id": model_id,
-                        "path": cfg["path"],
+                        "path": cfg.get("path"),
                         "loaded": model_id in self._loaded,
-                        "downloaded": gguf_path.exists(),
-                        "backend": "llama.cpp",
+                        "downloaded": cfg.get("path")
+                        and (self.models_dir / str(cfg["path"])).exists(),
+                        "backend": cfg.get("loader", "llama.cpp"),
                         "hf_repo": cfg.get("hf_repo"),
                         **info,
                     }
@@ -134,7 +176,9 @@ class ModelRegistry:
 
         return models
 
-    async def load_model(self, model_id: str, backend: str | None = None) -> LoadedModel:
+    async def load_model(
+        self, model_id: str, backend: str | None = None
+    ) -> LoadedModel:
         """
         Load a model by ID.
         Args:
@@ -144,128 +188,203 @@ class ModelRegistry:
             A LoadedModel object containing the model and tokenizer.
         """
         if model_id in self._loaded:
-            logger.info("Model already loaded: %s", model_id)
+            logger.info("Model %s already loaded", model_id)
             return self._loaded[model_id]
 
         logger.info("Loading model: %s (backend: %s)", model_id, backend or "auto")
 
-        # Check path and config
-        dir_path = Path(self.models_dir)
-        model_path = dir_path / str(model_id)
+        config = MODEL_CONFIGS.get(model_id)
 
-        # Determine if it's GGUF from ID, path, or config
-        is_gguf = (
-            model_id.endswith(".gguf")
-            or model_path.suffix == ".gguf"
-            or (
-                model_id in MODEL_CONFIGS
-                and str(MODEL_CONFIGS[model_id].get("path", "")).endswith(".gguf")
-            )
-        )
+        # Fallback for direct GGUF files by name
+        if not config and (
+            model_id.endswith(".gguf") or (Path(self.models_dir) / model_id).exists()
+        ):
+            # Default config for direct files
+            config = {"loader": "gguf", "path": model_id}
 
-        # Decide backend
-        effective_backend = backend
-        if not effective_backend:
-            effective_backend = "llama.cpp" if is_gguf else "transformers"
+        if not config:
+            raise ValueError(f"Unknown model identifier: {model_id}")
 
-        if effective_backend == "llama.cpp":
-            from llama_cpp import Llama  # type: ignore
+        loader_type = config.get("loader", "gguf")
 
-        if is_gguf:
-            n_gpu_layers: int = 0  # Default to CPU for safety
-            n_ctx: int = 2048
+        # Override backend if specified
+        if backend == "llama.cpp":
+            loader_type = "gguf"
+        elif backend == "transformers":
+            loader_type = "transformers"
 
-            # Try to find config by ID or by path/filename
-            config = MODEL_CONFIGS.get(model_id)
-            if not config:
-                # Search configs for matching path
-                for cfg_id, cfg in MODEL_CONFIGS.items():
-                    if cfg.get("path") == model_id or Path(cfg.get("path", "")).name == model_id:
-                        config = cfg
-                        model_id = cfg_id
-                        break
+        if loader_type == "gguf":
+            await self._load_gguf(model_id, config)
+        elif loader_type == "transformers":
+            await self._load_hf(model_id, config)
+        elif loader_type == "multimodal":
+            await self._load_multimodal(model_id, config)
+        else:
+            raise ValueError(f"Unsupported loader type: {loader_type}")
 
-            # Check for custom config
-            if config:
-                # If path exists relative to models_dir, use full path, otherwise use name
-                config_path = str(config.get("path", ""))
-                cfg_path = Path(self.models_dir) / config_path
-                path = str(cfg_path) if cfg_path.exists() else config_path
-                n_gpu_layers = int(config.get("n_gpu_layers", 0))
-                n_ctx = int(config.get("n_ctx", 2048))
-                logger.info(
-                    "Loading configured model %s with n_gpu_layers=%s, n_ctx=%s",
-                    model_id,
-                    n_gpu_layers,
-                    n_ctx,
-                )
-            else:
-                path = str(model_path) if model_path.exists() else model_id
-                logger.info("Loading GGUF model from %s", path)
+        return self._loaded[model_id]
 
+    async def _load_gguf(
+        self,
+        model_id: str,
+        config: dict[str, Any],
+    ) -> None:
+        """Load GGUF model using llama-cpp-python."""
+        from llama_cpp import Llama
+
+        path = config["path"]
+        model_path = self.models_dir / path
+
+        # Check if we need to download
+        if not model_path.exists():
+            # If we have repo info, download it
+            if "hf_repo" in config:
+                await self.download_model(model_id)
+
+        str_path = str(model_path)
+        logger.info("Loading GGUF model from %s...", str_path)
+
+        n_gpu_layers = int(config.get("n_gpu_layers", 0))
+        n_ctx = int(config.get("n_ctx", 2048))
+
+        def _load():
             try:
-                model = Llama(
-                    model_path=path,
+                return Llama(
+                    model_path=str_path,
                     n_gpu_layers=n_gpu_layers,
                     n_ctx=n_ctx,
                     verbose=True,
                 )
             except ValueError as e:
+                # Fallback to CPU if GPU failed
                 if "Failed to create llama_context" in str(e) and n_gpu_layers != 0:
-                    logger.warning(
-                        "Failed to create Llama context with GPU acceleration. Falling back to CPU."
+                    logger.warning("GPU init failed, falling back to CPU")
+                    return Llama(
+                        model_path=str_path, n_gpu_layers=0, n_ctx=n_ctx, verbose=True
                     )
-                    model = Llama(
-                        model_path=path,
-                        n_gpu_layers=0,
-                        n_ctx=n_ctx,
-                        verbose=True,
-                    )
-                else:
-                    raise e
+                raise e
 
-            device = "cuda:0" if n_gpu_layers > 0 else "cpu"
-            loaded = LoadedModel(
-                model_id=model_id,
-                model=model,
-                tokenizer=None,
-                backend="llama.cpp",
-                device=device,
+        loop = asyncio.get_event_loop()
+        llm = await loop.run_in_executor(None, _load)
+
+        device = "cuda:0" if n_gpu_layers > 0 else "cpu"
+
+        self._loaded[model_id] = LoadedModel(
+            model=llm,
+            tokenizer=None,
+            config=config,
+            model_id=model_id,
+            loaded_at=__import__("time").time(),
+            backend="llama.cpp",
+            device=device,
+        )
+
+    async def _load_hf(
+        self,
+        model_id: str,
+        config: dict[str, Any],
+    ) -> None:
+        """Load Transformers model using huggingface/transformers."""
+        from .backbones.hf_backbone import HuggingFaceBackbone
+        from .backbones.base import BackboneConfig
+        import torch
+
+        hf_repo = config["hf_repo"]
+        device_map = config.get("device_map", "auto")
+        # Handle string "float16" etc
+        dtype_str = config.get("torch_dtype", "float16")
+        torch_dtype = getattr(torch, dtype_str)
+        load_in_8bit = config.get("load_in_8bit", False)
+        load_in_4bit = config.get("load_in_4bit", False)
+
+        logger.info("Loading Transformers model from %s...", hf_repo)
+
+        def _load_hf_inner():
+            backbone_config = BackboneConfig(
+                extra={
+                    "hf_repo": hf_repo,
+                    "device_map": device_map,
+                    "torch_dtype": torch_dtype,
+                    "load_in_8bit": load_in_8bit,
+                    "load_in_4bit": load_in_4bit,
+                }
             )
-        else:
-            from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
+            backbone = HuggingFaceBackbone(backbone_config)
+            return backbone, backbone.tokenizer
 
-            # Check if it's a local path or HuggingFace ID
-            if model_path.exists():
-                path = str(model_path)
-            else:
-                path = model_id  # Treat as HuggingFace model ID
+        loop = asyncio.get_event_loop()
+        backbone, tokenizer = await loop.run_in_executor(None, _load_hf_inner)
 
-            tokenizer = AutoTokenizer.from_pretrained(path)
-            model = AutoModelForCausalLM.from_pretrained(path)
+        # Estimate device
+        device = str(backbone.model.device)
+        size_mb = self._estimate_model_size(backbone.model)
 
-            # Device-aware placement
-            size_mb = self._estimate_model_size(model)
-            if self.device_manager:
-                target_device = self.device_manager.best_device_for("inference", size_mb)
-            else:
-                import torch
+        self._loaded[model_id] = LoadedModel(
+            model_id=model_id,
+            model=backbone,
+            tokenizer=tokenizer,
+            config=config,
+            backend="transformers",
+            device=device,
+            model_size_mb=size_mb,
+            loaded_at=asyncio.get_event_loop().time(),
+        )
 
-                target_device = "cuda:0" if torch.cuda.is_available() else "cpu"
-            model = model.to(target_device)
-            logger.info("Placed transformers model %s on %s (%d MB)", model_id, target_device, size_mb)
+    async def _load_multimodal(
+        self,
+        model_id: str,
+        config: dict[str, Any],
+    ) -> None:
+        """Load MultiModal model."""
+        from .backbones.multimodal import MultiModalBackbone
+        from .backbones.base import BackboneConfig
+        import torch
 
-            loaded = LoadedModel(
-                model_id=model_id,
-                model=model,
-                tokenizer=tokenizer,
-                backend="transformers",
-                device=target_device,
-                model_size_mb=size_mb,
+        vision_config = config["vision_config"]
+        llm_config = config["llm_config"]
+
+        logger.info("Loading MultiModal model %s...", model_id)
+
+        def _load_mm_inner():
+            backbone_config = BackboneConfig(
+                extra={
+                    "vision_config": vision_config,
+                    "llm_config": llm_config,
+                }
             )
+            backbone = MultiModalBackbone(backbone_config)
+            return backbone, backbone.llm_backbone.tokenizer
 
-        self._loaded[model_id] = loaded
-        return loaded
+        loop = asyncio.get_event_loop()
+        backbone, tokenizer = await loop.run_in_executor(None, _load_mm_inner)
+
+        # Estimate device
+        device = str(backbone.llm_backbone.model.device)
+        size_mb = self._estimate_multimodal_size(backbone)
+
+        self._loaded[model_id] = LoadedModel(
+            model_id=model_id,
+            model=backbone,
+            tokenizer=tokenizer,
+            config=config,
+            backend="multimodal",
+            device=device,
+            model_size_mb=size_mb,
+            loaded_at=asyncio.get_event_loop().time(),
+        )
+
+    def _estimate_multimodal_size(self, model: Any) -> float:
+        """Estimate multimodal model size in MB."""
+        import torch
+
+        size_mb = self._estimate_model_size(model.vision_backbone.model)
+        size_mb += self._estimate_model_size(model.llm_backbone.model)
+        # Add projection layer size
+        proj_params = sum(p.numel() for p in model.projection.parameters())
+        # Use element size of weights
+        element_size = model.projection.weight.element_size()
+        size_mb += (proj_params * element_size) / (1024 * 1024)
+        return round(float(size_mb), 2)
 
     def get_model(self, model_id: str) -> LoadedModel | None:
         """
@@ -375,13 +494,17 @@ class ModelRegistry:
     def _estimate_model_size(model: Any) -> int:
         """Estimate model size in MB from parameter count."""
         try:
-            param_bytes = sum(p.nelement() * p.element_size() for p in model.parameters())
+            param_bytes = sum(
+                p.nelement() * p.element_size() for p in model.parameters()
+            )
             return param_bytes // (1024 * 1024)
         except Exception:
             return 0
 
     async def download_model(
-        self, model_id: str, progress_callback: Callable[[dict[str, Any]], Any] | None = None
+        self,
+        model_id: str,
+        progress_callback: Callable[[dict[str, Any]], Any] | None = None,
     ) -> dict[str, Any]:
         """
         Download a model GGUF file from HuggingFace.
@@ -400,17 +523,25 @@ class ModelRegistry:
         hf_repo = config.get("hf_repo")
         hf_file = config.get("hf_file")
         if not hf_repo or not hf_file:
-            raise ValueError(f"Model {model_id} has no HuggingFace download info configured")
+            raise ValueError(
+                f"Model {model_id} has no HuggingFace download info configured"
+            )
 
         dest_path = Path(self.models_dir) / str(config["path"])
         if dest_path.exists():
             logger.info("Model %s already downloaded at %s", model_id, dest_path)
-            return {"status": "already_downloaded", "model_id": model_id, "path": str(dest_path)}
+            return {
+                "status": "already_downloaded",
+                "model_id": model_id,
+                "path": str(dest_path),
+            }
 
         logger.info("Downloading %s from %s/%s", model_id, hf_repo, hf_file)
 
         if progress_callback:
-            await progress_callback({"status": "downloading", "model_id": model_id, "progress": 0})
+            await progress_callback(
+                {"status": "downloading", "model_id": model_id, "progress": 0}
+            )
 
         def _download() -> str:
             from huggingface_hub import hf_hub_download  # type: ignore
@@ -435,6 +566,8 @@ class ModelRegistry:
         logger.info("Download complete: %s -> %s", model_id, local_path)
 
         if progress_callback:
-            await progress_callback({"status": "complete", "model_id": model_id, "progress": 100})
+            await progress_callback(
+                {"status": "complete", "model_id": model_id, "progress": 100}
+            )
 
         return {"status": "downloaded", "model_id": model_id, "path": local_path}

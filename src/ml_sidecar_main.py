@@ -4,11 +4,11 @@ import sys
 from collections.abc import Callable
 from typing import Any
 
-from pi_sidecar.ipc.ndjson_transport import NdjsonTransport
-from pi_sidecar.inference.engine import InferenceEngine
-from pi_sidecar.models.sidecar_registry import ModelRegistry
-from pi_sidecar.training import TrainingService
-from pi_sidecar.device import DeviceManager
+from src.ipc.ndjson_transport import NdjsonTransport
+from src.inference.engine import InferenceEngine
+from src.models.sidecar_registry import ModelRegistry
+from src.training import TrainingService
+from src.device import DeviceManager
 
 logging.basicConfig(
     stream=sys.stderr,
@@ -106,7 +106,10 @@ class MlRequestHandler:
 
     async def _model_unload(self, p, _cb):
         unloaded = self.registry.unload_model(p["model_id"])
-        return {"status": "unloaded" if unloaded else "not_loaded", "model_id": p["model_id"]}
+        return {
+            "status": "unloaded" if unloaded else "not_loaded",
+            "model_id": p["model_id"],
+        }
 
     async def _model_download(self, p, cb):
         result = await self.registry.download_model(p["model_id"], progress_callback=cb)
@@ -124,9 +127,7 @@ class MlRequestHandler:
     # ── Model migration handler ──────────────────────────────────
 
     async def _model_migrate(self, p, _cb):
-        result = await self.registry.migrate_model(
-            p["model_id"], p["target_device"]
-        )
+        result = await self.registry.migrate_model(p["model_id"], p["target_device"])
         return result
 
     # ── Training handlers ────────────────────────────────────────
@@ -173,21 +174,23 @@ class MlRequestHandler:
         return {"deployed_models": deployed}
 
     async def _voice_synthesize(self, p, _cb):
-        from pi_sidecar.tts.elevenlabs import ElevenLabsTTS
+        from src.tts.elevenlabs import ElevenLabsTTS
 
         tts = ElevenLabsTTS(api_key=p.get("api_key"))
         success = await tts.synthesize(p["text"], p["output_path"])
         return {"success": success, "output_path": p["output_path"]}
 
     async def _voice_transcribe(self, p, _cb):
-        from pi_sidecar.stt.whisper import WhisperSTT
+        from src.stt.whisper import WhisperSTT
 
-        stt = WhisperSTT(model_size=p.get("model_size", "base"), device=p.get("device", "cpu"))
+        stt = WhisperSTT(
+            model_size=p.get("model_size", "base"), device=p.get("device", "cpu")
+        )
         text = await stt.transcribe(p["audio_path"])
         return {"text": text, "audio_path": p["audio_path"]}
 
     async def _personality_hatch_chat(self, p, _cb):
-        from pi_sidecar.personality import get_personality
+        from src.personality import get_personality
 
         personality = get_personality()
         system_prompt = f"{personality.system_prompt}\n\n# Hatching Context\nYou are in the 'hatching' phase. Be extremely welcoming and discuss your identity with the user."

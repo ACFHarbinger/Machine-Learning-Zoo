@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from pi_sidecar.enums import RunStatus
+from ..enums import RunStatus
 
 
 @dataclass

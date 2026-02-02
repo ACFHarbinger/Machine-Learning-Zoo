@@ -11,7 +11,9 @@ import torch
 
 def torch_load_cpu(load_path: str) -> Any:
     """Load torch tensors on CPU."""
-    return torch.load(load_path, map_location=lambda storage, loc: storage)  # Load on CPU
+    return torch.load(
+        load_path, map_location=lambda storage, loc: storage
+    )  # Load on CPU
 
 
 def move_to(var: Any, device: torch.device | str) -> Any:
@@ -77,7 +79,9 @@ def _load_model_file(
     return model, load_optimizer_state_dict
 
 
-def load_model(path: str, epoch: int | None = None) -> tuple[torch.nn.Module, dict[str, Any]]:
+def load_model(
+    path: str, epoch: int | None = None
+) -> tuple[torch.nn.Module, dict[str, Any]]:
     """
     Load a model and its configuration from a directory or specific file.
 
@@ -88,7 +92,7 @@ def load_model(path: str, epoch: int | None = None) -> tuple[torch.nn.Module, di
     Returns:
         tuple: (model, args)
     """
-    from pi_sidecar.models import LSTM, NSTransformer
+    from ...models import LSTM, NSTransformer
 
     if os.path.isfile(path):
         model_filename = path

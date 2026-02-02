@@ -8,9 +8,9 @@ and enforcing retention rules across local and cloud storage.
 import logging
 from typing import Any, Protocol, cast
 
-from pi_sidecar.configs.storage import RetentionConfig
-from pi_sidecar.utils.io.cloud_storage import CloudCheckpointManager
-from pi_sidecar.utils.io.model_versioning import ModelRegistry
+from ...configs.storage import RetentionConfig
+from .cloud_storage import CloudCheckpointManager
+from .model_versioning import ModelRegistry
 
 logger = logging.getLogger(__name__)
 

@@ -11,18 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Distributed Training**:
+  - Implementation of `DistributedDataParallel` (DDP) support in `TrainingOrchestrator`.
+  - Added rank-aware logging and progress streaming via `ProgressCallback`.
+  - Integrated `pytorch-lightning` for scalable training across multiple GPUs.
+- **Multi-Modal Pipelines**:
+  - Implemented `HuggingFaceVisionBackbone` for vision encoder support.
+  - Implemented `MultiModalBackbone` for aligning vision and text hidden states.
+  - Enhanced `InferenceEngine` to support multimodal inputs (image + text).
+  - Added support for LLaVA-style architectures (CLIP + LLM).
+- **Advanced LLM Support**:
+  - Implemented `HuggingFaceBackbone` for native Transformers integration.
+  - Added support for Llama-3, Llama-3.1, and DeepSeek (R1-Distill) models.
+  - Enhanced `InferenceEngine` with `top_p`, `top_k`, and `repetition_penalty` parameters.
+  - Implemented 4-bit/8-bit quantization loading via `bitsandbytes`.
 - Initial creation of documentation files:
   - CONTRIBUTING.md
   - ARCHITECTURE.md
-  - AGENTS.md
-  - DEPENDENCIES.md
-  - DEVELOPMENT.md
-  - ROADMAP.md
-  - TESTING.md
-  - TROUBLESHOOTING.md
-  - TUTORIAL.md
-- Added tech badges to all documentation files.
-- Updated README.md with comprehensive badges and sections.
+    ... (rest of the file)
 
 ### Changed
 

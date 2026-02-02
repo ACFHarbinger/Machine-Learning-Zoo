@@ -14,8 +14,8 @@ import os
 from pathlib import Path
 from typing import Any
 
-from pi_sidecar.models.sidecar_registry import ModelRegistry
-from pi_sidecar.personality import get_personality
+from ..models.sidecar_registry import ModelRegistry
+from ..personality import get_personality
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class InferenceEngine:
         Returns:
             A dictionary containing the status of the operation.
         """
-        from pi_sidecar.models.sidecar_registry import MODEL_CONFIGS
+        from ..models.sidecar_registry import MODEL_CONFIGS
 
         # Local models configured in MODEL_CONFIGS are never API models
         if model_id in MODEL_CONFIGS:
@@ -146,6 +146,10 @@ class InferenceEngine:
         model_id: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
+        top_p: float = 0.9,
+        top_k: int = 40,
+        repetition_penalty: float = 1.1,
+        image_data: str | None = None,
     ):
         """
         Generate streaming text completion from specified provider.
@@ -159,8 +163,6 @@ class InferenceEngine:
             )
 
             if has_claude_max:
-                # Direct Claude Max streaming is complex due to httpx
-                # We'll fallback to non-streaming for now or implement if possible
                 async for token in self._complete_claude_max_stream(
                     prompt, model_id, max_tokens, temperature
                 ):
@@ -174,7 +176,7 @@ class InferenceEngine:
                     yield token
             else:
                 async for token in self._complete_anthropic_stream(
-                    prompt, model_id, max_tokens, temperature
+                    prompt, model_id, max_tokens, temperature, top_p=top_p
                 ):
                     yield token
         elif provider == "google":
@@ -184,7 +186,14 @@ class InferenceEngine:
                 yield token
         else:
             async for token in self._complete_local_stream(
-                prompt, model_id, max_tokens, temperature
+                prompt,
+                model_id,
+                max_tokens,
+                temperature,
+                top_p=top_p,
+                top_k=top_k,
+                repetition_penalty=repetition_penalty,
+                image_data=image_data,
             ):
                 yield token
 
@@ -215,7 +224,9 @@ class InferenceEngine:
         personality_prompt = personality.system_prompt
         import json
 
-        tools_list_str = "\n".join(f"- {t.get('name')}: {t.get('description')}" for t in tools)
+        tools_list_str = "\n".join(
+            f"- {t.get('name')}: {t.get('description')}" for t in tools
+        )
 
         system_prompt = f"""{personality_prompt}
 
@@ -281,7 +292,8 @@ Available tools:
                 plan["token_usage"] = {
                     "prompt_tokens": usage.get("input_tokens", 0),
                     "completion_tokens": usage.get("output_tokens", 0),
-                    "total_tokens": usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
+                    "total_tokens": usage.get("input_tokens", 0)
+                    + usage.get("output_tokens", 0),
                 }
                 return plan
         except json.JSONDecodeError:
@@ -294,11 +306,20 @@ Available tools:
             "tool_calls": [],
             "question": None,
             "is_complete": False,
-            "token_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            "token_usage": {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+            },
         }
 
     async def _complete_anthropic_stream(
-        self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
+        self,
+        prompt: str,
+        model_id: str | None,
+        max_tokens: int,
+        temperature: float,
+        top_p: float = 0.9,
     ):
         """Complete using Anthropic Claude via standard SDK with streaming."""
         if self._anthropic_client is None:
@@ -316,19 +337,29 @@ Available tools:
         async with self._anthropic_client.messages.stream(
             model=model,
             max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
             messages=[{"role": "user", "content": prompt}],
         ) as stream:
             async for event in stream:
-                if event.type == "content_block_delta" and event.delta.type == "text_delta":
+                if (
+                    event.type == "content_block_delta"
+                    and event.delta.type == "text_delta"
+                ):
                     yield event.delta.text
 
     async def _complete_anthropic(
-        self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
+        self,
+        prompt: str,
+        model_id: str | None,
+        max_tokens: int,
+        temperature: float,
+        top_p: float = 0.9,
     ) -> dict[str, Any]:
         """Backward compatible non-streaming call."""
         text = ""
         async for chunk in self._complete_anthropic_stream(
-            prompt, model_id, max_tokens, temperature
+            prompt, model_id, max_tokens, temperature, top_p=top_p
         ):
             text += chunk
         return {"text": text, "provider": "anthropic", "model": model_id}
@@ -354,7 +385,9 @@ Available tools:
             )
 
             if response.status_code != 200:
-                raise ValueError(f"Token refresh failed ({response.status_code}): {response.text}")
+                raise ValueError(
+                    f"Token refresh failed ({response.status_code}): {response.text}"
+                )
 
             data = response.json()
             new_token = data["access_token"]
@@ -366,13 +399,17 @@ Available tools:
             if "expires_in" in data:
                 import time
 
-                secrets["claude_max_expires_at"] = str(int(time.time()) + data["expires_in"])
+                secrets["claude_max_expires_at"] = str(
+                    int(time.time()) + data["expires_in"]
+                )
             self._save_secrets(secrets)
 
             logger.info("Claude Max token refreshed successfully")
             return new_token
 
-    async def _complete_claude_max_stream(self, prompt, model_id, max_tokens, temperature):
+    async def _complete_claude_max_stream(
+        self, prompt, model_id, max_tokens, temperature
+    ):
         """Simulate streaming for Claude Max by just yielding the full response for now."""
         # TODO: Implement true streaming for Claude Max using httpx-sse if needed
         res = await self._complete_claude_max(prompt, model_id, max_tokens, temperature)
@@ -441,15 +478,21 @@ Available tools:
 
             if response.status_code != 200:
                 error_text = response.text
-                logger.error("Claude Max API error %d: %s", response.status_code, error_text)
-                raise ValueError(f"Claude Max API error ({response.status_code}): {error_text}")
+                logger.error(
+                    "Claude Max API error %d: %s", response.status_code, error_text
+                )
+                raise ValueError(
+                    f"Claude Max API error ({response.status_code}): {error_text}"
+                )
 
             data = response.json()
 
             # Parse Anthropic Messages API response
             content_blocks = data.get("content", [])
             text = "".join(
-                block.get("text", "") for block in content_blocks if block.get("type") == "text"
+                block.get("text", "")
+                for block in content_blocks
+                if block.get("type") == "text"
             )
 
             usage = data.get("usage", {})
@@ -567,12 +610,18 @@ Available tools:
 
         async with httpx.AsyncClient(trust_env=False) as client:
             try:
-                response = await client.post(endpoint, json=payload, headers=headers, timeout=60.0)
+                response = await client.post(
+                    endpoint, json=payload, headers=headers, timeout=60.0
+                )
 
                 if response.status_code != 200:
                     error_text = response.text
-                    logger.error(f"Antigravity API Error {response.status_code}: {error_text}")
-                    raise ValueError(f"Antigravity API Error {response.status_code}: {error_text}")
+                    logger.error(
+                        f"Antigravity API Error {response.status_code}: {error_text}"
+                    )
+                    raise ValueError(
+                        f"Antigravity API Error {response.status_code}: {error_text}"
+                    )
 
                 data = response.json()
 
@@ -601,12 +650,27 @@ Available tools:
                 raise
 
     async def _complete_local_stream(
-        self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
+        self,
+        prompt: str,
+        model_id: str | None,
+        max_tokens: int,
+        temperature: float,
+        top_p: float = 0.9,
+        top_k: int = 40,
+        repetition_penalty: float = 1.1,
+        image_data: str | None = None,
     ):
         """Complete using local model with streaming, with OOM auto-fallback to CPU."""
         try:
             async for token in self._complete_local_stream_inner(
-                prompt, model_id, max_tokens, temperature
+                prompt,
+                model_id,
+                max_tokens,
+                temperature,
+                top_p=top_p,
+                top_k=top_k,
+                repetition_penalty=repetition_penalty,
+                image_data=image_data,
             ):
                 yield token
         except RuntimeError as e:
@@ -638,12 +702,26 @@ Available tools:
             await self.registry.migrate_model(resolved_id, "cpu")
 
             async for token in self._complete_local_stream_inner(
-                prompt, model_id, max_tokens, temperature
+                prompt,
+                model_id,
+                max_tokens,
+                temperature,
+                top_p=top_p,
+                top_k=top_k,
+                repetition_penalty=repetition_penalty,
             ):
                 yield token
 
     async def _complete_local_stream_inner(
-        self, prompt: str, model_id: str | None, max_tokens: int, temperature: float
+        self,
+        prompt: str,
+        model_id: str | None,
+        max_tokens: int,
+        temperature: float,
+        top_p: float = 0.9,
+        top_k: int = 40,
+        repetition_penalty: float = 1.1,
+        image_data: str | None = None,
     ):
         """Complete using local model with streaming."""
         model = self.registry.get_model(model_id or "default")
@@ -657,6 +735,9 @@ Available tools:
                 prompt,
                 max_tokens=max_tokens,
                 temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                repeat_penalty=repetition_penalty,
                 stop=["</s>", "User:", "Assistant:"],
                 stream=True,
             )
@@ -664,13 +745,58 @@ Available tools:
                 token = chunk["choices"][0].get("text", "")
                 if token:
                     yield token
+        elif model.backend == "multimodal":
+            # Handle multimodal generation
+            from transformers import TextIteratorStreamer
+            from threading import Thread
+            import base64
+            from io import BytesIO
+            from PIL import Image
+
+            streamer = TextIteratorStreamer(model.tokenizer, skip_prompt=True)
+
+            # Prepare inputs
+            pixel_values = None
+            if image_data:
+                # Assuming image_data is base64
+                if "," in image_data:
+                    image_data = image_data.split(",")[1]
+                img_bytes = base64.b64decode(image_data)
+                img = Image.open(BytesIO(img_bytes)).convert("RGB")
+                processed = model.model.vision_backbone.preprocess(img)
+                pixel_values = processed["pixel_values"]
+
+            input_ids = model.tokenizer(prompt, return_tensors="pt").input_ids.to(
+                model.model.device
+            )
+
+            generation_kwargs = dict(
+                pixel_values=pixel_values,
+                input_ids=input_ids,
+                streamer=streamer,
+                max_new_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                repetition_penalty=repetition_penalty,
+                do_sample=True if temperature > 0 else False,
+            )
+
+            thread = Thread(target=model.model.generate, kwargs=generation_kwargs)
+            thread.start()
+            for token in streamer:
+                yield token
         else:
             # For transformers, use TextIteratorStreamer
             from transformers import TextIteratorStreamer
             from threading import Thread
 
-            assert model.tokenizer is not None, "Tokenizer must be loaded for transformers backend"
-            assert model.model is not None, "Model must be loaded for transformers backend"
+            assert model.tokenizer is not None, (
+                "Tokenizer must be loaded for transformers backend"
+            )
+            assert model.model is not None, (
+                "Model must be loaded for transformers backend"
+            )
 
             streamer = TextIteratorStreamer(model.tokenizer, skip_prompt=True)
             generation_kwargs = dict(
@@ -680,7 +806,10 @@ Available tools:
                 streamer=streamer,
                 max_new_tokens=max_tokens,
                 temperature=temperature,
-                do_sample=True,
+                top_p=top_p,
+                top_k=top_k,
+                repetition_penalty=repetition_penalty,
+                do_sample=True if temperature > 0 else False,
             )
             thread = Thread(target=model.model.generate, kwargs=generation_kwargs)
             thread.start()
@@ -692,7 +821,9 @@ Available tools:
     ) -> dict[str, Any]:
         """Backward compatible non-streaming local call."""
         text = ""
-        async for chunk in self._complete_local_stream(prompt, model_id, max_tokens, temperature):
+        async for chunk in self._complete_local_stream(
+            prompt, model_id, max_tokens, temperature
+        ):
             text += chunk
 
         # Estimate usage (vocab roughly 1 token per 3-4 chars)

@@ -28,7 +28,9 @@ class ProgressCallback(Callback):
         self.current_epoch = 0
         self.total_epochs = 0
 
-    def on_train_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
+    def on_train_start(
+        self, trainer: pl.Trainer, pl_module: pl.LightningModule
+    ) -> None:
         """
         Called when training starts.
         Args:
@@ -40,7 +42,9 @@ class ProgressCallback(Callback):
         """
         self.total_epochs = trainer.max_epochs or 0
 
-    def on_train_epoch_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
+    def on_train_epoch_start(
+        self, trainer: pl.Trainer, pl_module: pl.LightningModule
+    ) -> None:
         """
         Called when an epoch starts.
         Args:
@@ -74,7 +78,9 @@ class ProgressCallback(Callback):
             None
         """
         if batch_idx % 10 == 0:  # Report every 10 batches
-            loss = outputs["loss"].item() if isinstance(outputs, dict) else outputs.item()
+            loss = (
+                outputs["loss"].item() if isinstance(outputs, dict) else outputs.item()
+            )
             self._emit_progress(
                 "batch",
                 {
@@ -84,7 +90,9 @@ class ProgressCallback(Callback):
                 },
             )
 
-    def on_train_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
+    def on_train_epoch_end(
+        self, trainer: pl.Trainer, pl_module: pl.LightningModule
+    ) -> None:
         """
         Called when an epoch ends.
         Args:
@@ -95,7 +103,8 @@ class ProgressCallback(Callback):
             None
         """
         metrics = {
-            k: v.item() if torch.is_tensor(v) else v for k, v in trainer.callback_metrics.items()
+            k: v.item() if torch.is_tensor(v) else v
+            for k, v in trainer.callback_metrics.items()
         }
         self._emit_progress(
             "epoch_end",
@@ -127,7 +136,15 @@ class ProgressCallback(Callback):
         Returns:
             None
         """
-        if self.progress_fn:
+        # In distributed training, only emit progress from rank 0
+        is_rank_zero = True
+        try:
+            if torch.distributed.is_initialized():
+                is_rank_zero = torch.distributed.get_rank() == 0
+        except (ImportError, RuntimeError):
+            pass
+
+        if is_rank_zero and self.progress_fn:
             self.progress_fn({"event": event, **data})
 
 
@@ -184,6 +201,8 @@ class TrainingOrchestrator:
         epochs: int = 3,
         batch_size: int = 8,
         accelerator: str = "auto",
+        strategy: str = "auto",
+        devices: str | int = "auto",
     ) -> dict:
         """
         Run training.
@@ -194,6 +213,8 @@ class TrainingOrchestrator:
             epochs: The number of epochs.
             batch_size: The batch size.
             accelerator: The accelerator.
+            strategy: The strategy (e.g., 'ddp', 'deepspeed').
+            devices: The devices to use.
         Returns:
             dict: The training results.
         """
@@ -224,6 +245,8 @@ class TrainingOrchestrator:
         self.trainer = pl.Trainer(
             max_epochs=epochs,
             accelerator=accelerator,
+            strategy=strategy,
+            devices=devices,
             callbacks=callbacks,
             enable_progress_bar=False,  # We use our own progress
             logger=False,
