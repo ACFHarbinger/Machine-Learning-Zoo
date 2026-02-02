@@ -29,9 +29,7 @@ class MlRequestHandler:
         self.registry = registry
         self.device_manager = device_manager
         assert hasattr(self.registry, "list_models"), "Registry must have list_models"
-        self.training = TrainingService(
-            registry=registry, device_manager=device_manager
-        )
+        self.training = TrainingService(registry=registry, device_manager=device_manager)
         self._handlers = {
             "health.ping": self._health_ping,
             "lifecycle.shutdown": self._lifecycle_shutdown,
@@ -137,8 +135,8 @@ class MlRequestHandler:
 
     # ── Training handlers ────────────────────────────────────────
 
-    async def _training_start(self, p, _cb):
-        return {"run_id": await self.training.start(p), "status": "started"}
+    async def _training_start(self, p, cb):
+        return {"run_id": await self.training.start(p, progress_callback=cb), "status": "started"}
 
     async def _training_stop(self, p, _cb):
         return {"stopped": await self.training.stop(p["run_id"]), "run_id": p["run_id"]}
@@ -188,9 +186,7 @@ class MlRequestHandler:
     async def _voice_transcribe(self, p, _cb):
         from src.stt.whisper import WhisperSTT
 
-        stt = WhisperSTT(
-            model_size=p.get("model_size", "base"), device=p.get("device", "cpu")
-        )
+        stt = WhisperSTT(model_size=p.get("model_size", "base"), device=p.get("device", "cpu"))
         text = await stt.transcribe(p["audio_path"])
         return {"text": text, "audio_path": p["audio_path"]}
 

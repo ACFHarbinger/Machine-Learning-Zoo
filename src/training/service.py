@@ -12,15 +12,40 @@ import logging
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from ..enums import RunStatus
-
 from ..configs import RunInfo
+from .base import BaseCallback
 
 logger = logging.getLogger(__name__)
 
 __all__ = ["TrainingService"]
+
+
+class TrainingProgressCallback(BaseCallback):
+    """Callback for streaming training progress via IPC."""
+
+    def __init__(self, run_id: str, progress_fn: Callable[[dict[str, Any]], None]):
+        self.run_id = run_id
+        self.progress_fn = progress_fn
+
+    def on_epoch_end(self, epoch: int, metrics: dict[str, float], **kwargs: Any) -> None:
+        self.progress_fn(
+            {"run_id": self.run_id, "event": "epoch_end", "epoch": epoch, "metrics": metrics}
+        )
+
+    def on_batch_end(self, batch_idx: int, metrics: dict[str, float], **kwargs: Any) -> None:
+        # Avoid overwhelming the IPC with too many updates
+        if batch_idx % 10 == 0:
+            self.progress_fn(
+                {
+                    "run_id": self.run_id,
+                    "event": "batch_end",
+                    "batch": batch_idx,
+                    "metrics": metrics,
+                }
+            )
 
 
 class TrainingService:
@@ -97,12 +122,8 @@ class TrainingService:
                     "run_id": run.run_id,
                     "status": run.status.value,
                     "config": run.config,
-                    "started_at": run.started_at.isoformat()
-                    if run.started_at
-                    else None,
-                    "completed_at": run.completed_at.isoformat()
-                    if run.completed_at
-                    else None,
+                    "started_at": run.started_at.isoformat() if run.started_at else None,
+                    "completed_at": run.completed_at.isoformat() if run.completed_at else None,
                     "metrics": run.metrics,
                     "error": run.error,
                     "model_path": run.model_path,
@@ -118,7 +139,11 @@ class TrainingService:
         with open(history_file, "w") as f:
             json.dump(data, f, indent=2)
 
-    async def start(self, config: dict[str, Any]) -> str:
+    async def start(
+        self,
+        config: dict[str, Any],
+        progress_callback: Callable[[dict[str, Any]], Any] | None = None,
+    ) -> str:
         """
         Start a new training run.
 
@@ -130,6 +155,7 @@ class TrainingService:
                 - head_config: Dict of head parameters
                 - training: Training hyperparameters
                 - data: Dataset configuration
+            progress_callback: Callback for real-time progress updates.
 
         Returns:
             run_id: Unique identifier for this run
@@ -145,13 +171,18 @@ class TrainingService:
         self._runs[run_id] = run_info
 
         # Spawn training task
-        task = asyncio.create_task(self._run_training(run_id, config))
+        task = asyncio.create_task(self._run_training(run_id, config, progress_callback))
         self._tasks[run_id] = task
 
         logger.info(f"Started training run: {run_id}")
         return run_id
 
-    async def _run_training(self, run_id: str, config: dict[str, Any]) -> None:
+    async def _run_training(
+        self,
+        run_id: str,
+        config: dict[str, Any],
+        progress_callback: Callable[[dict[str, Any]], Any] | None = None,
+    ) -> None:
         """Execute training in background."""
         run_info = self._runs[run_id]
         run_info.status = RunStatus.RUNNING
@@ -202,12 +233,18 @@ class TrainingService:
                 mixed_precision=training_config.get("mixed_precision", "no"),
             )
 
+            # Setup callbacks
+            callbacks = []
+            if progress_callback:
+                callbacks.append(TrainingProgressCallback(run_id, progress_callback))
+
             # Train
             trainer = AcceleratedTrainer(
                 model=model,
                 train_loader=train_loader,
                 config=trainer_config,
                 loss_fn=torch.nn.CrossEntropyLoss(),
+                callbacks=callbacks,
             )
 
             result = trainer.train()
@@ -306,10 +343,7 @@ class TrainingService:
         Returns:
             List of run status dicts
         """
-        return [
-            await self.status(run_id)
-            for run_id in sorted(self._runs.keys(), reverse=True)
-        ]
+        return [await self.status(run_id) for run_id in sorted(self._runs.keys(), reverse=True)]
 
     async def deploy(
         self, run_id: str, tool_name: str, device: str | None = None
@@ -335,9 +369,7 @@ class TrainingService:
         if run is None:
             raise ValueError(f"Run not found: {run_id}")
         if run.status != RunStatus.COMPLETED:
-            raise ValueError(
-                f"Run {run_id} is not completed (status={run.status.value})"
-            )
+            raise ValueError(f"Run {run_id} is not completed (status={run.status.value})")
         if not run.model_path:
             raise ValueError(f"Run {run_id} has no saved model path")
 
@@ -365,9 +397,9 @@ class TrainingService:
         # Determine target device
         if device is None:
             if self.device_manager:
-                size_mb = sum(
-                    p.nelement() * p.element_size() for p in model.parameters()
-                ) // (1024 * 1024)
+                size_mb = sum(p.nelement() * p.element_size() for p in model.parameters()) // (
+                    1024 * 1024
+                )
                 device = self.device_manager.best_device_for("inference", size_mb)
             else:
                 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -377,9 +409,7 @@ class TrainingService:
         # Register as a LoadedModel in the registry
         from ..configs.sidecar_model import LoadedModel
 
-        size_mb = sum(p.nelement() * p.element_size() for p in model.parameters()) // (
-            1024 * 1024
-        )
+        size_mb = sum(p.nelement() * p.element_size() for p in model.parameters()) // (1024 * 1024)
 
         loaded = LoadedModel(
             model_id=tool_name,
