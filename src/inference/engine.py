@@ -12,10 +12,12 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional, Union
 
 from ..models.sidecar_registry import ModelRegistry
 from ..personality import get_personality
+from ..utils.prompts.few_shot import FewShotRegistry
+from ..utils.prompts.prompts import PromptRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +32,11 @@ class InferenceEngine:
             registry: The model registry to use for text completion.
         """
         self.registry = registry
+        self.prompt_registry = PromptRegistry()
+        self.few_shot_registry = FewShotRegistry()
+        self.prompt_registry.load_all()
+        self.few_shot_registry.load_all()
+
         self._embedding_model = None
         self._anthropic_client = None
         self._gemini_client = None
@@ -42,7 +49,7 @@ class InferenceEngine:
         Returns:
             A dictionary containing the status of the operation.
         """
-        from ..models.sidecar_registry import MODEL_CONFIGS
+        from ..models.hub import MODEL_CONFIGS
 
         # Local models configured in MODEL_CONFIGS are never API models
         if model_id in MODEL_CONFIGS:
@@ -113,11 +120,15 @@ class InferenceEngine:
 
     async def complete(
         self,
-        prompt: str,
+        prompt: Optional[str] = None,
         provider: str = "local",
         model_id: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
+        template_name: Optional[str] = None,
+        template_vars: Optional[dict[str, Any]] = None,
+        few_shot_category: Optional[str] = None,
+        few_shot_count: int = 0,
     ) -> dict[str, Any]:
         """
         Generate text completion from specified provider.
@@ -130,6 +141,10 @@ class InferenceEngine:
             model_id=model_id,
             max_tokens=max_tokens,
             temperature=temperature,
+            template_name=template_name,
+            template_vars=template_vars,
+            few_shot_category=few_shot_category,
+            few_shot_count=few_shot_count,
         ):
             text += chunk
 
@@ -141,7 +156,7 @@ class InferenceEngine:
 
     async def complete_stream(
         self,
-        prompt: str,
+        prompt: Optional[str] = None,
         provider: str = "local",
         model_id: str | None = None,
         max_tokens: int = 1024,
@@ -150,11 +165,24 @@ class InferenceEngine:
         top_k: int = 40,
         repetition_penalty: float = 1.1,
         image_data: str | None = None,
+        template_name: Optional[str] = None,
+        template_vars: Optional[dict[str, Any]] = None,
+        few_shot_category: Optional[str] = None,
+        few_shot_count: int = 0,
     ):
         """
         Generate streaming text completion from specified provider.
         Yields tokens one by one.
         """
+        # Prepare prompt using template and few-shot examples
+        final_prompt = await self._prepare_prompt(
+            prompt=prompt,
+            template_name=template_name,
+            template_vars=template_vars,
+            few_shot_category=few_shot_category,
+            few_shot_count=few_shot_count,
+        )
+
         if provider == "anthropic":
             secrets = self._load_secrets()
             has_claude_max = bool(secrets.get("claude_max_oauth"))
@@ -164,29 +192,29 @@ class InferenceEngine:
 
             if has_claude_max:
                 async for token in self._complete_claude_max_stream(
-                    prompt, model_id, max_tokens, temperature
+                    final_prompt, model_id, max_tokens, temperature
                 ):
                     yield token
             elif has_antigravity_tokens:
                 logger.info("Routing Anthropic request via Antigravity Gateway")
                 model = model_id or "claude-3-5-sonnet-v2@20241022"
                 async for token in self._complete_gemini_stream(
-                    prompt, model, max_tokens, temperature
+                    final_prompt, model, max_tokens, temperature
                 ):
                     yield token
             else:
                 async for token in self._complete_anthropic_stream(
-                    prompt, model_id, max_tokens, temperature, top_p=top_p
+                    final_prompt, model_id, max_tokens, temperature, top_p=top_p
                 ):
                     yield token
         elif provider == "google":
             async for token in self._complete_gemini_stream(
-                prompt, model_id, max_tokens, temperature
+                final_prompt, model_id, max_tokens, temperature
             ):
                 yield token
         else:
             async for token in self._complete_local_stream(
-                prompt,
+                final_prompt,
                 model_id,
                 max_tokens,
                 temperature,
@@ -196,6 +224,43 @@ class InferenceEngine:
                 image_data=image_data,
             ):
                 yield token
+
+    async def _prepare_prompt(
+        self,
+        prompt: Optional[str] = None,
+        template_name: Optional[str] = None,
+        template_vars: Optional[Dict[str, Any]] = None,
+        few_shot_category: Optional[str] = None,
+        few_shot_count: int = 0,
+    ) -> str:
+        """
+        Prepare a prompt by rendering a template and/or adding few-shot examples.
+        """
+        template_vars = template_vars or {}
+
+        # 1. Start with the base prompt or template-rendered prompt
+        if template_name:
+            template = self.prompt_registry.get_template(template_name)
+            if not template:
+                logger.warning("Prompt template not found: %s", template_name)
+                final_prompt = prompt or ""
+            else:
+                final_prompt = template.render(**template_vars)
+        else:
+            final_prompt = prompt or ""
+
+        # 2. Add few-shot examples if requested
+        if few_shot_category and few_shot_count > 0:
+            examples = self.few_shot_registry.get_examples(
+                few_shot_category, count=few_shot_count
+            )
+            if examples:
+                examples_str = "\n\n".join(
+                    f"Input: {ex.input}\nOutput: {ex.output}" for ex in examples
+                )
+                final_prompt = f"Examples:\n{examples_str}\n\n{final_prompt}"
+
+        return final_prompt
 
     async def plan(
         self,

@@ -11,6 +11,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Domain Adaptation**:
+  - Implemented `MMDLoss` for distribution alignment.
+  - Implemented `GradientReversalLayer` and `DomainDiscriminator` for Domain Adversarial Neural Networks (DANN).
+  - Integrated domain adaptation losses into `PiLightningModule`.
+
+- **Continual Learning**:
+  - Implemented `EWCCallback` for Elastic Weight Consolidation.
+  - Implemented `ReplayBuffer` and `ReplayDataset` for experience replay.
+  - Integrated continual learning strategies into `TrainingOrchestrator`.
+- **Prompt Engineering Toolkit**:
+  - Implementation of `PromptTemplate` engine using Jinja2.
+  - New `PromptRegistry` and `FewShotRegistry` for persistent storage of templates and examples.
+  - Automated `PromptOptimizer` using LLM-in-the-loop refinement.
+  - Integrated template rendering and few-shot decoration into `InferenceEngine`.
+- **DeepSpeed Integration**:
+  - Full support for `DeepSpeedStrategy` in `TrainingOrchestrator`.
+  - Automated ZeRO-stage configuration (Stage 1, 2, and 3).
+  - Support for CPU offloading of optimizer states and parameters to handle large models.
+- **LoRA & QLoRA Support**:
+  - Integrated `peft` library for parameter-efficient fine-tuning.
+  - Support for 4-bit (QLoRA) training via `bitsandbytes` and `BitsAndBytesConfig`.
+  - Automatic adapter management in `ModelHub` (listing and discovery).
+  - Adapter-only saving in `TrainingOrchestrator` to optimize storage.
+- **Model Hub**:
+  - Centralized `ModelHub` for unified model inventory and lifecycle management.
+  - New `StorageManager` for disk space monitoring and model size estimation.
+  - Consolidated all model configurations into a single source of truth in `hub.py`.
+  - Refactored `ModelRegistry` and `InferenceEngine` to delegate downloads and storage tracking to the Hub.
+  - Standardized type hints across the entire model management stack for Python 3.9+ compatibility.
+
 - **Distributed Training**:
   - Implementation of `DistributedDataParallel` (DDP) support in `TrainingOrchestrator`.
   - Added rank-aware logging and progress streaming via `ProgressCallback`.

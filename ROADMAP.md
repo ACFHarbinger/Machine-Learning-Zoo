@@ -19,7 +19,7 @@ This document outlines the high-level goals and planned features for the Machine
 
 ## Phase 3: Ecosystem Integration
 
-- [ ] **Model Hub**: Easy download/upload of pretrained weights.
+- [x] **Model Hub**: Easy download/upload of pretrained weights.
 - [ ] **Visual Dashboard**: A React-based dashboard for monitoring training real-time (integrated with the main app).
 - [ ] **AutoML**: Automated hyperparameter tuning support.
 
@@ -28,14 +28,14 @@ This document outlines the high-level goals and planned features for the Machine
 - [x] **Quantization**: Native support for 4-bit/8-bit loading via `bitsandbytes`.
 - [ ] **Optimized Inference**: Integration with vLLM or similar libraries for high-throughput serving.
 - [ ] **Model Compression**: Pruning and knowledge distillation pipelines to reduce model size without significant accuracy loss.
-- [ ] **DeepSpeed Integration**: ZeRO-stage offloading for training large models on limited hardware.
+- [x] **DeepSpeed Integration**: ZeRO-stage offloading for training large models on limited hardware.
 
 ## Phase 5: Fine-Tuning & Adaptation
 
-- [ ] **LoRA / QLoRA Support**: Parameter-efficient fine-tuning for LLMs and vision models.
-- [ ] **Prompt Engineering Toolkit**: Few-shot example management, prompt templates, and automated prompt optimization.
-- [ ] **Continual Learning**: Strategies for updating models on new data without catastrophic forgetting.
-- [ ] **Domain Adaptation**: Transfer learning utilities for shifting between data distributions.
+- [x] **LoRA / QLoRA Support**: Parameter-efficient fine-tuning for LLMs and vision models.
+- [x] **Prompt Engineering Toolkit**: Few-shot example management, prompt templates, and automated prompt optimization.
+- [x] **Continual Learning**: Strategies for updating models on new data without catastrophic forgetting (EWC, Experience Replay).
+- [x] **Domain Adaptation**: Utilities for distribution alignment (MMD loss) and adversarial training (GRL, DANN).
 
 ## Phase 6: Explainability & Evaluation
 

@@ -2,7 +2,7 @@ import asyncio
 import logging
 import sys
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Dict, Optional
 
 from src.ipc.ndjson_transport import NdjsonTransport
 from src.inference.engine import InferenceEngine
@@ -28,6 +28,7 @@ class MlRequestHandler:
         self.engine = engine
         self.registry = registry
         self.device_manager = device_manager
+        assert hasattr(self.registry, "list_models"), "Registry must have list_models"
         self.training = TrainingService(
             registry=registry, device_manager=device_manager
         )
@@ -58,7 +59,10 @@ class MlRequestHandler:
         }
 
     async def dispatch(
-        self, method: str, params: dict, progress_callback: Callable | None = None
+        self,
+        method: str,
+        params: Dict[str, Any],
+        progress_callback: Optional[Callable[..., Any]] = None,
     ) -> Any:
         handler = self._handlers.get(method)
         if not handler:
@@ -98,6 +102,7 @@ class MlRequestHandler:
         return await self.engine.load_model(p.get("model_id") or p.get("path"))
 
     async def _model_list(self, p, _cb):
+        # Mypy might be confused, but it exists in sidecar_registry.py
         return {"models": self.registry.list_models()}
 
     async def _model_load(self, p, _cb):

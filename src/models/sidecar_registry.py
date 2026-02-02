@@ -6,76 +6,14 @@ import asyncio
 import logging
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional, Union
 
 from ..configs.sidecar_model import LoadedModel
 
 logger = logging.getLogger(__name__)
 
 
-# Configurations for specific hardware (24GB VRAM)
-MODEL_CONFIGS: dict[str, dict[str, Any]] = {
-    "deepseek-r1-32b": {
-        "loader": "gguf",
-        "path": "deepseek-r1-distill-qwen-32b.Q4_K_M.gguf",
-        "n_gpu_layers": 40,  # Safer partial offload for 24GB VRAM with system overhead
-        "n_ctx": 2048,
-        "hf_repo": "bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
-        "hf_file": "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
-    },
-    "llama-3.3-70b": {
-        "loader": "gguf",
-        "path": "llama-3.3-70b-instruct.Q4_K_M.gguf",
-        "n_gpu_layers": 35,  # Partial offload to fit in 24GB VRAM
-        "n_ctx": 2048,
-        "hf_repo": "bartowski/Llama-3.3-70B-Instruct-GGUF",
-        "hf_file": "Llama-3.3-70B-Instruct-Q4_K_M.gguf",
-    },
-    # Llama 3 configurations
-    "llama-3-8b-instruct": {
-        "loader": "transformers",
-        "hf_repo": "meta-llama/Meta-Llama-3-8B-Instruct",
-        "device_map": "auto",
-        "torch_dtype": "float16",
-        "load_in_4bit": True,
-    },
-    "llama-3.1-8b-instruct": {
-        "loader": "transformers",
-        "hf_repo": "meta-llama/Meta-Llama-3.1-8B-Instruct",
-        "device_map": "auto",
-        "torch_dtype": "bfloat16",
-        "load_in_4bit": True,
-    },
-    # DeepSeek configurations
-    "deepseek-v3-small": {
-        "loader": "transformers",
-        "hf_repo": "deepseek-ai/DeepSeek-V3",  # Note: High VRAM requirements, usually needs distillation or quantization
-        "device_map": "auto",
-        "torch_dtype": "bfloat16",
-        "load_in_4bit": True,
-    },
-    "deepseek-r1-distill-llama-8b": {
-        "loader": "transformers",
-        "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
-        "device_map": "auto",
-        "torch_dtype": "bfloat16",
-        "load_in_4bit": True,
-    },
-    "llava-v1.5-7b": {
-        "loader": "multimodal",
-        "vision_config": {
-            "hf_repo": "openai/clip-vit-large-patch14-336",
-            "device_map": "auto",
-            "torch_dtype": "float16",
-        },
-        "llm_config": {
-            "hf_repo": "lmsys/vicuna-7b-v1.5",
-            "device_map": "auto",
-            "torch_dtype": "float16",
-            "load_in_4bit": True,
-        },
-    },
-}
+from .hub import ModelHub, MODEL_CONFIGS
 
 
 class ModelRegistry:
@@ -83,8 +21,8 @@ class ModelRegistry:
 
     def __init__(
         self,
-        models_dir: Path | None = None,
-        device_manager: Any | None = None,
+        models_dir: Optional[Path] = None,
+        device_manager: Optional[Any] = None,
     ):
         """
         Initialize the model registry.
@@ -94,90 +32,16 @@ class ModelRegistry:
         """
         self.models_dir = models_dir or Path.home() / ".pi-assistant" / "models"
         self.models_dir.mkdir(parents=True, exist_ok=True)
-        self._loaded: dict[str, LoadedModel] = {}
+        self.hub = ModelHub(self.models_dir)
+        self._loaded: Dict[str, LoadedModel] = {}
         self.device_manager = device_manager
 
-    def list_models(self) -> list[dict]:
-        """
-        List available models with device placement info.
-        Returns:
-            A list of dictionaries containing the model information.
-        """
-        models: list[dict[str, Any]] = []
-
-        def _device_info(model_id: str) -> dict[str, Any]:
-            """Get device and size info for a loaded model."""
-            loaded = self._loaded.get(model_id)
-            if loaded:
-                return {
-                    "device": loaded.device,
-                    "model_size_mb": loaded.model_size_mb,
-                }
-            return {"device": None, "model_size_mb": None}
-
-        # List models in models_dir
-        for item in self.models_dir.iterdir():
-            if item.is_dir():
-                info = _device_info(item.name)
-                models.append(
-                    {
-                        "model_id": item.name,
-                        "path": str(item),
-                        "loaded": item.name in self._loaded,
-                        "downloaded": True,
-                        "backend": "transformers",
-                        **info,
-                    }
-                )
-            elif item.suffix == ".gguf":
-                info = _device_info(item.name)
-                models.append(
-                    {
-                        "model_id": item.name,
-                        "path": str(item),
-                        "loaded": item.name in self._loaded,
-                        "downloaded": True,
-                        "backend": "llama.cpp",
-                        **info,
-                    }
-                )
-
-        # Add loaded models not in directory
-        for model_id, model in self._loaded.items():
-            if not any(m["model_id"] == model_id for m in models):
-                models.append(
-                    {
-                        "model_id": model_id,
-                        "path": None,
-                        "loaded": True,
-                        "downloaded": True,
-                        "backend": getattr(model, "backend", "unknown"),
-                        "device": model.device,
-                        "model_size_mb": model.model_size_mb,
-                    }
-                )
-
-        # Add configured models
-        for model_id, cfg in MODEL_CONFIGS.items():
-            if not any(m["model_id"] == model_id for m in models):
-                info = _device_info(model_id)
-                models.append(
-                    {
-                        "model_id": model_id,
-                        "path": cfg.get("path"),
-                        "loaded": model_id in self._loaded,
-                        "downloaded": cfg.get("path")
-                        and (self.models_dir / str(cfg["path"])).exists(),
-                        "backend": cfg.get("loader", "llama.cpp"),
-                        "hf_repo": cfg.get("hf_repo"),
-                        **info,
-                    }
-                )
-
-        return models
+    def list_models(self) -> List[Dict[str, Any]]:
+        """List available local models."""
+        return self.hub.list_local()
 
     async def load_model(
-        self, model_id: str, backend: str | None = None
+        self, model_id: str, backend: Optional[str] = None
     ) -> LoadedModel:
         """
         Load a model by ID.
@@ -227,10 +91,10 @@ class ModelRegistry:
     async def _load_gguf(
         self,
         model_id: str,
-        config: dict[str, Any],
+        config: Dict[str, Any],
     ) -> None:
         """Load GGUF model using llama-cpp-python."""
-        from llama_cpp import Llama
+        from llama_cpp import Llama  # type: ignore
 
         path = config["path"]
         model_path = self.models_dir / path
@@ -282,10 +146,10 @@ class ModelRegistry:
     async def _load_hf(
         self,
         model_id: str,
-        config: dict[str, Any],
+        config: Dict[str, Any],
     ) -> None:
         """Load Transformers model using huggingface/transformers."""
-        from .backbones.hf_backbone import HuggingFaceBackbone
+        from .backbones.hf_backbone import HuggingFaceBackbone  # type: ignore
         from .backbones.base import BackboneConfig
         import torch
 
@@ -317,7 +181,7 @@ class ModelRegistry:
 
         # Estimate device
         device = str(backbone.model.device)
-        size_mb = self._estimate_model_size(backbone.model)
+        size_mb = self.hub.storage.estimate_model_size_mb(backbone.model)
 
         self._loaded[model_id] = LoadedModel(
             model_id=model_id,
@@ -333,7 +197,7 @@ class ModelRegistry:
     async def _load_multimodal(
         self,
         model_id: str,
-        config: dict[str, Any],
+        config: Dict[str, Any],
     ) -> None:
         """Load MultiModal model."""
         from .backbones.multimodal import MultiModalBackbone
@@ -386,7 +250,7 @@ class ModelRegistry:
         size_mb += (proj_params * element_size) / (1024 * 1024)
         return round(float(size_mb), 2)
 
-    def get_model(self, model_id: str) -> LoadedModel | None:
+    def get_model(self, model_id: str) -> Optional[LoadedModel]:
         """
         Get a loaded model, or None if not loaded.
         Args:
@@ -420,7 +284,7 @@ class ModelRegistry:
             return True
         return False
 
-    async def migrate_model(self, model_id: str, target_device: str) -> dict[str, Any]:
+    async def migrate_model(self, model_id: str, target_device: str) -> Dict[str, Any]:
         """
         Move a loaded model to a different device at runtime.
 
@@ -490,84 +354,14 @@ class ModelRegistry:
             "new_device": target_device,
         }
 
-    @staticmethod
-    def _estimate_model_size(model: Any) -> int:
+    def _estimate_model_size(self, model: Any) -> float:
         """Estimate model size in MB from parameter count."""
-        try:
-            param_bytes = sum(
-                p.nelement() * p.element_size() for p in model.parameters()
-            )
-            return param_bytes // (1024 * 1024)
-        except Exception:
-            return 0
+        return self.hub.storage.estimate_model_size_mb(model)
 
     async def download_model(
         self,
         model_id: str,
         progress_callback: Callable[[dict[str, Any]], Any] | None = None,
     ) -> dict[str, Any]:
-        """
-        Download a model GGUF file from HuggingFace.
-        Args:
-            model_id: The model ID from MODEL_CONFIGS.
-            progress_callback: Optional async callback for progress updates.
-        Returns:
-            A dictionary with download status and local path.
-        """
-        config = MODEL_CONFIGS.get(model_id)
-        if not config:
-            raise ValueError(
-                f"Unknown model ID: {model_id}. Available: {list(MODEL_CONFIGS.keys())}"
-            )
-
-        hf_repo = config.get("hf_repo")
-        hf_file = config.get("hf_file")
-        if not hf_repo or not hf_file:
-            raise ValueError(
-                f"Model {model_id} has no HuggingFace download info configured"
-            )
-
-        dest_path = Path(self.models_dir) / str(config["path"])
-        if dest_path.exists():
-            logger.info("Model %s already downloaded at %s", model_id, dest_path)
-            return {
-                "status": "already_downloaded",
-                "model_id": model_id,
-                "path": str(dest_path),
-            }
-
-        logger.info("Downloading %s from %s/%s", model_id, hf_repo, hf_file)
-
-        if progress_callback:
-            await progress_callback(
-                {"status": "downloading", "model_id": model_id, "progress": 0}
-            )
-
-        def _download() -> str:
-            from huggingface_hub import hf_hub_download  # type: ignore
-
-            downloaded_path = hf_hub_download(
-                repo_id=hf_repo,
-                filename=hf_file,
-                local_dir=str(self.models_dir),
-                local_dir_use_symlinks=False,
-            )
-            # Rename to our expected filename if different
-            dl = Path(downloaded_path)
-            if dl.name != config["path"]:
-                target = self.models_dir / str(config["path"])
-                dl.rename(target)
-                return str(target)
-            return downloaded_path
-
-        loop = asyncio.get_event_loop()
-        local_path = await loop.run_in_executor(None, _download)
-
-        logger.info("Download complete: %s -> %s", model_id, local_path)
-
-        if progress_callback:
-            await progress_callback(
-                {"status": "complete", "model_id": model_id, "progress": 100}
-            )
-
-        return {"status": "downloaded", "model_id": model_id, "path": local_path}
+        """Download a model to local storage."""
+        return await self.hub.download(model_id, progress_callback)
