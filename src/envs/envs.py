@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict, Optional
 
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 from numpy.typing import NDArray
 
-__all__ = ["HAS_RUST", "ClobEnv", "PolymarketEnv", "TradingEnv"]
+__all__ = ["HAS_RUST", "ClobEnv", "PolymarketEnv", "TradingEnv", "MultiAgentEnvWrapper"]
 
 # Use Any for Rust objects to avoid complex type issues with optional imports
 RustTradingEnv: Any = None
@@ -284,24 +284,6 @@ class TradingEnv(gym.Env[NDArray[np.float64], int]):
                 asset, side, quantity, duration, algo_type, urgency, participation_rate
             )
 
-    def submit_algo_order(
-        self,
-        asset: str,
-        side: int,  # 0=Bid, 1=Ask
-        quantity: float,
-        algo_type: str,
-        duration: int = 100,
-        urgency: float | None = None,
-        participation_rate: float | None = None,
-    ) -> None:
-        """
-        Submit an algorithmic order.
-        """
-        if self._rust_env is not None:
-            self._rust_env.submit_algo_order_py(
-                asset, side, quantity, duration, algo_type, urgency, participation_rate
-            )
-
 
 class ClobEnv(TradingEnv):
     """
@@ -494,3 +476,44 @@ class PolymarketEnv(gym.Env[NDArray[Any], NDArray[Any]]):
         """
         if self.render_mode == "human":
             print(f"Account Value: ${self._account_value():.2f}")
+
+
+class MultiAgentEnvWrapper(gym.Env[Dict[str, NDArray[Any]], Dict[str, Any]]):
+    """
+    A wrapper that turns a standard Gymnasium environment into a multi-agent one.
+    Useful for simulating multi-agent interactions in the same state space.
+    """
+
+    def __init__(self, env: gym.Env, num_agents: int = 1):
+        super().__init__()
+        self.env = env
+        self.num_agents = num_agents
+        self.agents = [f"agent_{i}" for i in range(num_agents)]
+
+        # Observation and Action spaces are dictionaries keyed by agent ID
+        self.observation_space = spaces.Dict(
+            {agent: env.observation_space for agent in self.agents}
+        )
+        self.action_space = spaces.Dict(
+            {agent: env.action_space for agent in self.agents}
+        )
+
+    def reset(
+        self, *, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None
+    ):
+        obs, info = self.env.reset(seed=seed, options=options)
+        # Duplicate observation for all agents (homogeneous)
+        multi_obs = {agent: obs for agent in self.agents}
+        return multi_obs, info
+
+    def step(self, actions: Dict[str, Any]):
+        # Resolve actions (simple sum/mean or first agent for now)
+        # In a real MA-RL env, the base env would handle multiple actions.
+        # This is a conceptual wrapper for the Research Phase.
+        first_agent_action = actions[self.agents[0]]
+        obs, reward, terminated, truncated, info = self.env.step(first_agent_action)
+
+        multi_obs = {agent: obs for agent in self.agents}
+        multi_rewards = {agent: reward for agent in self.agents}
+
+        return multi_obs, multi_rewards, terminated, truncated, info

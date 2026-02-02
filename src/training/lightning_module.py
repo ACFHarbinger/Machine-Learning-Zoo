@@ -1,12 +1,19 @@
 """PyTorch Lightning Module for model training."""
 
 from typing import Any, Dict, Optional, Union
+import logging
 
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import get_peft_model, LoraConfig, TaskType, prepare_model_for_kbit_training
+from src.training.domain_adaptation import (
+    MMDLoss,
+    GradientReversalLayer,
+    DomainDiscriminator,
+)
+import torch.nn.functional as F
 
 
 class PiLightningModule(pl.LightningModule):
@@ -21,6 +28,7 @@ class PiLightningModule(pl.LightningModule):
         lora_config: Optional[Dict[str, Any]] = None,
         use_4bit: bool = False,
         domain_adaptation_config: Optional[Dict[str, Any]] = None,
+        distillation_config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize the lightning module.
@@ -82,14 +90,33 @@ class PiLightningModule(pl.LightningModule):
             self.model = get_peft_model(self.model, peft_config)
             self.model.print_trainable_parameters()
 
+        # Setup Knowledge Distillation
+        self.distill_config = distillation_config or {}
+        self.teacher_model = None
+        if self.distill_config.get("teacher_name"):
+            teacher_name = self.distill_config["teacher_name"]
+            logger = logging.getLogger(__name__)
+            logger.info(f"Loading teacher model for distillation: {teacher_name}")
+            self.teacher_model = AutoModelForCausalLM.from_pretrained(
+                teacher_name,
+                device_map="auto",
+                torch_dtype=torch.float16,
+            )
+            self.teacher_model.eval()
+            for param in self.teacher_model.parameters():
+                param.requires_grad = False
+
         # Ensure pad token exists
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
-            # For PEFT models, the config is in base_model
-            config = getattr(
-                self.model, "config", getattr(self.model, "model", None).config
-            )
-            config.pad_token_id = self.tokenizer.eos_token_id
+            # For PEFT models, the config might be in base_model
+            config = getattr(self.model, "config", None)
+            if config is None:
+                base_model = getattr(self.model, "model", None)
+                config = getattr(base_model, "config", None) if base_model else None
+
+            if config:
+                config.pad_token_id = self.tokenizer.eos_token_id
 
     def forward(
         self,
@@ -160,6 +187,29 @@ class PiLightningModule(pl.LightningModule):
             da_loss = nn.functional.cross_entropy(domain_preds, domain_labels)
             total_loss += self.da_config.get("lambda", 0.1) * da_loss
             self.log("da_dann_loss", da_loss, on_step=True)
+
+        # Knowledge Distillation Loss
+        if self.teacher_model:
+            temperature = self.distill_config.get("temperature", 2.0)
+            alpha = self.distill_config.get("alpha", 0.5)
+
+            with torch.no_grad():
+                teacher_outputs = self.teacher_model(
+                    input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]
+                )
+                teacher_logits = teacher_outputs.logits
+
+            # Soften logits and compute KL Divergence
+            student_logits = outputs.logits
+
+            distill_loss = F.kl_div(
+                F.log_softmax(student_logits / temperature, dim=-1),
+                F.softmax(teacher_logits / temperature, dim=-1),
+                reduction="batchmean",
+            ) * (temperature**2)
+
+            total_loss = alpha * task_loss + (1 - alpha) * distill_loss
+            self.log("distill_loss", distill_loss, on_step=True)
 
         self.log("train_loss", total_loss, prog_bar=True, on_step=True, on_epoch=True)
         return total_loss

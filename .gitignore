@@ -419,3 +419,7 @@ FodyWeavers.xsd
 
 # Python
 *.egg-info
+
+# Machine Learning Model Weights
+mlruns/
+outputs/

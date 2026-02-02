@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Optional
+import importlib.metadata
+import logging
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
@@ -11,9 +15,11 @@ class Registry(Generic[T]):
     A central registry for managing components.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, entry_point_group: Optional[str] = None) -> None:
         self._name = name
         self._registry: dict[str, type[T]] = {}
+        self._entry_point_group = entry_point_group
+        self._plugins_loaded = False
 
     def register(self, name: str | None = None) -> Callable[[type[T]], type[T]]:
         """
@@ -34,6 +40,9 @@ class Registry(Generic[T]):
         """
         Retrieve a class from the registry.
         """
+        if not self._plugins_loaded and self._entry_point_group:
+            self._load_plugins()
+
         if name not in self._registry:
             available = ", ".join(sorted(self._registry.keys()))
             raise ValueError(
@@ -46,7 +55,28 @@ class Registry(Generic[T]):
         """
         List all registered component names.
         """
+        if not self._plugins_loaded and self._entry_point_group:
+            self._load_plugins()
         return sorted(list(self._registry.keys()))
+
+    def _load_plugins(self):
+        """Load plugins from entry points."""
+        if self._entry_point_group:
+            eps = importlib.metadata.entry_points().select(
+                group=self._entry_point_group
+            )
+            for ep in eps:
+                try:
+                    cls = ep.load()
+                    reg_name = ep.name
+                    if reg_name not in self._registry:
+                        self._registry[reg_name] = cls
+                        logger.info(
+                            f"Loaded plugin '{reg_name}' for registry '{self._name}'"
+                        )
+                except Exception as e:
+                    logger.error(f"Failed to load plugin '{ep.name}': {e}")
+        self._plugins_loaded = True
 
     @property
     def registry(self) -> dict[str, type[T]]:
@@ -57,10 +87,10 @@ class Registry(Generic[T]):
 
 
 # Global Registries
-MODEL_REGISTRY = Registry("Model")
-POLICY_REGISTRY = Registry("Policy")
-ENV_REGISTRY = Registry("Environment")
-PIPELINE_REGISTRY = Registry("Pipeline")
+MODEL_REGISTRY = Registry("Model", entry_point_group="ml_zoo.models")
+POLICY_REGISTRY = Registry("Policy", entry_point_group="ml_zoo.policies")
+ENV_REGISTRY = Registry("Environment", entry_point_group="ml_zoo.envs")
+PIPELINE_REGISTRY = Registry("Pipeline", entry_point_group="ml_zoo.pipelines")
 
 # Helper Decorators
 register_model = MODEL_REGISTRY.register

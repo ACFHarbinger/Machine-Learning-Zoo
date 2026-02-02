@@ -7,12 +7,15 @@ import logging
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
+from pytorch_lightning.loggers import WandbLogger, MLFlowLogger
 
 from .data_module import PiDataModule
 from .lightning_module import PiLightningModule
 from .continual import EWCCallback, ReplayBuffer
 from .replay_data import ReplayDataset
 from .domain_adaptation import MMDLoss, DomainDiscriminator, GradientReversalLayer
+from .explainability import ExplainabilityModule
+from .evaluation import Evaluator
 
 
 logger = logging.getLogger(__name__)
@@ -188,6 +191,7 @@ class TrainingOrchestrator:
         warmup_steps: int = 100,
         lora_config: Optional[Dict[str, Any]] = None,
         use_4bit: bool = False,
+        distillation_config: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Prepare the model for training.
@@ -204,6 +208,7 @@ class TrainingOrchestrator:
             warmup_steps=warmup_steps,
             lora_config=lora_config,
             use_4bit=use_4bit,
+            distillation_config=distillation_config,
         )
 
     def train(
@@ -223,6 +228,8 @@ class TrainingOrchestrator:
         replay_ratio: float = 0.2,
         domain_adaptation_mode: Optional[str] = None,  # "mmd", "dann"
         target_texts: Optional[List[str]] = None,
+        distillation_config: Optional[Dict[str, Any]] = None,
+        tracking_config: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Run training.
@@ -239,7 +246,11 @@ class TrainingOrchestrator:
             dict: The training results.
         """
         if self.module is None:
-            self.prepare(lora_config=lora_config, use_4bit=use_4bit)
+            self.prepare(
+                lora_config=lora_config,
+                use_4bit=use_4bit,
+                distillation_config=distillation_config,
+            )
 
         # Create data module
         data_module = PiDataModule(
@@ -299,12 +310,29 @@ class TrainingOrchestrator:
             # In a real scenario, we'd add samples from train_texts to buffer AFTER training.
             logger.info("Experience Replay enabled with ratio=%.2f", replay_ratio)
 
-        # Handle DeepSpeed strategy
         if isinstance(strategy, str) and strategy.startswith("deepspeed"):
             if deepspeed_config is None:
                 # Default to Stage 2 with CPU offload if it's a "performance" phase
                 deepspeed_config = self._get_deepspeed_config(stage=2, offload_cpu=True)
             strategy = pl.strategies.DeepSpeedStrategy(config=deepspeed_config)
+
+        # Loggers
+        loggers = []
+        if tracking_config:
+            if tracking_config.get("use_wandb"):
+                loggers.append(
+                    WandbLogger(
+                        project=tracking_config.get("project", "ml-zoo"),
+                        name=tracking_config.get("name"),
+                    )
+                )
+            if tracking_config.get("use_mlflow"):
+                loggers.append(
+                    MLFlowLogger(
+                        experiment_name=tracking_config.get("project", "ml-zoo"),
+                        run_name=tracking_config.get("name"),
+                    )
+                )
 
         # Create trainer
         self.trainer = pl.Trainer(
@@ -314,7 +342,7 @@ class TrainingOrchestrator:
             devices=devices,
             callbacks=callbacks,
             enable_progress_bar=False,  # We use our own progress
-            logger=False,
+            logger=loggers if loggers else False,
         )
 
         # Train
@@ -334,12 +362,102 @@ class TrainingOrchestrator:
             sample_size = min(100, len(train_texts))
             self.replay_buffer.add_samples(random.sample(train_texts, sample_size))
 
-        return {
+        results = {
             "epochs": epochs,
             "final_loss": self.trainer.callback_metrics.get(
                 "train_loss", torch.tensor(0.0)
             ).item(),
             "checkpoint_dir": str(self.output_dir),
+        }
+
+        # Run final evaluation if requested
+        evaluation_results = {}
+        if val_texts and self.module:
+            try:
+                evaluation_results = self.evaluate(val_texts)
+                logger.info("Final Evaluation: %s", evaluation_results)
+            except Exception as e:
+                logger.error("Evaluation failed: %s", e)
+
+        results["evaluation"] = evaluation_results
+        return results
+
+    def evaluate(self, texts: List[str], task: str = "generation") -> Dict[str, float]:
+        """
+        Evaluate the model on a set of texts.
+        Args:
+            texts: The evaluation texts.
+            task: The task type.
+        Returns:
+            dict: Evaluation metrics.
+        """
+        if self.module is None or self.trainer is None:
+            raise ValueError("Model not prepared or trained.")
+
+        self.module.eval()
+        import torch
+        from .data_module import PiDataModule
+
+        dm = PiDataModule(
+            tokenizer=self.module.tokenizer,
+            train_texts=[],
+            val_texts=texts,
+            batch_size=8,
+        )
+        dm.setup("validate")
+
+        all_logits = []
+        all_labels = []
+
+        with torch.no_grad():
+            for batch in dm.val_dataloader():
+                batch = {k: v.to(self.module.device) for k, v in batch.items()}
+                output = self.module.model(**batch)
+                all_logits.append(output.logits.cpu())
+                all_labels.append(batch["labels"].cpu())
+
+        logits = torch.cat(all_logits, dim=0)
+        labels = torch.cat(all_labels, dim=0)
+
+        return Evaluator.evaluate(task, labels, logits)
+
+    def explain(self, text: str, target_idx: int) -> Dict[str, Any]:
+        """
+        Generate explainability data for a single input.
+        Args:
+            text: The input text.
+            target_idx: The target token/class index to explain.
+        Returns:
+            dict: Explainability data.
+        """
+        if self.module is None:
+            raise ValueError("Model not prepared.")
+
+        inputs = self.module.tokenizer(text, return_tensors="pt").to(self.module.device)
+        input_ids = inputs["input_ids"]
+
+        # Get embeddings for IG
+        embeddings = self.module.model.get_input_embeddings()(input_ids)
+
+        # Integrated Gradients
+        def model_forward(emb):
+            return self.module.model(inputs_embeds=emb).logits[:, -1, :]
+
+        attributions = ExplainabilityModule.integrated_gradients(
+            model_forward, embeddings, target_idx
+        )
+
+        # Attention maps
+        attention_maps = ExplainabilityModule.get_attention_maps(
+            self.module.model, input_ids
+        )
+
+        tokens = self.module.tokenizer.convert_ids_to_tokens(input_ids[0])
+        viz = ExplainabilityModule.visualize_attention(attention_maps, tokens)
+
+        return {
+            "attributions": attributions.sum(dim=-1).cpu().numpy().tolist(),
+            "attention": viz,
         }
 
     def _get_deepspeed_config(

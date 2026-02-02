@@ -9,6 +9,11 @@ from .classification import ClassificationHead, ClassificationHeadConfig
 from .regression import RegressionHead, RegressionHeadConfig
 from .rl_policy import PolicyOutput, RLPolicyHead, RLPolicyHeadConfig
 from .sequence import SequenceHead, SequenceHeadConfig
+from .multi_agent_policy import (
+    MultiAgentPolicyHead,
+    MultiAgentPolicyHeadConfig,
+    MultiAgentPolicyOutput,
+)
 
 __all__ = [
     # Base
@@ -26,4 +31,7 @@ __all__ = [
     "PolicyOutput",
     "SequenceHead",
     "SequenceHeadConfig",
+    "MultiAgentPolicyHead",
+    "MultiAgentPolicyHeadConfig",
+    "MultiAgentPolicyOutput",
 ]

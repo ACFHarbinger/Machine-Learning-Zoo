@@ -4,7 +4,7 @@ import logging
 import torch
 import torch.nn as nn
 from pytorch_lightning import Callback, LightningModule, Trainer
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

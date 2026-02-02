@@ -19,6 +19,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "n_ctx": 2048,
         "hf_repo": "bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
         "hf_file": "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
+        "license": "MIT",
+        "author": "DeepSeek",
     },
     "llama-3.3-70b": {
         "loader": "gguf",
@@ -27,6 +29,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "n_ctx": 2048,
         "hf_repo": "bartowski/Llama-3.3-70B-Instruct-GGUF",
         "hf_file": "Llama-3.3-70B-Instruct-Q4_K_M.gguf",
+        "license": "Llama 3.3",
+        "author": "Meta",
     },
     "llama-3-8b-instruct": {
         "loader": "transformers",
@@ -34,6 +38,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "device_map": "auto",
         "torch_dtype": "float16",
         "load_in_4bit": True,
+        "license": "Llama 3",
+        "author": "Meta",
     },
     "llama-3.1-8b-instruct": {
         "loader": "transformers",
@@ -41,6 +47,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "device_map": "auto",
         "torch_dtype": "bfloat16",
         "load_in_4bit": True,
+        "license": "Llama 3.1",
+        "author": "Meta",
     },
     "deepseek-v3-small": {
         "loader": "transformers",
@@ -48,6 +56,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "device_map": "auto",
         "torch_dtype": "bfloat16",
         "load_in_4bit": True,
+        "license": "MIT",
+        "author": "DeepSeek",
     },
     "deepseek-r1-distill-llama-8b": {
         "loader": "transformers",
@@ -55,6 +65,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "device_map": "auto",
         "torch_dtype": "bfloat16",
         "load_in_4bit": True,
+        "license": "MIT",
+        "author": "DeepSeek",
     },
     "llava-v1.5-7b": {
         "loader": "multimodal",
@@ -69,6 +81,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
             "torch_dtype": "float16",
             "load_in_4bit": True,
         },
+        "license": "Llama 2 Modified",
+        "author": "LMSYS",
     },
     # Legacy configurations
     "phi-2-dpo-v7": {
@@ -77,6 +91,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "hf_repo": "TheBloke/phi-2-dpo-v7-GGUF",
         "hf_file": "phi-2-dpo-v7.Q4_K_M.gguf",
         "n_gpu_layers": 20,
+        "license": "MIT",
+        "author": "Microsoft (Distilled)",
     },
     "llama-2-7b-chat": {
         "loader": "gguf",
@@ -84,6 +100,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "hf_repo": "TheBloke/Llama-2-7B-Chat-GGUF",
         "hf_file": "llama-2-7b-chat.Q4_K_M.gguf",
         "n_gpu_layers": 20,
+        "license": "Llama 2",
+        "author": "Meta",
     },
     "mistral-7b-instruct-v0.2": {
         "loader": "gguf",
@@ -91,6 +109,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "hf_repo": "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
         "hf_file": "mistral-7b-instruct-v0.2.Q4_K_M.gguf",
         "n_gpu_layers": 20,
+        "license": "Apache 2.0",
+        "author": "Mistral AI",
     },
     "neural-chat-7b-v3-1": {
         "loader": "gguf",
@@ -98,6 +118,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "hf_repo": "TheBloke/neural-chat-7B-v3-1-GGUF",
         "hf_file": "neural-chat-7b-v3-1.Q4_K_M.gguf",
         "n_gpu_layers": 20,
+        "license": "Apache 2.0",
+        "author": "Intel",
     },
     "openhermes-2.5-mistral-7b": {
         "loader": "gguf",
@@ -105,6 +127,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "hf_repo": "TheBloke/OpenHermes-2.5-Mistral-7B-GGUF",
         "hf_file": "openhermes-2.5-mistral-7b.Q4_K_M.gguf",
         "n_gpu_layers": 20,
+        "license": "Apache 2.0",
+        "author": "Teknium",
     },
     "zephyr-7b-beta": {
         "loader": "gguf",
@@ -112,6 +136,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "hf_repo": "TheBloke/zephyr-7B-beta-GGUF",
         "hf_file": "zephyr-7b-beta.Q4_K_M.gguf",
         "n_gpu_layers": 20,
+        "license": "MIT",
+        "author": "HuggingFace H4",
     },
     "tinyllama-1.1b-chat-v1.0": {
         "loader": "gguf",
@@ -119,6 +145,8 @@ MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         "hf_repo": "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
         "hf_file": "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
         "n_gpu_layers": 0,
+        "license": "Apache 2.0",
+        "author": "TinyLlama Project",
     },
 }
 
@@ -270,22 +298,76 @@ class ModelHub:
 
         return {"status": "downloaded", "path": local_path}
 
-    def delete(self, model_id: str) -> bool:
-        """Delete a local model file."""
+    def get_storage_stats(self) -> Dict[str, Any]:
+        """
+        Get storage utilization statistics for the Model Hub.
+        """
+        usage = self.storage.get_disk_usage()
+        hub_size = self.storage.get_models_size()
+
+        return {
+            "hub_size_bytes": hub_size,
+            "hub_size_gb": round(hub_size / (1024**3), 2),
+            "disk_total_gb": round(usage["total"] / (1024**3), 2),
+            "disk_used_gb": round(usage["used"] / (1024**3), 2),
+            "disk_free_gb": round(usage["free"] / (1024**3), 2),
+            "percent_used": round((usage["used"] / usage["total"]) * 100, 1),
+        }
+
+    def prune_models(self, keep_n: int = 5) -> List[str]:
+        """
+        Remove least recently used model files to free up space.
+        Args:
+            keep_n: Number of models to keep.
+        Returns:
+            List of deleted model IDs.
+        """
+        local_models = self.list_local()
+        # Sort by access time if possible, otherwise by modification time
+        # For simplicity, we'll sort based on file modification time
+
+        def _get_mtime(m):
+            p = Path(m.get("path", ""))
+            return p.stat().st_mtime if p.exists() else 0
+
+        models_with_time = [m for m in local_models if m.get("path")]
+        models_with_time.sort(key=_get_mtime, reverse=True)
+
+        to_delete = models_with_time[keep_n:]
+        deleted = []
+
+        for m in to_delete:
+            model_id = m.get("model_id") or m.get("id")
+            if model_id and self.delete(model_id):
+                deleted.append(model_id)
+
+        return deleted
+
+    def get_model_info(self, model_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get detailed metadata and status for a specific model.
+        """
         config = MODEL_CONFIGS.get(model_id)
-        if not config or "path" not in config:
-            # Try to delete by ID if it's a direct file
-            path = self.models_dir / model_id
-        else:
-            path = self.models_dir / str(config["path"])
+        if not config:
+            return None
 
-        if path.exists():
-            if path.is_file():
-                path.unlink()
-            else:
-                import shutil
+        # Check local status
+        local_info = next(
+            (m for m in self.list_local() if m.get("model_id") == model_id), None
+        )
 
-                shutil.rmtree(path)
-            logger.info("Deleted model storage: %s", path)
-            return True
-        return False
+        info = {
+            "model_id": model_id,
+            "is_local": local_info is not None,
+            "metadata": {
+                "author": config.get("author", "Unknown"),
+                "license": config.get("license", "Unknown"),
+                "loader": config.get("loader"),
+            },
+            "configuration": config,
+        }
+
+        if local_info:
+            info["local_details"] = local_info
+
+        return info

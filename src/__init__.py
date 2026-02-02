@@ -13,7 +13,6 @@ from . import (
     features,
     models,
     pipeline,
-    presets,
     utils,
 )
 
@@ -26,6 +25,5 @@ __all__ = [
     "features",
     "models",
     "pipeline",
-    "presets",
     "utils",
 ]

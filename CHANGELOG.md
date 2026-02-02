@@ -11,6 +11,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Knowledge Distillation**: Support for teacher-student training with KL-Divergence loss in `PiLightningModule`.
+- **Experiment Tracking**: Integration with WandB and MLflow for deeper observability in `TrainingOrchestrator`.
+- **Performance**: Upgraded core dependencies and resolved compatibility issues between `peft` and `transformers`.
+- **Model Hub**: Added storage statistics, model pruning, and detailed metadata (license, author).
+- **Fairness Auditing**: Introduced `FairnessAuditor` for measuring demographic parity and disparate impact.
+- **Visual Dashboard**: New real-time training monitoring interface at `src/api/dashboard.py`.
+- **vLLM Integration**: Added `VLLMEngine` for high-throughput LLM inference and serving.
+- **A/B Testing Framework**: Implemented `ABTestingManager` for traffic splitting and sticky sessions.
+- **Model Benchmarking**: Introduced `ModelBenchmarker` for standardized latency and throughput evaluation.
+- **API Reference**: Comprehensive guide to core modules added in `docs/API_REFERENCE.md`.
+
+### Fixed
+
+- **Continual Learning**: Fixed `NameError` in `ReplayBuffer` (missing `Any` import).
+- **Stability**: Refactored token padding logic in `PiLightningModule` for better robustness in mocked environments.
+
+## [v0.1.0] - 2026-02-02
+
+- **Advanced Research**:
+  - Implemented `FederatedAggregator` and `FederatedClient` for privacy-preserving training.
+  - Implemented `GANGenerator` and `VAEGenerator` for synthetic data augmentation.
+  - Added `MultiAgentEnvWrapper` to support multi-agent reinforcement learning.
+
+- **Explainability & Evaluation**:
+  - Implemented `ExplainabilityModule` with Integrated Gradients and attention map extraction.
+  - Implemented `Evaluator` with task-specific metrics for classification, regression, and generation.
+  - Integrated evaluation and explainability hooks into `TrainingOrchestrator`.
+
+- **Production & Deployment**:
+  - Implemented production-ready FastAPI inference server with unified `/v1/predict` endpoint.
+  - Added Docker containerization with multi-stage builds and Redis integration.
+  - Implemented ONNX export utility for time-series models to support edge deployment.
+
 - **Domain Adaptation**:
   - Implemented `MMDLoss` for distribution alignment.
   - Implemented `GradientReversalLayer` and `DomainDiscriminator` for Domain Adversarial Neural Networks (DANN).
