@@ -279,7 +279,7 @@ class DeviceManager:
             if torch.cuda.is_available():
                 for i in range(torch.cuda.device_count()):
                     props = torch.cuda.get_device_properties(i)
-                    mem_total = props.total_mem // (1024 * 1024)
+                    mem_total = props.total_memory // (1024 * 1024)
                     mem_allocated = torch.cuda.memory_allocated(i) // (1024 * 1024)
                     gpus.append(
                         GpuInfo(
