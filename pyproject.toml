@@ -55,6 +55,7 @@ dependencies = [
     "deepspeed>=0.12.0",
     "jinja2>=3.1.0",
     "tensordict>=0.11.0",
+    "dehb>=0.1.2",
 ]
 
 [dependency-groups]

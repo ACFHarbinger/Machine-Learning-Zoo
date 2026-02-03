@@ -20,14 +20,12 @@ logger = get_pylogger(__name__)
 class Baseline(nn.Module, ABC):
     """Base class for baselines."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the baseline."""
         super().__init__()
 
     @abstractmethod
-    def eval(
-        self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None
-    ) -> torch.Tensor:  # type: ignore[override]
+    def eval(self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None) -> torch.Tensor:  # type: ignore[override]
         """Compute baseline value."""
         raise NotImplementedError
 
@@ -88,9 +86,7 @@ class NoBaseline(Baseline):
         """Initialize NoBaseline."""
         super().__init__()
 
-    def eval(
-        self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None
-    ) -> torch.Tensor:  # type: ignore[override]
+    def eval(self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None) -> torch.Tensor:  # type: ignore[override]
         """
         Return zero baseline (no variance reduction).
 
@@ -123,9 +119,7 @@ class ExponentialBaseline(Baseline):
         self.beta = exp_beta if exp_beta is not None else beta
         self.running_mean: Optional[torch.Tensor] = None
 
-    def eval(
-        self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None
-    ) -> torch.Tensor:  # type: ignore[override]
+    def eval(self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None) -> torch.Tensor:  # type: ignore[override]
         """
         Compute baseline value using exponential moving average.
 
@@ -140,9 +134,7 @@ class ExponentialBaseline(Baseline):
         if self.running_mean is None:
             self.running_mean = reward.mean().detach()
         else:
-            self.running_mean = (
-                self.beta * self.running_mean + (1 - self.beta) * reward.mean().detach()
-            )
+            self.running_mean = self.beta * self.running_mean + (1 - self.beta) * reward.mean().detach()
         return self.running_mean.expand_as(reward)
 
 
@@ -179,12 +171,8 @@ class RolloutBaseline(Baseline):
             # Old style: update_every is actually the problem class
             # bl_alpha is actually the opts dict
             opts = bl_alpha if isinstance(bl_alpha, dict) else kwargs.get("opts", {})
-            self.update_every = (
-                opts.get("bl_update_every", 1) if isinstance(opts, dict) else 1
-            )
-            self.bl_alpha = (
-                opts.get("bl_alpha", 0.05) if isinstance(opts, dict) else 0.05
-            )
+            self.update_every = opts.get("bl_update_every", 1) if isinstance(opts, dict) else 1
+            self.bl_alpha = opts.get("bl_alpha", 0.05) if isinstance(opts, dict) else 0.05
         else:
             self.update_every = update_every
             self.bl_alpha = bl_alpha
@@ -203,9 +191,7 @@ class RolloutBaseline(Baseline):
             for param in self.baseline_policy.parameters():
                 param.requires_grad = False
 
-    def _rollout(
-        self, policy: nn.Module, td_or_dataset: Any, env: Optional[Any] = None
-    ) -> torch.Tensor:
+    def _rollout(self, policy: nn.Module, td_or_dataset: Any, env: Optional[Any] = None) -> torch.Tensor:
         """Run greedy rollout on a batch or dataset."""
         from torch.utils.data import Dataset
 
@@ -213,14 +199,10 @@ class RolloutBaseline(Baseline):
             return self._rollout_dataset(policy, td_or_dataset, env)
         return self._rollout_batch(policy, td_or_dataset, env)
 
-    def _rollout_dataset(
-        self, policy: nn.Module, dataset: Any, env: Optional[Any] = None
-    ) -> torch.Tensor:
+    def _rollout_dataset(self, policy: nn.Module, dataset: Any, env: Optional[Any] = None) -> torch.Tensor:
         """Run greedy rollout on a complete dataset."""
         if env is None:
-            raise ValueError(
-                "Environment (env) is required for RolloutBaseline evaluation"
-            )
+            raise ValueError("Environment (env) is required for RolloutBaseline evaluation")
 
         from logic.src.data.datasets import tensordict_collate_fn
         from logic.src.utils.functions.rl import ensure_tensordict
@@ -278,9 +260,7 @@ class RolloutBaseline(Baseline):
             return torch.tensor([], device="cpu")
         return torch.cat(rewards)
 
-    def _rollout_batch(
-        self, policy: nn.Module, td: Any, env: Optional[Any] = None
-    ) -> torch.Tensor:
+    def _rollout_batch(self, policy: nn.Module, td: Any, env: Optional[Any] = None) -> torch.Tensor:
         """Run greedy rollout on a single batch."""
         import copy
 
@@ -299,9 +279,7 @@ class RolloutBaseline(Baseline):
                 out = {"reward": res[0]} if isinstance(res, tuple) else res
             else:
                 if env is None:
-                    raise ValueError(
-                        "Environment (env) is required for RolloutBaseline evaluation"
-                    )
+                    raise ValueError("Environment (env) is required for RolloutBaseline evaluation")
                 out = policy(td_copy, env, decode_type="greedy")
 
         return out["reward"]
@@ -338,9 +316,7 @@ class RolloutBaseline(Baseline):
         bl_vals = self._rollout(p, dataset, env)
         return BaselineDataset(dataset, bl_vals.view(-1, 1))
 
-    def eval(
-        self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None
-    ) -> torch.Tensor:  # type: ignore[override]
+    def eval(self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None) -> torch.Tensor:  # type: ignore[override]
         """
         Compute baseline value.
         """
@@ -351,9 +327,7 @@ class RolloutBaseline(Baseline):
             with torch.no_grad():
                 from logic.src.utils.functions.rl import ensure_tensordict
 
-                td = ensure_tensordict(
-                    td, next(iter(self.baseline_policy.parameters())).device
-                )
+                td = ensure_tensordict(td, next(iter(self.baseline_policy.parameters())).device)
                 return self._rollout(self.baseline_policy, td, env)
 
         return torch.zeros_like(reward)
@@ -384,14 +358,10 @@ class RolloutBaseline(Baseline):
                 baseline_mean = baseline_vals.mean().item()
 
                 # T-test for significance
-                t_stat, p_val = stats.ttest_rel(
-                    candidate_vals.cpu().numpy(), baseline_vals.cpu().numpy()
-                )
+                t_stat, p_val = stats.ttest_rel(candidate_vals.cpu().numpy(), baseline_vals.cpu().numpy())
 
                 if candidate_mean > baseline_mean and p_val / 2 < self.bl_alpha:
-                    print(
-                        f"Update baseline: {baseline_mean:.4f} -> {candidate_mean:.4f} (p={p_val / 2:.4f})"
-                    )
+                    print(f"Update baseline: {baseline_mean:.4f} -> {candidate_mean:.4f} (p={p_val / 2:.4f})")
                     self.setup(policy)
             else:
                 self.setup(policy)
@@ -421,15 +391,11 @@ class WarmupBaseline(Baseline):
         """
         super().__init__()
         self.baseline = baseline
-        self.warmup_epochs = (
-            bl_warmup_epochs if bl_warmup_epochs is not None else warmup_epochs
-        )
+        self.warmup_epochs = bl_warmup_epochs if bl_warmup_epochs is not None else warmup_epochs
         self.warmup_baseline = ExponentialBaseline(beta=beta, exp_beta=exp_beta)
         self.alpha = 0.0
 
-    def eval(
-        self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None
-    ) -> torch.Tensor:  # type: ignore[override]
+    def eval(self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None) -> torch.Tensor:  # type: ignore[override]
         """
         Compute blended baseline value based on warmup progress.
 
@@ -501,9 +467,7 @@ class CriticBaseline(Baseline):
         super().__init__()
         self.critic = critic
 
-    def eval(
-        self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None
-    ) -> torch.Tensor:  # type: ignore[override]
+    def eval(self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None) -> torch.Tensor:  # type: ignore[override]
         """
         Compute baseline value using learned critic.
 
@@ -544,9 +508,7 @@ class POMOBaseline(Baseline):
         """Initialize POMOBaseline."""
         super().__init__()
 
-    def eval(
-        self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None
-    ) -> torch.Tensor:  # type: ignore[override]
+    def eval(self, td: TensorDict, reward: torch.Tensor, env: Optional[Any] = None) -> torch.Tensor:  # type: ignore[override]
         """
         Compute POMO baseline as mean reward across starting points.
 
