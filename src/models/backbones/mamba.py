@@ -6,24 +6,15 @@ State-space model backbone for long-range sequence modeling.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import torch
 from torch import nn
 
-from .base import Backbone, BackboneConfig, register_backbone
+from .base import Backbone, register_backbone
+from ...configs.backbones import MambaBackboneConfig
 
 __all__ = ["MambaBackbone", "MambaBackboneConfig"]
-
-
-@dataclass
-class MambaBackboneConfig(BackboneConfig):
-    """Configuration for Mamba backbone."""
-
-    state_dim: int = 16  # SSM state expansion factor
-    conv_size: int = 4  # Local convolution width
-    expand_factor: int = 2
 
 
 class MambaBlock(nn.Module):
@@ -37,9 +28,7 @@ class MambaBlock(nn.Module):
         self.in_proj = nn.Linear(dim, inner_dim * 2, bias=False)
 
         # Conv1d for local context
-        self.conv = nn.Conv1d(
-            inner_dim, inner_dim, conv_size, padding=conv_size - 1, groups=inner_dim
-        )
+        self.conv = nn.Conv1d(inner_dim, inner_dim, conv_size, padding=conv_size - 1, groups=inner_dim)
 
         # SSM parameters
         self.x_proj = nn.Linear(inner_dim, state_dim * 2, bias=False)
@@ -105,9 +94,7 @@ class MambaBackbone(Backbone):
             ]
         )
 
-        self.norms = nn.ModuleList(
-            [nn.LayerNorm(config.hidden_dim) for _ in range(config.num_layers)]
-        )
+        self.norms = nn.ModuleList([nn.LayerNorm(config.hidden_dim) for _ in range(config.num_layers)])
 
         self.final_norm = nn.LayerNorm(config.hidden_dim)
         self.dropout = nn.Dropout(config.dropout)

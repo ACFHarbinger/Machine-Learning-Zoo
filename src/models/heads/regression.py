@@ -6,24 +6,15 @@ For continuous value prediction tasks.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any
 
 import torch
 from torch import nn
 
-from .base import Head, HeadConfig, register_head
+from .base import Head, register_head
+from ...configs.heads import RegressionHeadConfig
 
 __all__ = ["RegressionHead", "RegressionHeadConfig"]
-
-
-@dataclass
-class RegressionHeadConfig(HeadConfig):
-    """Configuration for regression head."""
-
-    output_dim: int = 1
-    pool_type: Literal["mean", "last", "none"] = "last"
-    output_activation: Literal["none", "sigmoid", "tanh", "softplus"] = "none"
 
 
 @register_head("regression")

@@ -7,14 +7,14 @@ optional inter-agent communication via message passing.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, NamedTuple
 
 import torch
 from torch import nn
 from torch.distributions import Categorical, Normal
 
-from .base import Head, HeadConfig, register_head
+from .base import Head, register_head
+from ...configs.heads import MultiAgentPolicyHeadConfig
 
 __all__ = [
     "MultiAgentPolicyOutput",
@@ -30,19 +30,6 @@ class MultiAgentPolicyOutput(NamedTuple):
     action_std: torch.Tensor | None  # For continuous actions
     values: torch.Tensor  # (num_agents, batch)
     messages: torch.Tensor | None  # (num_agents, batch, message_dim)
-
-
-@dataclass
-class MultiAgentPolicyHeadConfig(HeadConfig):
-    """Configuration for multi-agent RL policy head."""
-
-    action_dim: int = 5
-    num_agents: int = 4
-    continuous: bool = False
-    log_std_min: float = -20.0
-    log_std_max: float = 2.0
-    communication_dim: int = 0  # 0 disables communication
-    shared_parameters: bool = True  # Whether agents share network weights
 
 
 @register_head("multi_agent_policy")
@@ -115,10 +102,9 @@ class MultiAgentPolicyHead(Head):
             self.actors.append(nn.Sequential(*layers))
 
         if config.continuous:
-            self.log_stds = nn.ParameterList([
-                nn.Parameter(torch.zeros(config.action_dim))
-                for _ in range(config.num_agents)
-            ])
+            self.log_stds = nn.ParameterList(
+                [nn.Parameter(torch.zeros(config.action_dim)) for _ in range(config.num_agents)]
+            )
 
     def forward(
         self,
@@ -138,9 +124,7 @@ class MultiAgentPolicyHead(Head):
         """
         if features.dim() == 2:
             # Shared features: expand for all agents
-            features = features.unsqueeze(0).expand(
-                self.cfg.num_agents, -1, -1
-            )
+            features = features.unsqueeze(0).expand(self.cfg.num_agents, -1, -1)
 
         # Pool sequences if needed
         if features.dim() == 4:
@@ -168,36 +152,24 @@ class MultiAgentPolicyHead(Head):
         action_std = None
         if self.cfg.continuous:
             if self.cfg.shared_parameters:
-                log_std = self.log_std.clamp(
-                    self.cfg.log_std_min, self.cfg.log_std_max
-                )
-                action_std = log_std.exp().unsqueeze(0).unsqueeze(0).expand_as(
-                    action_logits
-                )
+                log_std = self.log_std.clamp(self.cfg.log_std_min, self.cfg.log_std_max)
+                action_std = log_std.exp().unsqueeze(0).unsqueeze(0).expand_as(action_logits)
             else:
                 stds = []
                 for i in range(num_agents):
-                    log_std = self.log_stds[i].clamp(
-                        self.cfg.log_std_min, self.cfg.log_std_max
-                    )
-                    stds.append(
-                        log_std.exp().unsqueeze(0).expand(batch_size, -1)
-                    )
+                    log_std = self.log_stds[i].clamp(self.cfg.log_std_min, self.cfg.log_std_max)
+                    stds.append(log_std.exp().unsqueeze(0).expand(batch_size, -1))
                 action_std = torch.stack(stds, dim=0)
 
         # Centralized critic
-        all_features = features.permute(1, 0, 2).reshape(
-            batch_size, -1
-        )  # (batch, num_agents * input_dim)
+        all_features = features.permute(1, 0, 2).reshape(batch_size, -1)  # (batch, num_agents * input_dim)
         values = self.centralized_critic(all_features)  # (batch, num_agents)
         values = values.t()  # (num_agents, batch)
 
         # Messages
         messages = None
         if self.cfg.communication_dim > 0:
-            messages = torch.stack([
-                self.message_encoder(features[i]) for i in range(num_agents)
-            ], dim=0)
+            messages = torch.stack([self.message_encoder(features[i]) for i in range(num_agents)], dim=0)
 
         return MultiAgentPolicyOutput(
             action_logits=action_logits,
@@ -222,9 +194,9 @@ class MultiAgentPolicyHead(Head):
         num_agents = features.shape[0]
 
         # Encode messages
-        messages = torch.stack([
-            self.message_encoder(features[i]) for i in range(num_agents)
-        ], dim=0)  # (num_agents, batch, comm_dim)
+        messages = torch.stack(
+            [self.message_encoder(features[i]) for i in range(num_agents)], dim=0
+        )  # (num_agents, batch, comm_dim)
 
         # Each agent receives messages from all others
         updated = []

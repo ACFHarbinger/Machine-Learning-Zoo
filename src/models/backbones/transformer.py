@@ -6,25 +6,15 @@ Encoder-only transformer for sequence modeling tasks.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import torch
 from torch import nn
 
-from .base import Backbone, BackboneConfig, register_backbone
+from .base import Backbone, register_backbone
+from ...configs.backbones import TransformerBackboneConfig
 
 __all__ = ["TransformerBackbone", "TransformerBackboneConfig"]
-
-
-@dataclass
-class TransformerBackboneConfig(BackboneConfig):
-    """Configuration for Transformer backbone."""
-
-    num_heads: int = 8
-    ff_dim: int = 1024
-    max_seq_len: int = 512
-    prenorm: bool = True
 
 
 @register_backbone("transformer")
@@ -47,9 +37,7 @@ class TransformerBackbone(Backbone):
         self.input_proj = nn.Linear(input_dim, config.hidden_dim)
 
         # Positional encoding
-        self.pos_encoding = nn.Parameter(
-            torch.randn(1, config.max_seq_len, config.hidden_dim) * 0.02
-        )
+        self.pos_encoding = nn.Parameter(torch.randn(1, config.max_seq_len, config.hidden_dim) * 0.02)
 
         # Transformer encoder layers
         encoder_layer = nn.TransformerEncoderLayer(

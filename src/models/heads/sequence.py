@@ -6,23 +6,15 @@ For sequence-to-sequence tasks like translation, summarization, etc.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import torch
 from torch import nn
 
-from .base import Head, HeadConfig, register_head
+from .base import Head, register_head
+from ...configs.heads import SequenceHeadConfig
 
 __all__ = ["SequenceHead", "SequenceHeadConfig"]
-
-
-@dataclass
-class SequenceHeadConfig(HeadConfig):
-    """Configuration for sequence head."""
-
-    vocab_size: int = 50000
-    tie_weights: bool = True  # Tie with encoder embeddings
 
 
 @register_head("sequence")

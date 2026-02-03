@@ -5,76 +5,12 @@ Defines the abstract interface that all storage backends must implement.
 """
 
 import hashlib
-import os
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
-
-@dataclass
-class StorageConfig:
-    """Configuration for model storage backends."""
-
-    # Storage type: local, s3, gcs
-    storage_type: str = "local"
-
-    # Local storage settings
-    local_path: str = "./model_weights"
-
-    # S3 settings
-    s3_bucket: str = ""
-    s3_prefix: str = "models/"
-    s3_region: str = "us-east-1"
-    aws_access_key_id: str | None = None
-    aws_secret_access_key: str | None = None
-
-    # GCS settings
-    gcs_bucket: str = ""
-    gcs_prefix: str = "models/"
-    gcs_credentials_path: str | None = None
-
-    # Common settings
-    compression: str = "zstd"  # none, gzip, zstd
-    versioning: bool = True
-    max_versions: int = 5
-
-    # Cache settings
-    cache_enabled: bool = True
-    cache_dir: str = ".cache/models"
-    cache_max_size_gb: float = 10.0
-
-    @classmethod
-    def from_env(cls) -> "StorageConfig":
-        """Create config from environment variables."""
-        return cls(
-            storage_type=os.getenv("NGLAB_MODEL_STORAGE", "local"),
-            local_path=os.getenv("MODEL_WEIGHTS_DIR", "./model_weights"),
-            s3_bucket=os.getenv("S3_BUCKET_NAME", ""),
-            s3_prefix=os.getenv("S3_PREFIX", "models/"),
-            s3_region=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
-            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-            gcs_bucket=os.getenv("GCS_BUCKET_NAME", ""),
-            gcs_prefix=os.getenv("GCS_PREFIX", "models/"),
-            gcs_credentials_path=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
-        )
-
-
-@dataclass
-class ModelMetadata:
-    """Metadata for stored models."""
-
-    name: str
-    version: str
-    checksum: str
-    size_bytes: int
-    created_at: str
-    framework: str = "pytorch"
-    architecture: str = ""
-    metrics: dict[str, Any] = field(default_factory=dict)
-    tags: list[str] = field(default_factory=list)
-    extra: dict[str, Any] = field(default_factory=dict)
+from ..configs.metadata import ModelMetadata
+from ..configs.storage import StorageConfig
 
 
 class ModelStorage(ABC):

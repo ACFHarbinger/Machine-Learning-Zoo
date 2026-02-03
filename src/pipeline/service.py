@@ -406,7 +406,7 @@ class TrainingService:
         model = model.to(device)
 
         # Register as a LoadedModel in the registry
-        from ...configs.sidecar_model import LoadedModel
+        from ...configs.loaded_model import LoadedModel
 
         size_mb = sum(p.nelement() * p.element_size() for p in model.parameters()) // (1024 * 1024)
 

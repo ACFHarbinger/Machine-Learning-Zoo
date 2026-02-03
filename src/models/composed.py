@@ -6,7 +6,6 @@ Builds complete models by combining backbones with task-specific heads.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import torch
@@ -14,19 +13,9 @@ from torch import nn
 
 from .backbones import BACKBONE_REGISTRY, Backbone, BackboneConfig
 from .heads import HEAD_REGISTRY, Head, HeadConfig
+from ..configs.wrappers import ComposedModelConfig
 
 __all__ = ["ComposedModel", "ComposedModelConfig", "build_model"]
-
-
-@dataclass
-class ComposedModelConfig:
-    """Configuration for composed models."""
-
-    backbone: str  # Name in BACKBONE_REGISTRY
-    head: str  # Name in HEAD_REGISTRY
-    backbone_config: dict[str, Any]
-    head_config: dict[str, Any]
-    freeze_backbone: bool = False
 
 
 class ComposedModel(nn.Module):

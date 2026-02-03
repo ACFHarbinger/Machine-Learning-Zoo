@@ -6,14 +6,14 @@ Actor-Critic head for reinforcement learning.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, NamedTuple
 
 import torch
 from torch import nn
 from torch.distributions import Categorical, Normal
 
-from .base import Head, HeadConfig, register_head
+from .base import Head, register_head
+from ...configs.heads import RLPolicyHeadConfig
 
 __all__ = ["PolicyOutput", "RLPolicyHead", "RLPolicyHeadConfig"]
 
@@ -24,17 +24,6 @@ class PolicyOutput(NamedTuple):
     action_logits: torch.Tensor  # For discrete; mean for continuous
     action_std: torch.Tensor | None  # For continuous actions
     value: torch.Tensor  # State value estimate
-
-
-@dataclass
-class RLPolicyHeadConfig(HeadConfig):
-    """Configuration for RL policy head."""
-
-    action_dim: int = 4
-    continuous: bool = False  # Discrete vs continuous actions
-    log_std_min: float = -20.0
-    log_std_max: float = 2.0
-    separate_value_head: bool = True
 
 
 @register_head("rl_policy")

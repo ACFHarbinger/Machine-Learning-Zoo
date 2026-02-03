@@ -6,24 +6,15 @@ Bidirectional LSTM for sequential feature extraction.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import torch
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-
-from .base import Backbone, BackboneConfig, register_backbone
+from .base import Backbone, register_backbone
+from ...configs.backbones import LSTMBackboneConfig
 
 __all__ = ["LSTMBackbone", "LSTMBackboneConfig"]
-
-
-@dataclass
-class LSTMBackboneConfig(BackboneConfig):
-    """Configuration for LSTM backbone."""
-
-    bidirectional: bool = True
-    proj_size: int = 0  # Projection size (0 = disabled)
 
 
 @register_backbone("lstm")

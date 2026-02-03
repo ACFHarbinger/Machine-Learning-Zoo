@@ -6,25 +6,15 @@ Convolutional Backbone.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any
 
 import torch
 from torch import nn
 
-from .base import Backbone, BackboneConfig, register_backbone
+from .base import Backbone, register_backbone
+from ...configs.backbones import ConvBackboneConfig
 
 __all__ = ["ConvBackbone", "ConvBackboneConfig"]
-
-
-@dataclass
-class ConvBackboneConfig(BackboneConfig):
-    """Configuration for Convolutional backbone."""
-
-    kernel_sizes: tuple[int, ...] = (7, 5, 3, 3)
-    channels: tuple[int, ...] = (64, 128, 256, 256)
-    conv_type: Literal["1d", "2d"] = "1d"
-    pool_type: Literal["max", "avg"] = "max"
 
 
 @register_backbone("conv")

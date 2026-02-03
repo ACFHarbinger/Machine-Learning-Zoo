@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -28,40 +27,11 @@ except ImportError:
     Accelerator = None  # type: ignore
 
 from .base import BaseCallback, BaseTrainer
+from ..configs.accelerated import AcceleratedTrainerConfig
 
 logger = logging.getLogger(__name__)
 
 __all__ = ["AcceleratedTrainer", "AcceleratedTrainerConfig"]
-
-
-@dataclass
-class AcceleratedTrainerConfig:
-    """Configuration for accelerated training."""
-
-    # Training params
-    max_epochs: int = 10
-    learning_rate: float = 3e-4
-    weight_decay: float = 0.01
-    batch_size: int = 32
-    gradient_accumulation_steps: int = 1
-    max_grad_norm: float = 1.0
-
-    # Accelerate params
-    mixed_precision: str = "no"  # "no", "fp16", "bf16"
-    gradient_checkpointing: bool = False
-
-    # Logging/Checkpointing
-    log_every_n_steps: int = 50
-    save_every_n_epochs: int = 1
-    output_dir: str = "~/.pi-assistant/models"
-    run_name: str = "run"
-
-    # Distributed
-    deepspeed_config: str | None = None  # Path to DeepSpeed config
-
-    # Extra
-    seed: int = 42
-    extra: dict[str, Any] = field(default_factory=dict)
 
 
 class AcceleratedTrainer(BaseTrainer):
@@ -86,10 +56,7 @@ class AcceleratedTrainer(BaseTrainer):
         callbacks: list[BaseCallback] | None = None,
     ) -> None:
         if not HAS_ACCELERATE:
-            raise ImportError(
-                "Accelerate is required for multi-GPU training. "
-                "Install with: pip install accelerate"
-            )
+            raise ImportError("Accelerate is required for multi-GPU training. Install with: pip install accelerate")
 
         self.config = config or AcceleratedTrainerConfig()
         self.callbacks = callbacks or []
@@ -121,8 +88,8 @@ class AcceleratedTrainer(BaseTrainer):
         )
 
         # Prepare with accelerator
-        self.model, self.optimizer, self.train_loader, self.scheduler = (
-            self.accelerator.prepare(model, optimizer, train_loader, scheduler)
+        self.model, self.optimizer, self.train_loader, self.scheduler = self.accelerator.prepare(
+            model, optimizer, train_loader, scheduler
         )
 
         self.val_loader = self.accelerator.prepare(val_loader) if val_loader else None
@@ -131,9 +98,7 @@ class AcceleratedTrainer(BaseTrainer):
         self.loss_fn = loss_fn or nn.MSELoss()
 
         # Setup output directory
-        self.output_dir = (
-            Path(self.config.output_dir).expanduser() / self.config.run_name
-        )
+        self.output_dir = Path(self.config.output_dir).expanduser() / self.config.run_name
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Tracking
@@ -220,20 +185,14 @@ class AcceleratedTrainer(BaseTrainer):
                     loss = self.loss_fn(output, y)
                 else:
                     # Assume model returns loss directly
-                    loss = (
-                        output
-                        if isinstance(output, torch.Tensor) and output.dim() == 0
-                        else output.mean()
-                    )
+                    loss = output if isinstance(output, torch.Tensor) and output.dim() == 0 else output.mean()
 
                 # Backward
                 self.accelerator.backward(loss)
 
                 # Gradient clipping
                 if self.config.max_grad_norm > 0:
-                    self.accelerator.clip_grad_norm_(
-                        self.model.parameters(), self.config.max_grad_norm
-                    )
+                    self.accelerator.clip_grad_norm_(self.model.parameters(), self.config.max_grad_norm)
 
                 self.optimizer.step()
                 self.scheduler.step()
@@ -278,11 +237,7 @@ class AcceleratedTrainer(BaseTrainer):
             if y is not None:
                 loss = self.loss_fn(output, y)
             else:
-                loss = (
-                    output
-                    if isinstance(output, torch.Tensor) and output.dim() == 0
-                    else output.mean()
-                )
+                loss = output if isinstance(output, torch.Tensor) and output.dim() == 0 else output.mean()
 
             total_loss += loss.item()
             num_batches += 1

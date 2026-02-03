@@ -8,24 +8,14 @@ for classification, regression, RL policies, etc.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from typing import Any
 
 import torch
 from torch import nn
 
+from ...configs.heads import HeadConfig
+
 __all__ = ["HEAD_REGISTRY", "Head", "HeadConfig", "register_head"]
-
-
-@dataclass
-class HeadConfig:
-    """Configuration for head modules."""
-
-    input_dim: int = 256  # Must match backbone.output_dim
-    output_dim: int = 10  # Task-specific (num_classes, action_dim, etc.)
-    hidden_dims: tuple[int, ...] = ()  # Optional MLP layers
-    dropout: float = 0.1
-    extra: dict[str, Any] = field(default_factory=dict)
 
 
 class Head(nn.Module, ABC):

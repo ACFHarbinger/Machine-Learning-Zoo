@@ -8,24 +8,15 @@ with task-specific heads for classification, regression, RL, etc.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from collections.abc import Callable
 from typing import Any
 
 import torch
 from torch import nn
 
+from ...configs.backbones import BackboneConfig
+
 __all__ = ["BACKBONE_REGISTRY", "Backbone", "BackboneConfig", "register_backbone"]
-
-
-@dataclass
-class BackboneConfig:
-    """Configuration for backbone models."""
-
-    hidden_dim: int = 256
-    num_layers: int = 4
-    dropout: float = 0.1
-    input_dim: int | None = None  # Set dynamically based on data
-    extra: dict[str, Any] = field(default_factory=dict)
 
 
 class Backbone(nn.Module, ABC):
@@ -75,7 +66,10 @@ class Backbone(nn.Module, ABC):
 BACKBONE_REGISTRY: dict[str, type[Backbone]] = {}
 
 
-def register_backbone(name: str):
+from collections.abc import Callable
+
+
+def register_backbone(name: str) -> Callable[[type[Backbone]], type[Backbone]]:
     """Decorator to register a backbone class."""
 
     def decorator(cls: type[Backbone]) -> type[Backbone]:

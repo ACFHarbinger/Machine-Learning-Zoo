@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from ..configs.sidecar_model import LoadedModel
+from ..configs.loaded_model import LoadedModel
 from .hub import MODEL_CONFIGS, ModelHub
 
 logger = logging.getLogger(__name__)
@@ -38,9 +38,7 @@ class ModelRegistry:
         """List available local models."""
         return self.hub.list_local()
 
-    async def load_model(
-        self, model_id: str, backend: Optional[str] = None
-    ) -> LoadedModel:
+    async def load_model(self, model_id: str, backend: Optional[str] = None) -> LoadedModel:
         """
         Load a model by ID.
         Args:
@@ -58,9 +56,7 @@ class ModelRegistry:
         config = MODEL_CONFIGS.get(model_id)
 
         # Fallback for direct GGUF files by name
-        if not config and (
-            model_id.endswith(".gguf") or (Path(self.models_dir) / model_id).exists()
-        ):
+        if not config and (model_id.endswith(".gguf") or (Path(self.models_dir) / model_id).exists()):
             # Default config for direct files
             config = {"loader": "gguf", "path": model_id}
 
@@ -121,9 +117,7 @@ class ModelRegistry:
                 # Fallback to CPU if GPU failed
                 if "Failed to create llama_context" in str(e) and n_gpu_layers != 0:
                     logger.warning("GPU init failed, falling back to CPU")
-                    return Llama(
-                        model_path=str_path, n_gpu_layers=0, n_ctx=n_ctx, verbose=True
-                    )
+                    return Llama(model_path=str_path, n_gpu_layers=0, n_ctx=n_ctx, verbose=True)
                 raise e
 
         loop = asyncio.get_event_loop()

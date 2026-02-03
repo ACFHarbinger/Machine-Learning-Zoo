@@ -6,25 +6,16 @@ For multi-class and multi-label classification tasks.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any
 
 import torch
 import torch.nn.functional as F
 from torch import nn
 
-from .base import Head, HeadConfig, register_head
+from .base import Head, register_head
+from ...configs.heads import ClassificationHeadConfig
 
 __all__ = ["ClassificationHead", "ClassificationHeadConfig"]
-
-
-@dataclass
-class ClassificationHeadConfig(HeadConfig):
-    """Configuration for classification head."""
-
-    num_classes: int = 10
-    pool_type: Literal["cls", "mean", "max", "none"] = "mean"
-    multi_label: bool = False
 
 
 @register_head("classification")
