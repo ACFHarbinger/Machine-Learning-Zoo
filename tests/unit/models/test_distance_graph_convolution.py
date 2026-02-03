@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from src.models.modules.distance_graph_convolution import (
     DistanceAwareGraphConvolution,
 )

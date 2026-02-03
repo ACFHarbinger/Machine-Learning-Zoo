@@ -1,6 +1,5 @@
 import ConfigSpace as CS  # noqa: N817
 import pytest
-
 from src.pipeline.hpo.dehb_config_repo import ConfigRepository
 
 

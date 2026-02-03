@@ -2,8 +2,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-from torch import nn
-
 from src.pipeline.core.reinforce.reinforce_baselines import (
     Baseline,
     BaselineDataset,
@@ -13,6 +11,7 @@ from src.pipeline.core.reinforce.reinforce_baselines import (
     RolloutBaseline,
     WarmupBaseline,
 )
+from torch import nn
 
 
 class MockBaseline(Baseline):

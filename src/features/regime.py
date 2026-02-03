@@ -14,7 +14,7 @@ class MarketRegimeDetector:
     def __init__(self, n_regimes: int = 3, random_state: int = 42):
         self.n_regimes = n_regimes
         self.model = GaussianMixture(
-            n_components=n_regimes, 
+            n_components=n_regimes,
             random_state=random_state,
             covariance_type="full"
         )
@@ -24,10 +24,10 @@ class MarketRegimeDetector:
         """Fit the clustering model on historical features."""
         if isinstance(features, pd.DataFrame):
             features = features.values
-            
+
         # Remove NaNs
         features = features[~np.isnan(features).any(axis=1)]
-        
+
         self.model.fit(features)
         self.is_fitted = True
         return self
@@ -36,14 +36,14 @@ class MarketRegimeDetector:
         """Predict the current regime for the given features."""
         if not self.is_fitted:
             raise RuntimeError("MarketRegimeDetector must be fitted before prediction.")
-            
+
         if isinstance(features, pd.DataFrame):
             features = features.values
-            
+
         # Handle cases with NaNs by returning a default/previous regime or 0
         if np.isnan(features).any():
             return np.zeros(len(features), dtype=int)
-            
+
         return self.model.predict(features)
 
     def get_regime_one_hot(self, features: np.ndarray | pd.DataFrame) -> np.ndarray:

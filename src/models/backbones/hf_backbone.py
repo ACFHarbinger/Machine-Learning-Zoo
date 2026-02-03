@@ -11,12 +11,10 @@ import logging
 from typing import Any
 
 import torch
-from torch import nn
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     PreTrainedModel,
-    PreTrainedTokenizer,
 )
 
 from .base import Backbone, BackboneConfig, register_backbone

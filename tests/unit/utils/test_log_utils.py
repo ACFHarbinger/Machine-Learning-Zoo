@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
-
 from src.utils.logging.log_utils import (
     _convert_numpy,
     log_epoch,

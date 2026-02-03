@@ -2,8 +2,8 @@
 
 import torch
 import torch.nn as nn
-from src.training.explainability import ExplainabilityModule
-from src.training.evaluation import Evaluator
+from src.pipeline.training.evaluation import Evaluator
+from src.pipeline.training.explainability import ExplainabilityModule
 
 
 def test_evaluator():

@@ -2,7 +2,6 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from src.backtesting.engine import BacktestEngine
 from src.backtesting.strategy import BaseStrategy
 

@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from src.models.time_series import TimeSeriesBackbone
 from src.utils.io.model_versioning import ModelMetadata
 

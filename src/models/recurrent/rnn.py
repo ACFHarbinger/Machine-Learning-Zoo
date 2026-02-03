@@ -6,8 +6,8 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import nn
 
-from ..base import BaseModel
 from ...utils.registry import register_model
+from ..base import BaseModel
 
 if TYPE_CHECKING:
     pass

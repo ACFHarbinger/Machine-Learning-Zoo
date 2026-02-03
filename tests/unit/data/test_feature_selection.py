@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-
 from src.features.feature_selection import TimeSeriesFeatureSelector
 from src.features.pipeline import FeaturePipeline
 

@@ -1,7 +1,4 @@
 import torch
-from torch import nn
-
-from src.models import TimeSeriesBackbone
 from src.models import (
     DCIGN,
     DNC,
@@ -35,8 +32,10 @@ from src.models import (
     RollingWindowCNN,
     SparseAE,
     StackedAutoEncoder,
+    TimeSeriesBackbone,
 )
 from src.models.general.pinn import pinn_loss
+from torch import nn
 
 # --- Feed-Forward & Basic Layers ---
 

@@ -5,8 +5,6 @@ Tests for Active Learning module - samplers and uncertainty estimation.
 import numpy as np
 import pytest
 import torch
-from torch import nn
-
 from src.pipeline.active_learning.sampler import (
     BaldSampler,
     BaseSampler,
@@ -19,6 +17,7 @@ from src.pipeline.active_learning.uncertainty import (
     mc_dropout_predict,
     pinball_loss,
 )
+from torch import nn
 
 
 class TestUncertaintySampler:

@@ -2,10 +2,9 @@
 
 import unittest
 from unittest.mock import MagicMock, patch
-import torch
-import torch.nn as nn
-from src.training.trainer import TrainingOrchestrator
-from src.training.lightning_module import PiLightningModule
+
+from src.pipeline.training.lightning_module import PiLightningModule
+from src.pipeline.training.trainer import TrainingOrchestrator
 
 
 class TestPerformanceTracking(unittest.TestCase):
@@ -45,9 +44,9 @@ class TestPerformanceTracking(unittest.TestCase):
         orchestrator = TrainingOrchestrator(model_name="gpt2")
 
         with (
-            patch("src.training.trainer.WandbLogger") as mock_wandb,
-            patch("src.training.trainer.MLFlowLogger") as mock_mlflow,
-            patch("src.training.trainer.pl.Trainer") as mock_trainer,
+            patch("src.pipeline.training.trainer.WandbLogger") as mock_wandb,
+            patch("src.pipeline.training.trainer.MLFlowLogger") as mock_mlflow,
+            patch("src.pipeline.training.trainer.pl.Trainer") as mock_trainer,
         ):
             orchestrator.train(
                 train_texts=["hello world"], epochs=1, tracking_config=tracking_config

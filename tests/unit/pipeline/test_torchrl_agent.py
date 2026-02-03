@@ -1,10 +1,9 @@
 import unittest
 from typing import cast
 
-from tensordict import TensorDict
-
 from src.env.env_wrapper import TradingEnvWrapper
 from src.env.trading_env import TradingEnv
+from tensordict import TensorDict
 
 
 class TestTorchRLAgent(unittest.TestCase):

@@ -7,7 +7,6 @@ import pytest
 import torch
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-
 from src.api.inference import (
     BatchInferenceHandler,
     PredictionRequest,

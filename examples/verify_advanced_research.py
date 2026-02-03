@@ -2,9 +2,9 @@
 
 import torch
 import torch.nn as nn
-from src.training.federated import FederatedAggregator, FederatedClient
+from src.envs.envs import MultiAgentEnvWrapper, TradingEnv
+from src.pipeline.training.federated import FederatedAggregator, FederatedClient
 from src.utils.gen.generators import GANGenerator, VAEGenerator
-from src.envs.envs import TradingEnv, MultiAgentEnvWrapper
 
 
 def test_federated_learning():

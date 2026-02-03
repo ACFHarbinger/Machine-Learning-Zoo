@@ -4,7 +4,6 @@ Verification script for MAML Lightning Module.
 
 import pytorch_lightning as pl
 import torch
-
 from src.models.time_series import TimeSeriesBackbone
 from src.pipeline.meta.maml import MAMLDataModule, MAMLLightningModule
 

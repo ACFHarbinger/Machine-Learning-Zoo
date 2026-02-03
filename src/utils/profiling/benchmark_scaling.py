@@ -3,8 +3,6 @@ Benchmark scaling efficiency of vectorized environments.
 """
 
 import argparse
-import os
-import sys
 import time
 
 import torch

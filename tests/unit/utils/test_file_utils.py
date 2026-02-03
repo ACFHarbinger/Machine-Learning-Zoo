@@ -7,7 +7,6 @@ import threading
 from unittest.mock import MagicMock
 
 import pytest
-
 from src.utils.io.file_utils import compose_dirpath, read_json
 
 

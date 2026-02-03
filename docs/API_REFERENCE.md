@@ -12,15 +12,15 @@ Welcome to the Machine Learning Zoo API Reference. This document provides an ove
 
 ### Training
 
-- `src.training.trainer`: The `TrainingOrchestrator` for managing PyTorch Lightning training.
-- `src.training.lightning_module`: Core PL module for all Zoo models.
-- `src.training.fairness`: `FairnessAuditor` for detecting bias.
+- `src.pipeline.training.trainer`: The `TrainingOrchestrator` for managing PyTorch Lightning training.
+- `src.pipeline.training.lightning_module`: Core PL module for all Zoo models.
+- `src.pipeline.training.fairness`: `FairnessAuditor` for detecting bias.
 
 ### Inference & API
 
 - `src.api.server`: High-performance FastAPI production server.
 - `src.api.ab_testing`: `ABTestingManager` for traffic splitting.
-- `src.inference.vllm_engine`: `VLLMEngine` for optimized LLM serving.
+- `src.pipeline.inference.vllm_engine`: `VLLMEngine` for optimized LLM serving.
 
 ## Evaluation
 

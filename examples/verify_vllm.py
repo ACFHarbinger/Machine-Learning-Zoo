@@ -1,5 +1,6 @@
 import unittest
-from src.inference.vllm_engine import VLLMEngine
+
+from src.pipeline.inference.vllm_engine import VLLMEngine
 
 
 class TestVLLMEngine(unittest.TestCase):

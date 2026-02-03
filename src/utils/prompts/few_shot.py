@@ -4,7 +4,7 @@ import json
 import logging
 import random
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from .prompts import FewShotExample
 

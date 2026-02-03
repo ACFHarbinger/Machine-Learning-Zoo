@@ -11,8 +11,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-from torch import nn
-
 from src.utils.io.model_versioning import (
     ModelMetadata,
     ModelRegistry,
@@ -22,6 +20,7 @@ from src.utils.io.model_versioning import (
     load_model_with_metadata,
     save_model_with_metadata,
 )
+from torch import nn
 
 # Test fixtures
 

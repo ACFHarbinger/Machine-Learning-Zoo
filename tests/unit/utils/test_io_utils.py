@@ -2,7 +2,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-
 from src.utils.io.cloud_storage import (
     CloudCheckpointManager,
     CloudStorageConfig,

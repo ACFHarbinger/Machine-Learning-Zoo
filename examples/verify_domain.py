@@ -1,11 +1,10 @@
 """Verification script for Domain Adaptation utilities."""
 
 import torch
-import torch.nn as nn
-from src.training.domain_adaptation import (
-    MMDLoss,
-    GradientReversalLayer,
+from src.pipeline.training.domain_adaptation import (
     DomainDiscriminator,
+    GradientReversalLayer,
+    MMDLoss,
 )
 
 

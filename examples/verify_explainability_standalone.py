@@ -1,9 +1,9 @@
 """Self-contained verification script for Phase 6 logic."""
 
+from typing import Any, Dict, List
+
 import torch
 import torch.nn as nn
-import numpy as np
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 # --- Copied from explainability.py ---
 

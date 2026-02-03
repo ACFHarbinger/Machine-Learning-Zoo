@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, cast
 import torch
 from torch import nn
 
+from ...utils.registry import register_model
 from ..base import BaseModel
 from ..modules.xlstm_block import xLSTMBlock
-from ...utils.registry import register_model
 
 if TYPE_CHECKING:
     pass

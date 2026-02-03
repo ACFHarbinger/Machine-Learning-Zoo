@@ -13,9 +13,9 @@ def test_config_from_dict():
             "hidden_dim": 512
         }
     }
-    
+
     cfg = TrainConfig.from_dict(data)
-    
+
     assert cfg.seed == 100
     assert cfg.task == "vae"
     assert isinstance(cfg.model, ModelConfig)
@@ -26,7 +26,7 @@ def test_config_to_dict():
     """Test converting config to dictionary."""
     cfg = TrainConfig(seed=777, task="test")
     data = cfg.to_dict()
-    
+
     assert data["seed"] == 777
     assert data["task"] == "test"
     assert "model" in data
@@ -37,7 +37,7 @@ def test_config_invalid_field():
         "seed": 42,
         "invalid_field": "ignore_me"
     }
-    
+
     cfg = TrainConfig.from_dict(data)
     assert cfg.seed == 42
     assert not hasattr(cfg, "invalid_field")
@@ -50,7 +50,7 @@ def test_nested_base_config_parsing():
             "max_steps": 500
         }
     }
-    
+
     cfg = TrainConfig.from_dict(data)
     assert isinstance(cfg.env, EnvConfig)
     assert cfg.env.lookback == 50

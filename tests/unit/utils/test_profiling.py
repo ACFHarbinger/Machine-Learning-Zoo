@@ -2,8 +2,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-from torch import nn
-
 from src.utils.profiling.cuda_profiler import (
     CUDAProfiler,
     ProfilerConfig,
@@ -11,6 +9,7 @@ from src.utils.profiling.cuda_profiler import (
     profile_model_forward,
     profile_training_step,
 )
+from torch import nn
 
 
 @pytest.fixture

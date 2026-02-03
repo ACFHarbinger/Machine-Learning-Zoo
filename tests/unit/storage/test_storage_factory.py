@@ -2,7 +2,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from src.storage.base import StorageConfig
 from src.storage.factory import create_storage
 from src.storage.gcs import GCSStorage

@@ -2,9 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-from torch import nn
-
 from src.pipeline.train import clip_grad_norms, rollout, train_batch, train_epoch
+from torch import nn
 
 
 @pytest.fixture

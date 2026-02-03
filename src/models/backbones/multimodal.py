@@ -13,8 +13,8 @@ import torch
 from torch import nn
 
 from .base import Backbone, BackboneConfig, register_backbone
-from .vision import HuggingFaceVisionBackbone
 from .hf_backbone import HuggingFaceBackbone
+from .vision import HuggingFaceVisionBackbone
 
 logger = logging.getLogger(__name__)
 

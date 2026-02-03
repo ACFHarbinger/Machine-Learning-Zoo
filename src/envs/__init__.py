@@ -12,8 +12,8 @@ from __future__ import annotations
 
 from .envs import ClobEnv, PolymarketEnv, TradingEnv
 from .multi_agent import (
-    CooperativeGatheringEnv,
     CompetitiveArenaEnv,
+    CooperativeGatheringEnv,
     MultiAgentEnvBase,
     MultiAgentEnvConfig,
 )

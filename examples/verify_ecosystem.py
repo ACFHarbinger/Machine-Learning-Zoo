@@ -1,10 +1,10 @@
 """Verification script for Phase 9: Ecosystem Growth."""
 
-import sys
 import unittest
 from unittest.mock import MagicMock, patch
-from src.utils.registry import MODEL_REGISTRY, Registry
-from src.training.automl import HyperparameterOptimizer
+
+from src.pipeline.training.automl import HyperparameterOptimizer
+from src.utils.registry import Registry
 
 
 class TestEcosystem(unittest.TestCase):

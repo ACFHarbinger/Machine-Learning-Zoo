@@ -1,10 +1,9 @@
 """Automated prompt optimization utilities."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Optional
 
-from ...inference.engine import InferenceEngine
-from .prompts import PromptTemplate
+from ...pipeline.inference.engine import InferenceEngine
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,6 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-
 from src.env.vectorized_env import (
     SubprocVecEnv,
     VectorizedTradingEnv,

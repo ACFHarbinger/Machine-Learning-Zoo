@@ -4,9 +4,9 @@ Verification script for the backtesting framework.
 
 import json
 
-from src.backtesting.engine import BacktestEngine
-from src.backtesting.metrics import calculate_metrics
-from src.backtesting.sample_strategy import SMACrossoverStrategy
+from src.pipeline.backtesting.engine import BacktestEngine
+from src.pipeline.backtesting.metrics import calculate_metrics
+from src.pipeline.backtesting.sample_strategy import SMACrossoverStrategy
 
 
 def verify() -> None:

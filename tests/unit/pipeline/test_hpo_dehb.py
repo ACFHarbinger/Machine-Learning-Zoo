@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 import ConfigSpace as CS  # noqa: N817
 import numpy as np
 import pytest
-
 from src.pipeline.hpo.de_async import AsyncDifferentialEvolution
 from src.pipeline.hpo.dehb import (
     DEHB,

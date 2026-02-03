@@ -4,11 +4,11 @@ import sys
 from collections.abc import Callable
 from typing import Any, Dict, Optional
 
-from .ipc.ndjson_transport import NdjsonTransport
-from .inference.engine import InferenceEngine
-from .models.sidecar_registry import ModelRegistry
-from .training import TrainingService
 from .device import DeviceManager
+from .ipc.ndjson_transport import NdjsonTransport
+from .models.sidecar_registry import ModelRegistry
+from .pipeline.inference import InferenceEngine
+from .pipeline.training import TrainingService
 
 logging.basicConfig(
     stream=sys.stderr,

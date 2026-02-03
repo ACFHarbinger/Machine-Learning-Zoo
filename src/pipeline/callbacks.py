@@ -19,10 +19,10 @@ class MemoryTrackingCallback(Callback):
         mem_info = process.memory_info()
         rss_mb = mem_info.rss / (1024 * 1024)
         vms_mb = mem_info.vms / (1024 * 1024)
-        
+
         pl_module.log("memory/rss_mb", rss_mb, prog_bar=False)
         pl_module.log("memory/vms_mb", vms_mb, prog_bar=False)
-        
+
         logger.info(f"Epoch {trainer.current_epoch} Memory Usage: RSS={rss_mb:.2f}MB, VMS={vms_mb:.2f}MB")
 
 class PerformanceLoggingCallback(Callback):

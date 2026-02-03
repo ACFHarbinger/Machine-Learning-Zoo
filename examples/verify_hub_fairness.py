@@ -1,8 +1,8 @@
 import unittest
-from pathlib import Path
+
 import torch
 from src.models.hub import ModelHub
-from src.training.fairness import FairnessAuditor
+from src.pipeline.training.fairness import FairnessAuditor
 
 
 class TestHubFairness(unittest.TestCase):

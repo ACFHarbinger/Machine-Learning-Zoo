@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import MagicMock
 
 import torch
-
 from src.pipeline.core.lightning.semi_supervised import SemiSupervisedModule
 
 

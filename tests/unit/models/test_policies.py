@@ -1,7 +1,6 @@
 import unittest
 
 import torch
-
 from src.policies.black_scholes import BlackScholesPolicy
 from src.policies.neural import NeuralPolicy
 from src.policies.regular import RegularPolicy

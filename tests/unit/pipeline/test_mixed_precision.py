@@ -10,8 +10,6 @@ from unittest.mock import patch
 
 import pytest
 import torch
-from torch import nn
-
 from src.utils.mixed_precision import (
     MixedPrecisionConfig,
     MixedPrecisionTrainer,
@@ -20,6 +18,7 @@ from src.utils.mixed_precision import (
     estimate_memory_savings,
     get_optimal_precision,
 )
+from torch import nn
 
 # Test fixtures
 

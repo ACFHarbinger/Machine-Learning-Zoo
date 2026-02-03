@@ -4,7 +4,6 @@ Tests for backtesting performance metrics calculation.
 
 import numpy as np
 import pytest
-
 from src.backtesting.metrics import calculate_metrics
 
 

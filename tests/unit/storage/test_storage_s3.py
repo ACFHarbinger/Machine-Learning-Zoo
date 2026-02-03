@@ -2,7 +2,6 @@ import sys
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
-
 from src.storage.base import StorageConfig
 
 # Set PYTHONPATH via pytest or env is assumed.

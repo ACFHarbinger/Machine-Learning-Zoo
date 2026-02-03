@@ -2,7 +2,6 @@
 Verification script for the Trading Arena environment.
 """
 
-import os
 import sys
 
 try:

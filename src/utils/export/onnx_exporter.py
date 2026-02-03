@@ -1,10 +1,11 @@
 """Utility for exporting PyTorch models to ONNX."""
 
+import logging
+from pathlib import Path
+from typing import Dict, Optional, Tuple
+
 import torch
 import torch.nn as nn
-from pathlib import Path
-from typing import Optional, Tuple, Any, Dict
-import logging
 
 logger = logging.getLogger(__name__)
 

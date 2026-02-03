@@ -5,7 +5,6 @@ from typing import Any, Callable
 
 # Add shared and logic src to path
 # (The Rust core will set PYTHONPATH properly)
-
 from .ipc.ndjson_transport import NdjsonTransport
 
 logging.basicConfig(

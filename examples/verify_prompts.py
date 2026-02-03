@@ -1,8 +1,9 @@
 """Verification script for Prompt Engineering Toolkit."""
 
 from pathlib import Path
+
+from src.utils.prompts.few_shot import FewShotExample, FewShotRegistry
 from src.utils.prompts.prompts import PromptRegistry, PromptTemplate
-from src.utils.prompts.few_shot import FewShotRegistry, FewShotExample
 
 
 def verify_prompts():

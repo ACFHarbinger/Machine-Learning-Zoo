@@ -1,8 +1,6 @@
 """Verification script for Continual Learning strategies."""
 
-import torch
-from pathlib import Path
-from src.training.trainer import TrainingOrchestrator
+from src.pipeline.training.trainer import TrainingOrchestrator
 
 
 def verify_continual_learning():

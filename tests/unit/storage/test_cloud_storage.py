@@ -4,8 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-from torch import nn
-
 from src.utils.io.cloud_storage import (
     CloudCheckpointManager,
     CloudStorageConfig,
@@ -13,6 +11,7 @@ from src.utils.io.cloud_storage import (
     S3Backend,
     create_cloud_manager_from_env,
 )
+from torch import nn
 
 
 @pytest.fixture

@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from src.utils.io.model_retention import ModelRetentionPolicy, RetentionConfig
 
 

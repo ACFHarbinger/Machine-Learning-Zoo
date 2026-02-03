@@ -21,9 +21,8 @@ from torch.utils.data import DataLoader, random_split
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from pipeline.lightning.vae_module import VAELightningModule
-
 from data.polymarket_dataset import PolymarketDataset
+from pipeline.lightning.vae_module import VAELightningModule
 
 
 def main():  # noqa: PLR0915

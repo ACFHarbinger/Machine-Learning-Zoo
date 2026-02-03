@@ -6,14 +6,12 @@ import asyncio
 import logging
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ..configs.sidecar_model import LoadedModel
+from .hub import MODEL_CONFIGS, ModelHub
 
 logger = logging.getLogger(__name__)
-
-
-from .hub import ModelHub, MODEL_CONFIGS
 
 
 class ModelRegistry:
@@ -149,9 +147,10 @@ class ModelRegistry:
         config: Dict[str, Any],
     ) -> None:
         """Load Transformers model using huggingface/transformers."""
-        from .backbones.hf_backbone import HuggingFaceBackbone  # type: ignore
-        from .backbones.base import BackboneConfig
         import torch
+
+        from .backbones.base import BackboneConfig
+        from .backbones.hf_backbone import HuggingFaceBackbone  # type: ignore
 
         hf_repo = config["hf_repo"]
         device_map = config.get("device_map", "auto")
@@ -200,9 +199,8 @@ class ModelRegistry:
         config: Dict[str, Any],
     ) -> None:
         """Load MultiModal model."""
-        from .backbones.multimodal import MultiModalBackbone
         from .backbones.base import BackboneConfig
-        import torch
+        from .backbones.multimodal import MultiModalBackbone
 
         vision_config = config["vision_config"]
         llm_config = config["llm_config"]
@@ -239,7 +237,6 @@ class ModelRegistry:
 
     def _estimate_multimodal_size(self, model: Any) -> float:
         """Estimate multimodal model size in MB."""
-        import torch
 
         size_mb = self._estimate_model_size(model.vision_backbone.model)
         size_mb += self._estimate_model_size(model.llm_backbone.model)

@@ -7,7 +7,6 @@ Executes a specific action at fixed intervals (e.g., rebalancing).
 from typing import Any
 
 from ..utils.registry import register_policy
-
 from .base import Policy
 
 

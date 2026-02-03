@@ -1,7 +1,6 @@
 import unittest
 
 import torch
-
 from src.pipeline.core.lightning.base import BaseModule
 
 

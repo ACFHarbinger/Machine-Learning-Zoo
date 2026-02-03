@@ -12,7 +12,6 @@ import torch
 from scipy.stats import norm
 
 from ..utils.registry import register_policy
-
 from .base import Policy
 
 

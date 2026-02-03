@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-
 from src.pipeline.online_learning.drift import MovingAverageDrift, PageHinkley
 from src.pipeline.online_learning.normalization import OnlineNormalizer
 

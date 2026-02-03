@@ -3,9 +3,10 @@ Synthetic Data Generation Module.
 Includes GAN and VAE implementations for data augmentation.
 """
 
+from typing import List, Tuple
+
 import torch
 from torch import nn
-from typing import Tuple, List, Optional
 
 
 class GANGenerator(nn.Module):

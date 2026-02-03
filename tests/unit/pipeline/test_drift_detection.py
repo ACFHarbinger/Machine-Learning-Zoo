@@ -4,7 +4,6 @@ Tests for concept drift detection algorithms.
 
 import numpy as np
 import pytest
-
 from src.pipeline.online_learning.drift import (
     MovingAverageDrift,
     PageHinkley,

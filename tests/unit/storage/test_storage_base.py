@@ -6,7 +6,6 @@ import gzip
 from unittest.mock import patch
 
 import pytest
-
 from src.storage.base import ModelMetadata, ModelStorage, StorageConfig
 
 

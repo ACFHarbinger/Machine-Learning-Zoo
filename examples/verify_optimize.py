@@ -1,9 +1,8 @@
 import logging
 
 import torch
-from torch.utils.data import DataLoader, Dataset
-
 from src.pipeline.hpo.optimize import bayesian_optimization, run_dehb_search
+from torch.utils.data import DataLoader, Dataset
 
 logging.basicConfig(level=logging.INFO)
 

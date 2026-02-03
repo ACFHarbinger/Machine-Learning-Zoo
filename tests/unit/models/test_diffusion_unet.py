@@ -1,5 +1,4 @@
 import torch
-
 from src.models.probabilistic.diffusion_unet import (
     DiffusionUNet1D,
     ResidualBlock1D,

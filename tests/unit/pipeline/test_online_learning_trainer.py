@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.linear_model import SGDRegressor
-
 from src.pipeline.online_learning.online_trainer import (
     ExperienceReplayBuffer,
     OnlineTrainer,

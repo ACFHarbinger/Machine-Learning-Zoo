@@ -7,7 +7,6 @@ Simple rule-based strategy that buys/sells based on fixed price thresholds.
 from typing import Any
 
 from ..utils.registry import register_policy
-
 from .base import Policy
 
 

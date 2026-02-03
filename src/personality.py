@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+
 from .constants import DEFAULT_HATCHING_MESSAGE, DEFAULT_PERSONALITY
 
 logger = logging.getLogger(__name__)

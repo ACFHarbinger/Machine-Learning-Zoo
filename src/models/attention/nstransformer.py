@@ -7,6 +7,7 @@ from typing import Any
 
 import torch
 from torch import nn
+
 from ...utils.registry import register_model
 from ..modules import (
     AttentionLayer,

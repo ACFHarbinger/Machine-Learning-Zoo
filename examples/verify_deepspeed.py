@@ -1,8 +1,8 @@
 """Verification script for DeepSpeed integration."""
 
-import torch
 from pathlib import Path
-from src.training.trainer import TrainingOrchestrator
+
+from src.pipeline.training.trainer import TrainingOrchestrator
 
 
 def verify_deepspeed_init():

@@ -15,6 +15,7 @@ from typing import Any, cast
 
 import torch
 import zstandard as zstd
+
 from ...configs.storage import CloudStorageConfig
 
 logger = logging.getLogger(__name__)

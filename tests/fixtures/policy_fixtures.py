@@ -3,9 +3,8 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
-from torch import nn
-
 from src.policies.neural import NeuralPolicy
+from torch import nn
 
 
 @pytest.fixture

@@ -2,8 +2,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-from torch.utils.data import DataLoader, Dataset
-
 from src.data.prefetch_dataloader import (
     BackgroundPrefetcher,
     CUDAPrefetcher,
@@ -12,6 +10,7 @@ from src.data.prefetch_dataloader import (
     benchmark_dataloader,
     create_optimized_dataloader,
 )
+from torch.utils.data import DataLoader, Dataset
 
 
 class SimpleDataset(Dataset):

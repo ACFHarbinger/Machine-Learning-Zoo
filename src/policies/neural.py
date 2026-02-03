@@ -8,7 +8,6 @@ from tensordict.nn import TensorDictModuleBase
 from torch import nn
 
 from ..utils.registry import register_policy
-
 from .base import Policy
 
 if TYPE_CHECKING:

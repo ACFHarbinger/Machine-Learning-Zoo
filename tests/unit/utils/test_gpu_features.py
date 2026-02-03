@@ -4,7 +4,6 @@ Unit tests for GPU Feature Engineer.
 
 import pytest
 import torch
-
 from src.utils.functions.gpu_features import GPUFeatureEngineer
 
 

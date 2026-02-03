@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from src.db.cache import (
     cache_key,
     cached_query,

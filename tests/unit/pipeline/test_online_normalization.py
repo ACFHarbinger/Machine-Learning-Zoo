@@ -3,9 +3,8 @@ Tests for online normalization layer.
 """
 
 import torch
-from torch import nn
-
 from src.pipeline.online_learning.normalization import OnlineNormalizer
+from torch import nn
 
 
 class TestOnlineNormalizer:

@@ -1,9 +1,10 @@
 """Self-contained verification script for Domain Adaptation logic."""
 
+from typing import Any
+
 import torch
 import torch.nn as nn
 from torch.autograd import Function
-from typing import Any
 
 # --- Copied from domain_adaptation.py to be self-contained ---
 

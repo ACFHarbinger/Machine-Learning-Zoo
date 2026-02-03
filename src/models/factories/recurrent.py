@@ -4,12 +4,12 @@ from typing import Any
 
 from torch import nn
 
-from .base import NeuralComponentFactory
 from ..recurrent.esn import EchoStateNetwork as ESN
 from ..recurrent.lsm import LiquidStateMachine
 from ..recurrent.rnn import GRU, LSTM
 from ..recurrent.tsmamba import TSMamba
 from ..recurrent.xlstm import xLSTM
+from .base import NeuralComponentFactory
 
 
 class RecurrentFactory(NeuralComponentFactory):

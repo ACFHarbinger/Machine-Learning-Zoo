@@ -1,12 +1,11 @@
 """Verification script for Phase 7: Deployment & Serving."""
 
-import torch
-import torch.nn as nn
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 from src.api.server import app
-from src.utils.export.onnx_exporter import ONNXExporter
 from src.models.time_series import TimeSeriesBackbone
-from pathlib import Path
+from src.utils.export.onnx_exporter import ONNXExporter
 
 
 def test_server():

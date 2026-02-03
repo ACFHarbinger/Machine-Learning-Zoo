@@ -2,7 +2,6 @@ from unittest.mock import MagicMock, patch
 
 import ConfigSpace as CS  # noqa: N817
 import numpy as np
-
 from src.pipeline.hpo.de import DifferentialEvolution
 from src.pipeline.hpo.dehb import (
     DifferentialEvolutionHyperband,

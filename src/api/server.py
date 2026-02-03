@@ -1,16 +1,20 @@
 """Production inference server for the Machine Learning Zoo."""
 
+import logging
 import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
 import torch
 import uvicorn
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Optional, Union, Tuple
-import logging
-from pathlib import Path
 
 from ..models.time_series import TimeSeriesBackbone
-from ..utils.io.model_versioning import load_model_with_metadata, ModelMetadata
+from ..utils.io.model_versioning import ModelMetadata, load_model_with_metadata
+from .ab_testing import ABTestingManager
+
+AB_MANAGER = ABTestingManager()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -24,10 +28,6 @@ app = FastAPI(
 
 # Global model cache to avoid reloading
 MODEL_CACHE: Dict[str, Any] = {}
-
-from .ab_testing import ABTestingManager
-
-AB_MANAGER = ABTestingManager()
 
 
 class PredictionRequest(BaseModel):
@@ -100,7 +100,7 @@ def get_model(
         MODEL_CACHE[cache_key] = (ts_model, metadata)
         return ts_model, metadata
     elif task == "text" and engine == "vllm":
-        from ..inference.vllm_engine import VLLMEngine
+        from ..pipeline.inference.vllm_engine import VLLMEngine
 
         vllm_model = VLLMEngine(model_name=model_path)
         MODEL_CACHE[cache_key] = (vllm_model, metadata)

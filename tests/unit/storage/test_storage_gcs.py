@@ -2,7 +2,6 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from src.storage.base import StorageConfig
 from src.storage.gcs import GCSStorage
 

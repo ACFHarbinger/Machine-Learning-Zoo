@@ -3,8 +3,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-from torch import nn
-
 from src.utils.logging.visualize_utils import (
     MyModelWrapper,
     get_batch,
@@ -15,6 +13,7 @@ from src.utils.logging.visualize_utils import (
     plot_weight_trajectories,
     visualize_epoch,
 )
+from torch import nn
 
 
 @pytest.fixture

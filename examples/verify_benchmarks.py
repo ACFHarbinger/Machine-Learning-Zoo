@@ -1,4 +1,5 @@
 import unittest
+
 import torch
 from src.benchmark.benchmarks import ModelBenchmarker
 

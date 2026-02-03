@@ -1,10 +1,10 @@
 """Benchmarking suite for Machine Learning Zoo."""
 
-import time
-import torch
 import logging
-from typing import Any, Dict, List, Optional
-from pathlib import Path
+import time
+from typing import Any, Dict, List
+
+import torch
 
 logger = logging.getLogger(__name__)
 

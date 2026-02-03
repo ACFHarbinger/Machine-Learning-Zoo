@@ -1,10 +1,9 @@
 import logging
 
 import torch
+from src.pipeline.distributed_train import train_ddp
 from torch import nn
 from torch.utils.data import Dataset
-
-from src.pipeline.distributed_train import train_ddp
 
 logging.basicConfig(level=logging.INFO)
 

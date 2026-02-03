@@ -3,12 +3,11 @@ import unittest
 from unittest.mock import ANY, MagicMock, patch
 
 import torch
-from torch import nn
-
 from src.pipeline.core.lightning.supervised_learning import (
     ProgressCallback,
     SLLightningModule,
 )
+from torch import nn
 
 
 class TestLightningSupervised(unittest.TestCase):

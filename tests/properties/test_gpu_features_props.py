@@ -5,7 +5,6 @@ import torch
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
-
 from src.utils.functions.gpu_features import GPUFeatureEngineer
 
 # Strategy for generating valid price series

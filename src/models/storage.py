@@ -4,8 +4,6 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-import torch
-
 
 class StorageManager:
     """Manages storage resources for the Model Hub."""

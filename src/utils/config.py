@@ -55,6 +55,6 @@ def sanitize_and_inject(cfg: Any, **kwargs: Any) -> dict[str, Any]:
             # If it's not a dict, we can't inject into it easily
             # But usually top-level configs passed to modules are dicts
             return sanitized
-    
+
     sanitized.update(kwargs)
     return sanitized

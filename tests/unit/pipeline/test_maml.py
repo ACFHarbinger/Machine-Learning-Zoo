@@ -6,9 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
-from torch import nn
-
 from src.pipeline.meta.maml import MAMLDataModule, MAMLLightningModule
+from torch import nn
 
 
 class SimpleModel(nn.Module):
