@@ -10,13 +10,12 @@ from torch import nn
 
 from ...utils.registry import register_model
 from ..modules import (
-    AttentionLayer,
     DataEmbedding,
-    DSAttention,
     Normalization,
     SkipConnection,
     Transpose,
 )
+from .attention import AttentionLayer, DSAttention
 
 
 class EncoderLayer(nn.Module):
@@ -36,9 +35,7 @@ class EncoderLayer(nn.Module):
         Initialize.
         """
         super().__init__()
-        self.attention = SkipConnection(
-            AttentionLayer(DSAttention(False, dropout_rate, False), embed_dim, n_heads)
-        )
+        self.attention = SkipConnection(AttentionLayer(DSAttention(False, dropout_rate, False), embed_dim, n_heads))
         self.conv = nn.Sequential(
             Transpose(),
             nn.Conv1d(in_channels=embed_dim, out_channels=hidden_dim, kernel_size=1),
@@ -60,9 +57,7 @@ class EncoderLayer(nn.Module):
         """
         Forward pass.
         """
-        y = x = torch.as_tensor(
-            self.norm(self.attention(x, x, x, attn_mask=attn_mask, tau=tau, delta=delta)[0])
-        )
+        y = x = torch.as_tensor(self.norm(self.attention(x, x, x, attn_mask=attn_mask, tau=tau, delta=delta)[0]))
         y = torch.as_tensor(self.conv(y))
         return torch.as_tensor(self.norm(x + y))
 
@@ -98,9 +93,7 @@ class Encoder(nn.Module):
         """
         # x [B, L, D]
         if self.conv_layers is not None:
-            for i, (attn_layer, conv_layer) in enumerate(
-                zip(self.attn_layers, self.conv_layers, strict=False)
-            ):
+            for i, (attn_layer, conv_layer) in enumerate(zip(self.attn_layers, self.conv_layers, strict=False)):
                 delta_val = delta if i == 0 else None
                 out = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta_val)
                 if isinstance(out, tuple | list):
@@ -146,9 +139,7 @@ class DecoderLayer(nn.Module):
         Initialize.
         """
         super().__init__()
-        self.attention = SkipConnection(
-            AttentionLayer(DSAttention(True, dropout_rate, False), embed_dim, n_heads)
-        )
+        self.attention = SkipConnection(AttentionLayer(DSAttention(True, dropout_rate, False), embed_dim, n_heads))
         self.cross_attention = SkipConnection(
             AttentionLayer(DSAttention(False, dropout_rate, False), embed_dim, n_heads)
         )
@@ -175,13 +166,9 @@ class DecoderLayer(nn.Module):
         """
         Forward pass.
         """
+        x = torch.as_tensor(self.norm(self.attention(x, x, x, attn_mask=x_mask, tau=tau, delta=None)[0]))
         x = torch.as_tensor(
-            self.norm(self.attention(x, x, x, attn_mask=x_mask, tau=tau, delta=None)[0])
-        )
-        x = torch.as_tensor(
-            self.norm(
-                self.cross_attention(x, cross, cross, attn_mask=cross_mask, tau=tau, delta=delta)[0]
-            )
+            self.norm(self.cross_attention(x, cross, cross, attn_mask=cross_mask, tau=tau, delta=delta)[0])
         )
         y = torch.as_tensor(self.conv(x))
         return torch.as_tensor(self.norm(x + y))
@@ -219,9 +206,7 @@ class Decoder(nn.Module):
         Forward pass.
         """
         for layer in self.layers:
-            x = torch.as_tensor(
-                layer(x, cross, x_mask=x_mask, cross_mask=cross_mask, tau=tau, delta=delta)
-            )
+            x = torch.as_tensor(layer(x, cross, x_mask=x_mask, cross_mask=cross_mask, tau=tau, delta=delta))
 
         if self.norm is not None:
             x = torch.as_tensor(self.norm(x))
@@ -326,12 +311,8 @@ class NSTransformer(nn.Module):
             norm_layer=torch.nn.LayerNorm(embed_dim),
             projection=nn.Linear(embed_dim, output_dim),
         )
-        self.tau_learner = Projector(
-            input_dim, seq_len, learner_dims, n_learner_layers, output_dim=1
-        )
-        self.delta_learner = Projector(
-            input_dim, seq_len, learner_dims, n_learner_layers, output_dim=seq_len
-        )
+        self.tau_learner = Projector(input_dim, seq_len, learner_dims, n_learner_layers, output_dim=1)
+        self.delta_learner = Projector(input_dim, seq_len, learner_dims, n_learner_layers, output_dim=seq_len)
         self.label_len: int = 0
 
     def forecast(
@@ -349,9 +330,7 @@ class NSTransformer(nn.Module):
         # Normalization
         mean_enc = x_enc.mean(1, keepdim=True).detach()  # B x 1 x E
         x_enc = x_enc - mean_enc
-        std_enc = torch.sqrt(
-            torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5
-        ).detach()  # B x 1 x E
+        std_enc = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5).detach()  # B x 1 x E
         x_enc = x_enc / std_enc
 
         tau = torch.as_tensor(self.tau_learner(x_raw, std_enc)).exp()
@@ -373,9 +352,7 @@ class NSTransformer(nn.Module):
         enc_out = torch.as_tensor(self.encoder(enc_out, attn_mask=None, tau=tau, delta=delta))
 
         dec_out = torch.as_tensor(self.dec_embedding(x_dec_new, x_mark_dec))
-        dec_out = torch.as_tensor(
-            self.decoder(dec_out, enc_out, x_mask=None, cross_mask=None, tau=tau, delta=delta)
-        )
+        dec_out = torch.as_tensor(self.decoder(dec_out, enc_out, x_mask=None, cross_mask=None, tau=tau, delta=delta))
         dec_out = dec_out * std_enc + mean_enc
         return dec_out
 

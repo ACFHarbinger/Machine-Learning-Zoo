@@ -1,127 +1,239 @@
-"""Visual Training Dashboard for Machine Learning Zoo."""
+"""Visual Training Dashboard API for Machine Learning Zoo.
 
+This module provides a FastAPI-based WebSocket API for real-time training monitoring
+and pipeline management. It connects to the React dashboard for:
+- Listing available model types from Enums
+- WebSocket streaming of training metrics
+- Pipeline validation and export
+"""
+
+from __future__ import annotations
+
+import json
 import logging
-from pathlib import Path
+from typing import Any
 
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+from ..enums.models import DeepModelType, HelperModelType, MacModelType
 
 app = FastAPI(
-    title="ML Zoo Training Dashboard",
+    title="ML Zoo Training Dashboard API",
     description="Real-time monitoring and management of ML training runs.",
-    version="1.0.0",
+    version="2.0.0",
+)
+
+# Enable CORS for dashboard connection
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 logger = logging.getLogger(__name__)
 
-# Base directory for MLflow runs
-MLRUNS_DIR = Path("mlruns")
+# -----------------------------------------------------------------------------
+# Request/Response Models
+# -----------------------------------------------------------------------------
 
 
-@app.get("/", response_class=HTMLResponse)
-async def get_dashboard():
-    """
-    Render a simple dashboard UI.
-    """
-    html_template = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>ML Zoo Dashboard</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <style>
-            body { font-family: sans-serif; margin: 20px; background: #f4f4f9; }
-            .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            h1 { color: #333; }
-            .run-list { margin-bottom: 20px; }
-            .run-item { padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
-            .chart-container { width: 100%; height: 400px; }
-            .status { font-weight: bold; }
-            .status.active { color: green; }
-            .status.finished { color: blue; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>Machine Learning Zoo - Dashboard</h1>
-            <div class="run-list" id="run-list">
-                <h3>Loading runs...</h3>
-            </div>
-            <div class="chart-container">
-                <canvas id="metricsChart"></canvas>
-            </div>
-        </div>
+class PipelineNode(BaseModel):
+    """A node in the model pipeline graph."""
 
-        <script>
-            async function fetchRuns() {
-                const response = await fetch('/api/runs');
-                const runs = await response.json();
-                const runList = document.getElementById('run-list');
-                runList.innerHTML = '<h3>Recent Training Runs</h3>';
-                
-                runs.forEach(run => {
-                    const div = document.createElement('div');
-                    div.className = 'run-item';
-                    div.innerHTML = `
-                        <span>Run: ${run.name} (${run.id})</span>
-                        <span class="status ${run.status.toLowerCase()}">${run.status}</span>
-                    `;
-                    runList.appendChild(div);
-                });
-            }
-
-            // Simple mock metrics for demonstration
-            const ctx = document.getElementById('metricsChart').getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [1, 2, 3, 4, 5],
-                    datasets: [{
-                        label: 'Training Loss',
-                        data: [0.9, 0.7, 0.5, 0.4, 0.3],
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-
-            fetchRuns();
-        </script>
-    </body>
-    </html>
-    """
-    return HTMLResponse(content=html_template)
+    id: str
+    type: str
+    data: dict[str, Any]
+    position: dict[str, float]
 
 
-@app.get("/api/runs")
-async def list_runs():
-    """
-    List runs from MLflow directory.
-    """
-    runs = []
-    if not MLRUNS_DIR.exists():
-        return []
+class PipelineEdge(BaseModel):
+    """A connection between nodes."""
 
-    # Simple directory traversal to find runs (simplified version of MLflow API)
-    for exp_dir in MLRUNS_DIR.iterdir():
-        if exp_dir.is_dir() and exp_dir.name != ".trash":
-            for run_dir in exp_dir.iterdir():
-                if run_dir.is_dir() and (run_dir / "meta.yaml").exists():
-                    # For now, just return ids and names
-                    runs.append(
-                        {
-                            "id": run_dir.name,
-                            "name": f"Experiment {exp_dir.name}",
-                            "status": "Finished",  # Simplified
-                        }
-                    )
+    source: str
+    target: str
 
-    return runs[:10]  # Return last 10 runs
 
+class TrainingConfig(BaseModel):
+    """Training configuration from the dashboard."""
+
+    epochs: int = 100
+    batch_size: int = 32
+    learning_rate: float = 0.001
+    seq_len: int = 30
+    pred_len: int = 1
+    train_split: float = 0.8
+    mode: str = "supervised"
+    hpo_algorithm: str = "none"
+    hpo_trials: int = 20
+
+
+class PipelineRequest(BaseModel):
+    """Complete pipeline request from dashboard."""
+
+    nodes: list[PipelineNode]
+    edges: list[PipelineEdge]
+    config: TrainingConfig
+
+
+class ModelTypeResponse(BaseModel):
+    """Response containing all available model types."""
+
+    deep: list[str]
+    mac: list[str]
+    helper: list[str]
+
+
+# -----------------------------------------------------------------------------
+# Active WebSocket Connections
+# -----------------------------------------------------------------------------
+
+active_connections: list[WebSocket] = []
+
+
+async def broadcast_training_update(data: dict[str, Any]) -> None:
+    """Broadcast training progress to all connected clients."""
+    for connection in active_connections:
+        try:
+            await connection.send_json(data)
+        except Exception:
+            pass
+
+
+# -----------------------------------------------------------------------------
+# REST Endpoints
+# -----------------------------------------------------------------------------
+
+
+@app.get("/")
+async def root() -> dict[str, str]:
+    """Health check and welcome message."""
+    return {"status": "healthy", "service": "ML Zoo Dashboard API"}
+
+
+@app.get("/api/models/types", response_model=ModelTypeResponse)
+async def get_model_types() -> ModelTypeResponse:
+    """Return all available model types from Enums."""
+    return ModelTypeResponse(
+        deep=[m.value for m in DeepModelType],
+        mac=[m.value for m in MacModelType],
+        helper=[m.value for m in HelperModelType],
+    )
+
+
+@app.post("/api/pipeline/validate")
+async def validate_pipeline(pipeline: PipelineRequest) -> JSONResponse:
+    """Validate a model pipeline configuration."""
+    errors = []
+
+    # Check for at least one model node
+    model_nodes = [n for n in pipeline.nodes if n.type == "model"]
+    if not model_nodes:
+        errors.append("Pipeline must contain at least one model node")
+
+    # Check for data input node
+    data_inputs = [n for n in pipeline.nodes if n.type == "data" and n.data.get("nodeKind") == "input"]
+    if not data_inputs:
+        errors.append("Pipeline must have a data input node")
+
+    # Check for valid connections
+    if not pipeline.edges:
+        errors.append("Pipeline nodes must be connected")
+
+    if errors:
+        return JSONResponse(status_code=400, content={"valid": False, "errors": errors})
+
+    return JSONResponse(content={"valid": True, "node_count": len(pipeline.nodes)})
+
+
+@app.post("/api/pipeline/export")
+async def export_pipeline(pipeline: PipelineRequest) -> JSONResponse:
+    """Export pipeline to Python training config."""
+    # Build the training command
+    model_nodes = [n for n in pipeline.nodes if n.type == "model"]
+
+    if not model_nodes:
+        return JSONResponse(status_code=400, content={"error": "No model nodes in pipeline"})
+
+    # For simplicity, take the first model node
+    main_model = model_nodes[0]
+    model_name = main_model.data.get("label", "LSTM")
+    model_params = main_model.data.get("params", {})
+
+    config_dict = {
+        "model": {
+            "name": model_name,
+            "params": model_params,
+        },
+        "training": {
+            "epochs": pipeline.config.epochs,
+            "batch_size": pipeline.config.batch_size,
+            "learning_rate": pipeline.config.learning_rate,
+            "seq_len": pipeline.config.seq_len,
+            "pred_len": pipeline.config.pred_len,
+            "train_split": pipeline.config.train_split,
+        },
+        "mode": pipeline.config.mode,
+        "hpo": {
+            "algorithm": pipeline.config.hpo_algorithm,
+            "trials": pipeline.config.hpo_trials,
+        },
+    }
+
+    return JSONResponse(content={"config": config_dict})
+
+
+# -----------------------------------------------------------------------------
+# WebSocket Endpoints
+# -----------------------------------------------------------------------------
+
+
+@app.websocket("/ws/training/{run_id}")
+async def training_websocket(websocket: WebSocket, run_id: str) -> None:
+    """WebSocket endpoint for real-time training metrics."""
+    await websocket.accept()
+    active_connections.append(websocket)
+    logger.info(f"Training WebSocket connected: run_id={run_id}")
+
+    try:
+        while True:
+            # Receive messages from client (e.g., pause/resume commands)
+            data = await websocket.receive_text()
+            message = json.loads(data)
+
+            if message.get("type") == "ping":
+                await websocket.send_json({"type": "pong"})
+
+    except WebSocketDisconnect:
+        active_connections.remove(websocket)
+        logger.info(f"Training WebSocket disconnected: run_id={run_id}")
+
+
+@app.websocket("/ws/inference")
+async def inference_websocket(websocket: WebSocket) -> None:
+    """WebSocket endpoint for live inference results."""
+    await websocket.accept()
+    logger.info("Inference WebSocket connected")
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Process inference request
+            request = json.loads(data)
+            # TODO: Route to inference engine
+            await websocket.send_json({"status": "received", "request": request})
+
+    except WebSocketDisconnect:
+        logger.info("Inference WebSocket disconnected")
+
+
+# -----------------------------------------------------------------------------
+# Entrypoint
+# -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import uvicorn

@@ -7,7 +7,7 @@ from torch import nn
 
 from ...utils.registry import register_model
 from ..base import BaseModel
-from ..modules.xlstm_block import xLSTMBlock
+from .xlstm_block import xLSTMBlock
 
 if TYPE_CHECKING:
     pass

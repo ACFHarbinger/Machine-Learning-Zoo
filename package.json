@@ -1,0 +1,17 @@
+{
+  "name": "machine-learning-zoo",
+  "version": "1.0.0",
+  "description": "Machine Learning Zoo Root Package",
+  "private": true,
+  "scripts": {
+    "dashboard": "cd frontend && npm run tauri dev",
+    "dashboard:build": "cd frontend && npm run tauri build",
+    "install:frontend": "cd frontend && npm install"
+  },
+  "keywords": [
+    "ml",
+    "dashboard",
+    "tauri"
+  ],
+  "author": "NGLab Team"
+}
