@@ -1,7 +1,22 @@
 /**
  * PropertiesPanel - Edit selected node parameters
+ * Supports dropdown selectors for modules with options (ActivationFunction, Normalization)
  */
 import type { Node } from 'reactflow';
+
+// Option definitions for special modules
+const MODULE_OPTIONS: Record<string, { label: string; paramKey: string; options: readonly string[] }> = {
+  'ActivationFunction': {
+    label: 'Activation Type',
+    paramKey: 'af_name',
+    options: ['relu', 'gelu', 'silu', 'selu', 'elu', 'tanh', 'sigmoid', 'leakyrelu', 'mish', 'hardswish', 'prelu', 'softplus'],
+  },
+  'Normalization': {
+    label: 'Normalization Type',
+    paramKey: 'norm_name',
+    options: ['batch', 'layer', 'instance', 'group'],
+  },
+};
 
 interface Props {
   selectedNode: Node | null;
@@ -28,6 +43,9 @@ export default function PropertiesPanel({ selectedNode, onClose, onUpdateData, o
 
   const data = selectedNode.data as Record<string, unknown>;
   const params = (data.params || {}) as Record<string, unknown>;
+  const label = String(data.label || 'Unnamed');
+  const isContainer = Boolean(data.isContainer);
+  const moduleOption = MODULE_OPTIONS[label];
 
   const updateParam = (key: string, value: unknown) => {
     onUpdateData(selectedNode.id, { params: { ...params, [key]: value } });
@@ -39,18 +57,27 @@ export default function PropertiesPanel({ selectedNode, onClose, onUpdateData, o
     return 'text';
   };
 
+  // Determine node color
+  const getNodeColor = () => {
+    if (selectedNode.type === 'container') return 'bg-violet-500';
+    if (selectedNode.type === 'data') return 'bg-cyan-500';
+    if (data.modelType === 'mac') return 'bg-emerald-500';
+    if (data.modelType === 'module') return 'bg-rose-500';
+    return 'bg-indigo-500';
+  };
+
   return (
     <div className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-3 h-3 rounded-full ${
-            selectedNode.type === 'data' ? 'bg-cyan-500' :
-            data.modelType === 'mac' ? 'bg-emerald-500' : 'bg-indigo-500'
-          }`} />
+          <div className={`w-3 h-3 rounded-full ${getNodeColor()}`} />
           <div>
-            <h2 className="font-semibold text-white">{String(data.label || 'Unnamed')}</h2>
-            <p className="text-xs text-slate-500">{String(data.category || selectedNode.type)}</p>
+            <h2 className="font-semibold text-white">{label}</h2>
+            <p className="text-xs text-slate-500">
+              {String(data.category || selectedNode.type)}
+              {isContainer && ' • Container'}
+            </p>
           </div>
         </div>
         <button
@@ -67,11 +94,30 @@ export default function PropertiesPanel({ selectedNode, onClose, onUpdateData, o
       <div className="flex-1 overflow-y-auto p-4">
         <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Parameters</h3>
         
-        {Object.entries(params).length === 0 ? (
+        {/* Module Options Dropdown */}
+        {moduleOption && (
+          <div className="mb-4 pb-4 border-b border-slate-800">
+            <label className="block text-sm text-slate-400 mb-1.5">{moduleOption.label}</label>
+            <select
+              value={String(params[moduleOption.paramKey] || moduleOption.options[0])}
+              onChange={(e) => updateParam(moduleOption.paramKey, e.target.value)}
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none cursor-pointer"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1.5rem' }}
+            >
+              {moduleOption.options.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {Object.entries(params).length === 0 && !moduleOption ? (
           <p className="text-sm text-slate-600">No configurable parameters.</p>
         ) : (
           <div className="space-y-4">
-            {Object.entries(params).map(([key, value]) => (
+            {Object.entries(params)
+              .filter(([key]) => !moduleOption || key !== moduleOption.paramKey)
+              .map(([key, value]) => (
               <div key={key}>
                 <label className="block text-sm text-slate-400 mb-1.5">{key.replace(/_/g, ' ')}</label>
                 {typeof value === 'boolean' ? (
@@ -94,6 +140,14 @@ export default function PropertiesPanel({ selectedNode, onClose, onUpdateData, o
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Container Children Info */}
+        {isContainer && (
+          <div className="mt-4 pt-4 border-t border-slate-800">
+            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Contained Modules</h4>
+            <p className="text-xs text-slate-600">Drag and drop modules onto this node on the canvas to nest them inside.</p>
           </div>
         )}
       </div>

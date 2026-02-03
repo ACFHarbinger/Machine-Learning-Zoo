@@ -1,10 +1,29 @@
 /**
  * NodePalette - Sidebar with draggable model blocks
+ * Supports drag-drop, double-click to add, and configurable module options
  */
 import { useState } from 'react';
 
+// Activation function options from activation_function.py
+const ACTIVATION_OPTIONS = [
+  'relu', 'gelu', 'silu', 'selu', 'elu', 'tanh', 'sigmoid', 
+  'leakyrelu', 'mish', 'hardswish', 'prelu', 'softplus'
+] as const;
+
+// Normalization options from normalization.py
+const NORMALIZATION_OPTIONS = ['batch', 'layer', 'instance', 'group'] as const;
+
+// Model entry type with optional configuration
+interface ModelEntry {
+  name: string;
+  description: string;
+  params: Record<string, unknown>;
+  options?: readonly string[];  // Selectable options (e.g., activation types)
+  isContainer?: boolean;        // Can contain other modules (SkipConnection, HyperConnection)
+}
+
 // Model catalog
-const MODEL_CATALOG: Record<string, Array<{ name: string; description: string; params: Record<string, unknown> }>> = {
+const MODEL_CATALOG: Record<string, ModelEntry[]> = {
   // Deep Learning
   'Recurrent Networks': [
     { name: 'LSTM', description: 'Long Short-Term Memory', params: { hidden_dim: 128, n_layers: 2, dropout: 0.1 } },
@@ -40,7 +59,7 @@ const MODEL_CATALOG: Record<string, Array<{ name: string; description: string; p
     { name: 'RBM', description: 'Restricted Boltzmann Machine', params: { hidden_dim: 64 } },
     { name: 'Flow', description: 'Normalizing Flow', params: { hidden_dim: 64, num_layers: 4 } },
   ],
-  'General NN': [
+  'General Neural Nets': [
     { name: 'MLP', description: 'Multi-Layer Perceptron', params: { hidden_dims: [64, 32], activation: 'relu' } },
     { name: 'PINN', description: 'Physics-Informed NN', params: { hidden_dim: 64 } },
     { name: 'NODE', description: 'Neural ODE', params: { hidden_dim: 64 } },
@@ -95,12 +114,21 @@ const MODEL_CATALOG: Record<string, Array<{ name: string; description: string; p
     { name: 'FPGrowth', description: 'Frequent Pattern Growth', params: { min_support: 0.5, min_confidence: 0.5 } },
   ],
   'Preprocessing': [
-     { name: 'StandardScaler', description: 'Normalization', params: {} },
-     { name: 'MinMaxScaler', description: 'Scaling', params: {} },
+    { name: 'StandardScaler', description: 'Normalization', params: {} },
+    { name: 'MinMaxScaler', description: 'Scaling', params: {} },
+  ],
+  'Modules': [
+    { name: 'ActivationFunction', description: 'Custom Activation', params: { af_name: 'relu' }, options: ACTIVATION_OPTIONS },
+    { name: 'Normalization', description: 'Normalization Layer', params: { norm_name: 'layer', embed_dim: 64 }, options: NORMALIZATION_OPTIONS },
+    { name: 'DataEmbedding', description: 'Data Embedding Layer', params: { input_dim: 1, embed_dim: 64 } },
+    { name: 'Transpose', description: 'Transpose Layer', params: {} },
+    { name: 'SkipConnection', description: 'Residual Skip', params: {}, isContainer: true },
+    { name: 'StaticHyperConnection', description: 'Static Width/Depth', params: { expansion_rate: 4 }, isContainer: true },
+    { name: 'DynamicHyperConnection', description: 'Dynamic Weights', params: { n_streams: 4 }, isContainer: true },
   ],
 };
 
-const CATEGORY_TYPES: Record<string, 'deep' | 'mac' | 'helper'> = {
+const CATEGORY_TYPES: Record<string, 'deep' | 'mac' | 'helper' | 'module'> = {
   'Recurrent Networks': 'deep',
   'Transformers': 'deep',
   'Convolutional': 'deep',
@@ -108,7 +136,7 @@ const CATEGORY_TYPES: Record<string, 'deep' | 'mac' | 'helper'> = {
   'Spiking': 'deep',
   'Memory Networks': 'deep',
   'Probabilistic': 'deep',
-  'General NN': 'deep',
+  'General Neural Nets': 'deep',
   
   'Linear Models': 'mac',
   'Decision Trees': 'mac',
@@ -120,12 +148,26 @@ const CATEGORY_TYPES: Record<string, 'deep' | 'mac' | 'helper'> = {
   'Clustering': 'helper',
   'Dimensionality Reduction': 'helper',
   'Association Rules': 'helper',
-  'Preprocessing': 'helper',
+  
+  'Preprocessing': 'module',
+  'Modules': 'module',
 };
 
-export default function NodePalette() {
+// Props interface
+interface NodePaletteProps {
+  onAddNode?: (data: {
+    name: string;
+    category: string;
+    modelType: string;
+    params: Record<string, unknown>;
+    options?: readonly string[];
+    isContainer?: boolean;
+  }) => void;
+}
+
+export default function NodePalette({ onAddNode }: NodePaletteProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(['Recurrent Networks', 'Clustering', 'Dimensionality Reduction']));
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['Recurrent Networks', 'Modules']));
 
   const toggle = (cat: string) => {
     const next = new Set(expanded);
@@ -143,9 +185,24 @@ export default function NodePalette() {
     return acc;
   }, {} as typeof MODEL_CATALOG);
 
-  const handleDragStart = (e: React.DragEvent, model: { name: string; category: string; modelType: string; params: Record<string, unknown> }) => {
-    e.dataTransfer.setData('application/reactflow', JSON.stringify(model));
+  const createModelData = (model: ModelEntry, cat: string) => ({
+    name: model.name,
+    category: cat,
+    modelType: CATEGORY_TYPES[cat],
+    params: model.params,
+    options: model.options,
+    isContainer: model.isContainer,
+  });
+
+  const handleDragStart = (e: React.DragEvent, model: ModelEntry, cat: string) => {
+    e.dataTransfer.setData('application/reactflow', JSON.stringify(createModelData(model, cat)));
     e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDoubleClick = (model: ModelEntry, cat: string) => {
+    if (onAddNode) {
+      onAddNode(createModelData(model, cat));
+    }
   };
 
   return (
@@ -173,7 +230,8 @@ export default function NodePalette() {
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${
                   CATEGORY_TYPES[cat] === 'deep' ? 'bg-indigo-500' :
-                  CATEGORY_TYPES[cat] === 'mac' ? 'bg-emerald-500' : 'bg-amber-500'
+                  CATEGORY_TYPES[cat] === 'mac' ? 'bg-emerald-500' :
+                  CATEGORY_TYPES[cat] === 'module' ? 'bg-rose-500' : 'bg-amber-500'
                 }`} />
                 <span>{cat}</span>
               </div>
@@ -190,16 +248,24 @@ export default function NodePalette() {
                   <div
                     key={model.name}
                     draggable
-                    onDragStart={(e) => handleDragStart(e, {
-                      name: model.name,
-                      category: cat,
-                      modelType: CATEGORY_TYPES[cat],
-                      params: model.params,
-                    })}
+                    onDragStart={(e) => handleDragStart(e, model, cat)}
+                    onDoubleClick={() => handleDoubleClick(model, cat)}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-grab active:cursor-grabbing text-slate-400 hover:bg-slate-800 hover:text-white transition-colors group"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{model.name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium truncate">{model.name}</span>
+                        {model.isContainer && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded">
+                            Container
+                          </span>
+                        )}
+                        {model.options && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded">
+                            Options
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-slate-500 truncate">{model.description}</div>
                     </div>
                     <svg className="w-4 h-4 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -223,6 +289,7 @@ export default function NodePalette() {
               e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'data', nodeKind: 'input', label: 'Data Input' }));
               e.dataTransfer.effectAllowed = 'move';
             }}
+            onDoubleClick={() => onAddNode?.({ name: 'Data Input', category: 'Data', modelType: 'data', params: {}, isContainer: false })}
             className="flex items-center gap-2 px-3 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg cursor-grab text-cyan-400 text-sm hover:bg-cyan-500/20 transition-colors"
           >
             <div className="w-2 h-2 rounded-full bg-cyan-500" />
@@ -234,12 +301,22 @@ export default function NodePalette() {
               e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'data', nodeKind: 'output', label: 'Output' }));
               e.dataTransfer.effectAllowed = 'move';
             }}
+            onDoubleClick={() => onAddNode?.({ name: 'Output', category: 'Data', modelType: 'data', params: {}, isContainer: false })}
             className="flex items-center gap-2 px-3 py-2 bg-rose-500/10 border border-rose-500/30 rounded-lg cursor-grab text-rose-400 text-sm hover:bg-rose-500/20 transition-colors"
           >
             <div className="w-2 h-2 rounded-full bg-rose-500" />
             Output
           </div>
         </div>
+      </div>
+
+      {/* Legend */}
+      <div className="px-4 py-3 border-t border-slate-800 text-xs text-slate-500">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500" /> Container</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-cyan-500" /> Options</span>
+        </div>
+        <div className="mt-1 opacity-70">Double-click to add</div>
       </div>
     </div>
   );

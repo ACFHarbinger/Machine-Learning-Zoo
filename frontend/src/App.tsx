@@ -10,6 +10,7 @@ import ReactFlow, {
   ReactFlowProvider,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   addEdge,
   type Node,
   type Connection,
@@ -42,8 +43,44 @@ function ModelBuilderCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const { getViewport } = useReactFlow();
   
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
+
+  // Add node at viewport center (for double-click)
+  const handleAddNode = useCallback((data: {
+    name: string;
+    category: string;
+    modelType: string;
+    params: Record<string, unknown>;
+    options?: readonly string[];
+    isContainer?: boolean;
+  }) => {
+    const viewport = getViewport();
+    const bounds = reactFlowWrapper.current?.getBoundingClientRect();
+    if (!bounds) return;
+
+    // Calculate center position in flow coordinates
+    const centerX = (bounds.width / 2 - viewport.x) / viewport.zoom;
+    const centerY = (bounds.height / 2 - viewport.y) / viewport.zoom;
+
+    const newNode: Node = {
+      id: getNodeId(),
+      type: data.isContainer ? 'container' : (data.modelType === 'data' ? 'data' : 'model'),
+      position: { x: centerX - 100, y: centerY - 40 },
+      data: {
+        label: data.name,
+        modelType: data.modelType,
+        category: data.category,
+        params: data.params || {},
+        options: data.options,
+        isContainer: data.isContainer,
+        children: [], // For container nodes
+      },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+  }, [getViewport, setNodes]);
 
   const onConnect = useCallback((params: Connection) => {
     setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#6366f1', strokeWidth: 2 } }, eds));
@@ -68,7 +105,7 @@ function ModelBuilderCanvas() {
 
     const newNode: Node = {
       id: getNodeId(),
-      type: data.type === 'data' ? 'data' : 'model',
+      type: data.isContainer ? 'container' : (data.type === 'data' ? 'data' : 'model'),
       position,
       data: {
         label: data.name || data.label,
@@ -76,6 +113,9 @@ function ModelBuilderCanvas() {
         category: data.category,
         params: data.params || {},
         nodeKind: data.nodeKind,
+        options: data.options,
+        isContainer: data.isContainer,
+        children: [],
       },
     };
 
@@ -89,6 +129,58 @@ function ModelBuilderCanvas() {
   const onPaneClick = useCallback(() => {
     setSelectedNodeId(null);
   }, []);
+
+  const onNodeDragStop = useCallback((_event: React.MouseEvent, node: Node) => {
+    // Check if this node overlaps with any container nodes
+    const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
+    if (!nodeElement) return;
+
+    const nodeBounds = nodeElement.getBoundingClientRect();
+
+    // Find containers this node overlaps with
+    const containerNodes = nodes.filter(n => n.type === 'container' && n.id !== node.id);
+    
+    for (const container of containerNodes) {
+      const containerElement = document.querySelector(`[data-id="${container.id}"]`);
+      if (!containerElement) continue;
+
+      const containerBounds = containerElement.getBoundingClientRect();
+      const overlapX = nodeBounds.left < containerBounds.right && nodeBounds.right > containerBounds.left;
+      const overlapY = nodeBounds.top < containerBounds.bottom && nodeBounds.bottom > containerBounds.top;
+
+      if (overlapX && overlapY) {
+        // Don't nest containers or data nodes
+        if (node.type === 'container' || node.type === 'data') return;
+
+        // Node overlaps with this container - absorb it
+        setNodes((nds) => {
+          const updatedNodes = nds.map(n => {
+            if (n.id === container.id) {
+              const children = (n.data.children as Array<{id: string; name: string; params: Record<string, unknown>}>) || [];
+              
+              // Check if already a child
+              if (children.some(c => c.id === node.id)) return n;
+
+              const newChildren = [
+                ...children,
+                {
+                  id: node.id,
+                  name: String(node.data.label || 'Unknown'),
+                  params: (node.data.params as Record<string, unknown>) || {},
+                }
+              ];
+              return { ...n, data: { ...n.data, children: newChildren } };
+            }
+            return n;
+          });
+
+          // Remove absorbed node from canvas
+          return updatedNodes.filter(n => n.id !== node.id);
+        });
+        return; // Only absorb into one container
+      }
+    }
+  }, [nodes, setNodes]);
 
   const updateNodeData = (nodeId: string, newData: Record<string, unknown>) => {
     setNodes((nds) => nds.map((n) => 
@@ -115,7 +207,7 @@ function ModelBuilderCanvas() {
   return (
     <div className="flex h-screen bg-slate-950 text-white overflow-hidden">
       {/* Left Sidebar: Node Palette */}
-      <NodePalette />
+      <NodePalette onAddNode={handleAddNode} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -157,6 +249,7 @@ function ModelBuilderCanvas() {
               onDragOver={onDragOver}
               onNodeClick={onNodeClick}
               onPaneClick={onPaneClick}
+              onNodeDragStop={onNodeDragStop}
               nodeTypes={nodeTypes}
               fitView
               snapToGrid
