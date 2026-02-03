@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING, Any
 
 from ..utils.registry import register_model
 from .base import BaseModel
-from .deep_factory import DEEP_MODEL_NAMES, create_deep_model
-from .mac_factory import MAC_MODEL_NAMES, create_mac_model
+from ..constants.models import DEEP_MODEL_NAMES, MAC_MODEL_NAMES
+from .deep_factory import create_deep_model
+from .mac_factory import create_mac_model
 
 if TYPE_CHECKING:
     pass

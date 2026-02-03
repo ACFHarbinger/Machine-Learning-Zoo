@@ -1,5 +1,13 @@
+"""
+Model constants and configurations.
+"""
+
+from typing import Any, Dict, List
+
+from ..enums.models import DeepModelType, MacModelType
+
 # Configurations for specific hardware (24GB VRAM)
-MODEL_CONFIGS = {
+MODEL_CONFIGS: Dict[str, Dict[str, Any]] = {
     "phi-2-dpo-v7": {
         "path": "phi-2-dpo-v7.Q4_K_M.gguf",
         "hf_repo": "TheBloke/phi-2-dpo-v7-GGUF",
@@ -42,4 +50,67 @@ MODEL_CONFIGS = {
         "hf_file": "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
         "n_gpu_layers": 0,  # Small model, CPU is fine
     },
+    "deepseek-r1-32b": {
+        "loader": "gguf",
+        "path": "deepseek-r1-distill-qwen-32b.Q4_K_M.gguf",
+        "n_gpu_layers": 40,
+        "n_ctx": 2048,
+        "hf_repo": "bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
+        "hf_file": "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
+        "license": "MIT",
+        "author": "DeepSeek",
+    },
+    "llama-3.3-70b": {
+        "loader": "gguf",
+        "path": "llama-3.3-70b-instruct.Q4_K_M.gguf",
+        "n_gpu_layers": 35,
+        "n_ctx": 2048,
+        "hf_repo": "bartowski/Llama-3.3-70B-Instruct-GGUF",
+        "hf_file": "Llama-3.3-70B-Instruct-Q4_K_M.gguf",
+        "license": "Llama 3.3",
+        "author": "Meta",
+    },
+    "llama-3-8b-instruct": {
+        "loader": "transformers",
+        "hf_repo": "meta-llama/Meta-Llama-3-8B-Instruct",
+        "device_map": "auto",
+        "torch_dtype": "float16",
+        "load_in_4bit": True,
+        "license": "Llama 3",
+        "author": "Meta",
+    },
+    "llama-3.1-8b-instruct": {
+        "loader": "transformers",
+        "hf_repo": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        "device_map": "auto",
+        "torch_dtype": "bfloat16",
+        "load_in_4bit": True,
+        "license": "Llama 3.1",
+        "author": "Meta",
+    },
+    "deepseek-v3-small": {
+        "loader": "transformers",
+        "hf_repo": "deepseek-ai/DeepSeek-V3",
+        "device_map": "auto",
+        "torch_dtype": "bfloat16",
+        "load_in_4bit": True,
+        "license": "MIT",
+        "author": "DeepSeek",
+    },
+    "deepseek-r1-distill-llama-8b": {
+        "loader": "transformers",
+        "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+        "device_map": "auto",
+        "torch_dtype": "bfloat16",
+        "load_in_4bit": True,
+        "license": "MIT",
+        "author": "DeepSeek",
+    },
 }
+
+
+# List of MAC model names
+MAC_MODEL_NAMES: List[str] = [m.value for m in MacModelType]
+
+# List of deep model names
+DEEP_MODEL_NAMES: List[str] = [m.value for m in DeepModelType]

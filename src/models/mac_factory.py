@@ -4,6 +4,7 @@ Classical Machine Learning Model Factory.
 
 from typing import Any
 
+from ..enums.models import MacModelType
 from .mac import (
     AdaBoostModel,
     AODEModel,
@@ -52,56 +53,6 @@ from .mac import (
 from .mac.base import ClassicalModel
 
 # List of MAC model names
-MAC_MODEL_NAMES = [
-    "LinearRegression",
-    "Ridge",
-    "Lasso",
-    "LARS",
-    "ElasticNet",
-    "LogisticRegression",
-    "Polynomial",
-    "DecisionTree",
-    "CART",
-    "ID3",
-    "C45",
-    "C50",
-    "CHAID",
-    "DecisionStump",
-    "ConditionalTree",
-    "M5",
-    "RandomForest",
-    "GradientBoosting",
-    "GBM",
-    "GBRT",
-    "AdaBoost",
-    "Bagging",
-    "Stacking",
-    "Voting",
-    "WeightedAverage",
-    "Blending",
-    "XGBoost",
-    "LightGBM",
-    "kNN",
-    "SVM",
-    "SVR",
-    "LinearSVM",
-    "NuSVM",
-    "OneClassSVM",
-    "LSSVM",
-    "TWSVM",
-    "NaiveBayes",
-    "GaussianNB",
-    "MultinomialNB",
-    "AODE",
-    "BayesianNetwork",
-    "BBN",
-    "BN",
-    "OLSR",
-    "Stepwise",
-    "MARS",
-    "LOESS",
-    "LWL",
-]
 
 
 def create_mac_model(model_name: str, cfg: dict[str, Any]) -> ClassicalModel | None:  # noqa: PLR0911
@@ -115,158 +66,153 @@ def create_mac_model(model_name: str, cfg: dict[str, Any]) -> ClassicalModel | N
     Returns:
         Instantiated model or None if not a MAC model.
     """
-    if model_name == "LinearRegression":
+    try:
+        model_type = MacModelType(model_name)
+    except ValueError:
+        return None
+
+    if model_type == MacModelType.LINEAR_REGRESSION:
         return LinearRegressionModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "Ridge":
-        return RidgeRegressionModel(
-            alpha=cfg.get("alpha", 1.0), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "Lasso":
-        return LassoRegressionModel(
-            alpha=cfg.get("alpha", 1.0), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "LARS":
+    elif model_type == MacModelType.RIDGE:
+        return RidgeRegressionModel(alpha=cfg.get("alpha", 1.0), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.LASSO:
+        return LassoRegressionModel(alpha=cfg.get("alpha", 1.0), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.LARS:
         return LARSModel(
             n_nonzero_coefs=cfg.get("n_nonzero_coefs", 500),
             **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "ElasticNet":
+    elif model_type == MacModelType.ELASTIC_NET:
         return ElasticNetModel(
             alpha=cfg.get("alpha", 1.0),
             l1_ratio=cfg.get("l1_ratio", 0.5),
             **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "LogisticRegression":
+    elif model_type == MacModelType.LOGISTIC_REGRESSION:
         return LogisticRegressionModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "Polynomial":
-        return PolynomialRegressionModel(
-            degree=cfg.get("degree", 2), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "DecisionTree":
+    elif model_type == MacModelType.POLYNOMIAL:
+        return PolynomialRegressionModel(degree=cfg.get("degree", 2), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.DECISION_TREE:
         return DecisionTreeModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
+            task=cfg.get("task", "regression"),
+            max_depth=cfg.get("max_depth", None),
+            **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "CART":
-        return CARTModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "ID3":
+    elif model_type == MacModelType.CART:
+        return CARTModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.ID3:
         from .mac.trees import ID3Model
 
-        return ID3Model(
-            task=cfg.get("task", "classification"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "C45":
-        return C45Model(
-            task=cfg.get("task", "classification"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "C50":
-        return C50Model(
-            task=cfg.get("task", "classification"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "CHAID":
-        return CHAIDModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "DecisionStump":
-        return DecisionStumpModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "ConditionalTree":
-        return ConditionalDecisionTreeModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "M5":
+        return ID3Model(task=cfg.get("task", "classification"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.C45:
+        return C45Model(task=cfg.get("task", "classification"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.C50:
+        return C50Model(task=cfg.get("task", "classification"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.CHAID:
+        return CHAIDModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.DECISION_STUMP:
+        return DecisionStumpModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.CONDITIONAL_TREE:
+        return ConditionalDecisionTreeModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.M5:
         return M5Model(**cfg.get("model_kwargs", {}))
-    elif model_name == "RandomForest":
+    elif model_type == MacModelType.RANDOM_FOREST:
         return RandomForestModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
+            task=cfg.get("task", "regression"),
+            n_estimators=cfg.get("n_estimators", 100),
+            **cfg.get("model_kwargs", {}),
         )
-    elif model_name in {"GradientBoosting", "GBM"}:
+    elif model_type == MacModelType.GRADIENT_BOOSTING:
         return GradientBoostingModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
+            task=cfg.get("task", "regression"),
+            n_estimators=cfg.get("n_estimators", 100),
+            **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "GBRT":
-        return GBRTModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "AdaBoost":
+    elif model_type == MacModelType.GBM:
+        return GBRTModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))  # Alias GBM -> GBRT
+    elif model_type == MacModelType.GBRT:
+        return GBRTModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.ADA_BOOST:
         return AdaBoostModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
+            task=cfg.get("task", "regression"),
+            n_estimators=cfg.get("n_estimators", 50),
+            **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "Bagging":
+    elif model_type == MacModelType.BAGGING:
         return BaggingModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
+            task=cfg.get("task", "regression"),
+            n_estimators=cfg.get("n_estimators", 10),
+            **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "Stacking":
+    elif model_type == MacModelType.STACKING:
         return StackingModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
+            task=cfg.get("task", "regression"),
+            final_estimator=cfg.get("final_estimator", None),
+            **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "Voting":
+    elif model_type == MacModelType.VOTING:
         return VotingModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
+            task=cfg.get("task", "regression"),
+            voting=cfg.get("voting", "hard"),
+            **cfg.get("model_kwargs", {}),
         )
-    elif model_name in {"WeightedAverage", "Blending"}:
+    elif model_type == MacModelType.WEIGHTED_AVERAGE:
+        return WeightedAverageModel(
+            task=cfg.get("task", "regression"),
+            weights=cfg.get("weights", None),
+            **cfg.get("model_kwargs", {}),
+        )
+    elif model_type == MacModelType.BLENDING:
         return WeightedAverageModel(
             task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "XGBoost":
-        return XGBoostModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "LightGBM":
-        return LightGBMModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "kNN":
+        )  # Placeholder if identical
+    elif model_type == MacModelType.XGBOOST:
+        return XGBoostModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.LIGHTGBM:
+        return LightGBMModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.KNN:
         return kNNModel(
             task=cfg.get("task", "regression"),
             n_neighbors=cfg.get("n_neighbors", 5),
             **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "SVM":
+    elif model_type == MacModelType.SVM:
         return SVMModel(
             task=cfg.get("task", "regression"),
             kernel=cfg.get("kernel", "rbf"),
             **cfg.get("model_kwargs", {}),
         )
-    elif model_name == "SVR":
+    elif model_type == MacModelType.SVR:
         return SVRModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "LinearSVM":
-        return LinearSVMModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "NuSVM":
-        return NuSVMModel(
-            task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "OneClassSVM":
+    elif model_type == MacModelType.LINEAR_SVM:
+        return LinearSVMModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.NU_SVM:
+        return NuSVMModel(task=cfg.get("task", "regression"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.ONE_CLASS_SVM:
         return OneClassSVMModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "LSSVM":
+    elif model_type == MacModelType.LSSVM:
         return LSSVMModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "TWSVM":
+    elif model_type == MacModelType.TWSVM:
         return TWSVMModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "NaiveBayes":
-        return NaiveBayesModel(
-            nb_type=cfg.get("type", "gaussian"), **cfg.get("model_kwargs", {})
-        )
-    elif model_name == "GaussianNB":
+    elif model_type == MacModelType.NAIVE_BAYES:
+        return NaiveBayesModel(nb_type=cfg.get("type", "gaussian"), **cfg.get("model_kwargs", {}))
+    elif model_type == MacModelType.GAUSSIAN_NB:
         return GaussianNaiveBayesModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "MultinomialNB":
+    elif model_type == MacModelType.MULTINOMIAL_NB:
         return MultinomialNaiveBayesModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "AODE":
+    elif model_type == MacModelType.AODE:
         return AODEModel(**cfg.get("model_kwargs", {}))
-    elif model_name in {"BayesianNetwork", "BBN", "BN"}:
+    elif model_type in {MacModelType.BAYESIAN_NETWORK, MacModelType.BBN, MacModelType.BN}:
         return BayesianNetworkModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "OLSR":
+    elif model_type == MacModelType.OLSR:
         return OLSRModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "Stepwise":
+    elif model_type == MacModelType.STEPWISE:
         return StepwiseRegressionModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "MARS":
+    elif model_type == MacModelType.MARS:
         return MARSModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "LOESS":
+    elif model_type == MacModelType.LOESS:
         return LOESSModel(**cfg.get("model_kwargs", {}))
-    elif model_name == "LWL":
+    elif model_type == MacModelType.LWL:
         return LWLModel(
             task=cfg.get("task", "regression"),
             n_neighbors=cfg.get("n_neighbors", 5),

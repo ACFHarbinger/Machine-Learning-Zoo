@@ -121,7 +121,7 @@ extend-exclude = '''
 line-length = 120
 target-version = "py311"
 src = ["src"]
-exclude = ["notebooks", "examples"]
+exclude = ["notebooks", "examples", "tests", "scripts"]
 
 [tool.isort]
 profile = "black"

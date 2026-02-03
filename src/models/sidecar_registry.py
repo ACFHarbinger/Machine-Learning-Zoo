@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from ..configs.loaded_model import LoadedModel
-from .hub import MODEL_CONFIGS, ModelHub
+from ..constants.models import MODEL_CONFIGS
+from .hub import ModelHub
 
 logger = logging.getLogger(__name__)
 

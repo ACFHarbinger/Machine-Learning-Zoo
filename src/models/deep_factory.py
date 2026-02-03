@@ -8,7 +8,7 @@ from typing import Any
 
 from torch import nn
 
-__all__ = ["DEEP_MODEL_NAMES", "create_deep_model"]
+__all__ = ["create_deep_model"]
 
 from .attention import AttentionNetwork, NSTransformer
 from .autoencoders import (
@@ -56,45 +56,7 @@ from .recurrent import (
 from .spiking import SNN
 
 # List of deep model names
-DEEP_MODEL_NAMES: list[str] = [
-    "NSTransformer",
-    "Mamba",
-    "LSTM",
-    "GRU",
-    "xLSTM",
-    "SNN",
-    "MLP",
-    "RBF",
-    "AE",
-    "DAE",
-    "SAE",
-    "StackedAE",
-    "Hopfield",
-    "RBM",
-    "ESN",
-    "ELM",
-    "SOM",
-    "Capsule",
-    "CNN",
-    "Perceptron",
-    "MarkovChain",
-    "BM",
-    "DBN",
-    "DCN",
-    "Deconv",
-    "AutoDeconv",
-    "DCIGN",
-    "LSM",
-    "ResNet",
-    "DNC",
-    "NTM",
-    "Attention",
-    "Flow",
-    "NODE",
-    "LVQ",
-    "PINN",
-    "VAE",
-]
+from ..enums.models import DeepModelType
 
 
 def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
@@ -108,7 +70,12 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
     Returns:
         Instantiated model or None if not a deep model.
     """
-    if model_name == "NSTransformer":
+    try:
+        model_type = DeepModelType(model_name)
+    except ValueError:
+        return None
+
+    if model_type == DeepModelType.NSTRANSFORMER:
         return NSTransformer(
             pred_len=int(cfg.get("pred_len", 1)),
             seq_len=int(cfg.get("seq_len", 30)),
@@ -118,7 +85,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             output_dim=int(cfg.get("output_dim", 64)),
             learner_dims=cfg.get("learner_dims", [64]),
         )
-    elif model_name == "Mamba":
+    elif model_type == DeepModelType.MAMBA:
         return TSMamba(
             input_dim=int(cfg.get("feature_dim", 12)),
             output_dim=1,
@@ -127,7 +94,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             forecast_horizon=int(cfg.get("pred_len", 1)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "LSTM":
+    elif model_type == DeepModelType.LSTM:
         return LSTM(
             input_dim=int(cfg.get("feature_dim", 12)),
             output_dim=int(cfg.get("output_dim", 1)),
@@ -137,7 +104,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             output_type=cfg.get("output_type", "embedding"),
             apply_softmax=cfg.get("probabilistic", False),
         )
-    elif model_name == "GRU":
+    elif model_type == DeepModelType.GRU:
         return GRU(
             input_dim=int(cfg.get("feature_dim", 12)),
             output_dim=int(cfg.get("output_dim", 1)),
@@ -146,7 +113,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             dropout=float(cfg.get("dropout", 0.0)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "xLSTM":
+    elif model_type == DeepModelType.XLSTM:
         return xLSTM(
             input_dim=int(cfg.get("feature_dim", 12)),
             output_dim=1,
@@ -157,7 +124,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             cell_type=cfg.get("cell_type", "slstm"),
             num_heads=int(cfg.get("num_heads", 4)),
         )
-    elif model_name == "SNN":
+    elif model_type == DeepModelType.SNN:
         return SNN(
             input_dim=int(cfg.get("feature_dim", 12)),
             output_dim=int(cfg.get("output_dim", 1)),
@@ -168,7 +135,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             decay=float(cfg.get("decay", 0.9)),
             threshold=float(cfg.get("threshold", 1.0)),
         )
-    elif model_name == "MLP":
+    elif model_type == DeepModelType.MLP:
         return MLP(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dims=cfg.get("hidden_dims", [128, 64]),
@@ -177,7 +144,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             activation=cfg.get("activation", "relu"),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "RBF":
+    elif model_type == DeepModelType.RBF:
         return RBF(
             input_dim=int(cfg.get("feature_dim", 12)),
             num_centers=int(cfg.get("hidden_dim", 100)),
@@ -185,14 +152,14 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             sigma=float(cfg.get("sigma", 1.0)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "AE":
+    elif model_type == DeepModelType.AE:
         return AutoEncoder(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dims=cfg.get("hidden_dims", [64]),
             latent_dim=int(cfg.get("hidden_dim", 32)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "DAE":
+    elif model_type == DeepModelType.DAE:
         return DenoisingAE(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dims=cfg.get("hidden_dims", [64]),
@@ -200,7 +167,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             noise_std=float(cfg.get("noise_std", 0.1)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "SAE":
+    elif model_type == DeepModelType.SAE:
         return SparseAE(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dims=cfg.get("hidden_dims", [64]),
@@ -209,7 +176,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             sparsity_weight=float(cfg.get("sparsity_weight", 0.1)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "StackedAE":
+    elif model_type == DeepModelType.STACKED_AE:
         return StackedAutoEncoder(
             layer_sizes=[
                 int(cfg.get("feature_dim", 12)),
@@ -218,18 +185,18 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             ],
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "Hopfield":
+    elif model_type == DeepModelType.HOPFIELD:
         return HopfieldNetwork(
             size=int(cfg.get("feature_dim", 12)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "RBM":
+    elif model_type == DeepModelType.RBM:
         return RBM(
             visible_dim=int(cfg.get("feature_dim", 12)),
             hidden_dim=int(cfg.get("hidden_dim", 64)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "ESN":
+    elif model_type == DeepModelType.ESN:
         return EchoStateNetwork(
             input_dim=int(cfg.get("feature_dim", 12)),
             reservoir_dim=int(cfg.get("hidden_dim", 500)),
@@ -238,7 +205,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             sparsity=float(cfg.get("sparsity", 0.1)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "ELM":
+    elif model_type == DeepModelType.ELM:
         return ELM(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dim=int(cfg.get("hidden_dim", 500)),
@@ -246,13 +213,13 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             activation=cfg.get("activation", "sigmoid"),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "SOM":
+    elif model_type == DeepModelType.SOM:
         return KohonenMap(
             input_dim=int(cfg.get("feature_dim", 12)),
             grid_size=cfg.get("grid_size", (10, 10)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "Capsule":
+    elif model_type == DeepModelType.CAPSULE:
         return CapsuleLayer(
             in_caps=int(cfg.get("in_caps", 8)),
             in_dim=int(cfg.get("in_dim", 16)),
@@ -260,7 +227,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             out_dim=int(cfg.get("out_dim", 32)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "CNN":
+    elif model_type == DeepModelType.CNN:
         return RollingWindowCNN(
             input_dim=int(cfg.get("feature_dim", 12)),
             output_dim=1,
@@ -268,25 +235,25 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             hidden_dim=int(cfg.get("hidden_dim", 128)),
             output_type=cfg.get("output_type", "embedding"),
         )
-    elif model_name == "Perceptron":
+    elif model_type == DeepModelType.PERCEPTRON:
         return Perceptron(
             input_dim=int(cfg.get("feature_dim", 12)),
             output_dim=int(cfg.get("output_dim", 1)),
             activation=cfg.get("activation", "sigmoid"),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "MarkovChain":
+    elif model_type == DeepModelType.MARKOV_CHAIN:
         return MarkovChain(
             num_states=int(cfg.get("num_states", 10)),
             output_type=cfg.get("output_type", "prediction"),
             learnable=cfg.get("learnable", True),
         )
-    elif model_name == "BM":
+    elif model_type == DeepModelType.BM:
         return BoltzmannMachine(
             num_units=int(cfg.get("feature_dim", 12)),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "DBN":
+    elif model_type == DeepModelType.DBN:
         return DeepBeliefNetwork(
             layer_sizes=[
                 int(cfg.get("feature_dim", 12)),
@@ -294,28 +261,28 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             ],
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "DCN":
+    elif model_type == DeepModelType.DCN:
         return DeepConvNet(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_channels=cfg.get("hidden_channels", [32, 64, 128]),
             output_dim=int(cfg.get("output_dim", 1)),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "Deconv":
+    elif model_type == DeepModelType.DECONV:
         return DeconvNet(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_channels=cfg.get("hidden_channels", [128, 64, 32]),
             output_dim=int(cfg.get("output_dim", 1)),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "AutoDeconv":
+    elif model_type == DeepModelType.AUTO_DECONV:
         return AutoDeconvNet(
             input_dim=int(cfg.get("feature_dim", 12)),
             latent_dim=int(cfg.get("latent_dim", 64)),
             hidden_channels=cfg.get("hidden_channels", [32, 64, 128]),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "DCIGN":
+    elif model_type == DeepModelType.DCIGN:
         latent_dim = int(cfg.get("latent_dim", 128))
         num_intrinsic = int(cfg.get("num_intrinsic", latent_dim // 4))
         num_extrinsic = latent_dim - num_intrinsic
@@ -327,7 +294,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             num_extrinsic=num_extrinsic,
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "LSM":
+    elif model_type == DeepModelType.LSM:
         return LiquidStateMachine(
             input_dim=int(cfg.get("feature_dim", 12)),
             liquid_size=int(cfg.get("liquid_size", 200)),
@@ -336,7 +303,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             spectral_radius=float(cfg.get("spectral_radius", 1.2)),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "ResNet":
+    elif model_type == DeepModelType.RESNET:
         return DeepResNet(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dim=int(cfg.get("hidden_dim", 128)),
@@ -346,7 +313,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             dropout=float(cfg.get("dropout", 0.1)),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "DNC":
+    elif model_type == DeepModelType.DNC:
         return DNC(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dim=int(cfg.get("hidden_dim", 128)),
@@ -357,7 +324,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             controller_type=cfg.get("controller_type", "lstm"),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "NTM":
+    elif model_type == DeepModelType.NTM:
         return NTM(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dim=int(cfg.get("hidden_dim", 128)),
@@ -369,7 +336,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             controller_type=cfg.get("controller_type", "lstm"),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "Attention":
+    elif model_type == DeepModelType.ATTENTION:
         return AttentionNetwork(
             input_dim=int(cfg.get("feature_dim", 12)),
             d_model=int(cfg.get("d_model", 128)),
@@ -381,14 +348,14 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             max_seq_len=int(cfg.get("max_seq_len", 1000)),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "Flow":
+    elif model_type == DeepModelType.FLOW:
         return NormalizingFlow(
             input_dim=int(cfg.get("feature_dim", 12)),
             num_layers=int(cfg.get("num_layers", 4)),
             hidden_dim=int(cfg.get("hidden_dim", 64)),
             seq_len=int(cfg.get("seq_len", 1)),
         )
-    elif model_name == "NODE":
+    elif model_type == DeepModelType.NODE:
         return NeuralODE(
             input_dim=int(cfg.get("feature_dim", 12)),
             hidden_dim=int(cfg.get("hidden_dim", 64)),
@@ -398,14 +365,14 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             horizon=float(cfg.get("horizon", 1.0)),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "LVQ":
+    elif model_type == DeepModelType.LVQ:
         return LVQ(
             input_dim=int(cfg.get("feature_dim", 12)),
             num_classes=int(cfg.get("num_classes", 2)),
             prototypes_per_class=int(cfg.get("prototypes_per_class", 1)),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "PINN":
+    elif model_type == DeepModelType.PINN:
         return PINN(
             input_dim=int(cfg.get("feature_dim", 2)),
             hidden_dim=int(cfg.get("hidden_dim", 20)),
@@ -414,7 +381,7 @@ def create_deep_model(model_name: str, cfg: dict[str, Any]) -> nn.Module | None:
             activation=cfg.get("activation", "tanh"),
             output_type=cfg.get("output_type", "prediction"),
         )
-    elif model_name == "VAE":
+    elif model_type == DeepModelType.VAE:
         return VAE(
             input_dim=int(cfg.get("feature_dim", 12)),
             latent_dim=int(cfg.get("latent_dim", 16)),

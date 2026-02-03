@@ -4,6 +4,8 @@ Factory for Classical and Supplemental ML Models.
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
+from ..enums.models import HelperModelType
+
 if TYPE_CHECKING:
     from .mac.base import ClassicalModel
 
@@ -44,29 +46,29 @@ class HelperModelFactory:
 
     _MODELS: ClassVar[dict[str, type]] = {
         # Clustering
-        "kmeans": KMeansModel,
-        "hierarchical": HierarchicalClusteringModel,
-        "dbscan": DBSCANModel,
-        "gmm": GMMModel,
-        "em": EMModel,
-        "kmedians": KMediansModel,
+        HelperModelType.KMEANS.value: KMeansModel,
+        HelperModelType.HIERARCHICAL.value: HierarchicalClusteringModel,
+        HelperModelType.DBSCAN.value: DBSCANModel,
+        HelperModelType.GMM.value: GMMModel,
+        HelperModelType.EM.value: EMModel,
+        HelperModelType.KMEDIANS.value: KMediansModel,
         # Dimensionality Reduction
-        "pca": PCAModel,
-        "tsne": TSNEModel,
-        "lda": LDAModel,
-        "pcr": PCRModel,
-        "plsr": PLSRModel,
-        "mds": MDSModel,
-        "sammon": SammonMappingModel,
-        "pp": ProjectionPursuitModel,
-        "mda": MDAModel,
-        "qda": QDAModel,
-        "fda": FDAModel,
-        "umap": UMAPModel,
+        HelperModelType.PCA.value: PCAModel,
+        HelperModelType.TSNE.value: TSNEModel,
+        HelperModelType.LDA.value: LDAModel,
+        HelperModelType.PCR.value: PCRModel,
+        HelperModelType.PLSR.value: PLSRModel,
+        HelperModelType.MDS.value: MDSModel,
+        HelperModelType.SAMMON.value: SammonMappingModel,
+        HelperModelType.PP.value: ProjectionPursuitModel,
+        HelperModelType.MDA.value: MDAModel,
+        HelperModelType.QDA.value: QDAModel,
+        HelperModelType.FDA.value: FDAModel,
+        HelperModelType.UMAP.value: UMAPModel,
         # Association Rule Learning
-        "apriori": AprioriModel,
-        "fpgrowth": FPGrowthModel,
-        "eclat": EclatModel,
+        HelperModelType.APRIORI.value: AprioriModel,
+        HelperModelType.FPGROWTH.value: FPGrowthModel,
+        HelperModelType.ECLAT.value: EclatModel,
     }
 
     @classmethod
@@ -81,11 +83,15 @@ class HelperModelFactory:
         Returns:
             An instance of ClassicalModel.
         """
-        model_class = cls._MODELS.get(model_name.lower())
+        try:
+            model_type = HelperModelType(model_name.lower())
+        except ValueError:
+            raise ValueError(f"Unknown model type: {model_name}. Available: {[m.value for m in HelperModelType]}")
+
+        model_class = cls._MODELS.get(model_type.value)
         if model_class is None:
-            raise ValueError(
-                f"Unknown model type: {model_name}. Available: {list(cls._MODELS.keys())}"
-            )
+            # Should not happen if _MODELS covers all Enum values
+            raise ValueError(f"Model {model_name} implementation not found.")
 
         from typing import cast
 

@@ -10,10 +10,10 @@ from unittest.mock import patch
 
 import pytest
 import torch
+from src.enums.optimization import PrecisionMode
 from src.utils.mixed_precision import (
     MixedPrecisionConfig,
     MixedPrecisionTrainer,
-    PrecisionMode,
     configure_model_for_mixed_precision,
     estimate_memory_savings,
     get_optimal_precision,
@@ -294,12 +294,8 @@ def test_trainer_accumulation_steps(simple_model, sample_batch):
         return output.mean()
 
     # Accumulate gradients over 2 steps
-    loss1, _ = trainer.training_step(
-        sample_batch, forward_fn, loss_fn, accumulation_steps=2
-    )
-    loss2, _ = trainer.training_step(
-        sample_batch, forward_fn, loss_fn, accumulation_steps=2
-    )
+    loss1, _ = trainer.training_step(sample_batch, forward_fn, loss_fn, accumulation_steps=2)
+    loss2, _ = trainer.training_step(sample_batch, forward_fn, loss_fn, accumulation_steps=2)
 
     assert isinstance(loss1, torch.Tensor)
     assert isinstance(loss2, torch.Tensor)
@@ -312,9 +308,7 @@ def test_trainer_accumulation_steps(simple_model, sample_batch):
 
 def test_configure_model_for_mixed_precision(simple_model):
     """Test configuring model for mixed precision."""
-    configured_model = configure_model_for_mixed_precision(
-        simple_model, precision="16-mixed"
-    )
+    configured_model = configure_model_for_mixed_precision(simple_model, precision="16-mixed")
 
     # Model should still work
     output = configured_model(torch.randn(4, 10))
@@ -358,9 +352,7 @@ def test_get_optimal_precision_no_cuda(mock_cuda):
 
 def test_estimate_memory_savings(simple_model):
     """Test estimating memory savings from mixed precision."""
-    estimates = estimate_memory_savings(
-        simple_model, batch_size=32, sequence_length=100, precision="16-mixed"
-    )
+    estimates = estimate_memory_savings(simple_model, batch_size=32, sequence_length=100, precision="16-mixed")
 
     assert isinstance(estimates, dict)
     assert "fp32_memory_mb" in estimates
@@ -375,9 +367,7 @@ def test_estimate_memory_savings(simple_model):
 
 def test_estimate_memory_savings_bf16(simple_model):
     """Test memory estimates for BF16."""
-    estimates = estimate_memory_savings(
-        simple_model, batch_size=32, sequence_length=100, precision="bf16-mixed"
-    )
+    estimates = estimate_memory_savings(simple_model, batch_size=32, sequence_length=100, precision="bf16-mixed")
 
     assert isinstance(estimates, dict)
     # BF16 should have similar savings to FP16
@@ -386,9 +376,7 @@ def test_estimate_memory_savings_bf16(simple_model):
 
 def test_estimate_memory_savings_fp32(simple_model):
     """Test memory estimates for FP32 (no savings)."""
-    estimates = estimate_memory_savings(
-        simple_model, batch_size=32, sequence_length=100, precision="32"
-    )
+    estimates = estimate_memory_savings(simple_model, batch_size=32, sequence_length=100, precision="32")
 
     assert isinstance(estimates, dict)
     # FP32 should have no savings
@@ -421,10 +409,7 @@ def test_full_training_loop(simple_model):
         trainer.step(clip_grad_norm=1.0)
 
     # Model should have updated parameters
-    assert all(
-        param.grad is not None or not param.requires_grad
-        for param in simple_model.parameters()
-    )
+    assert all(param.grad is not None or not param.requires_grad for param in simple_model.parameters())
 
 
 def test_checkpoint_save_load_cycle(simple_model, tmp_path):
