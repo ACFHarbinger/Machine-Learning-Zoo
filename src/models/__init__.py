@@ -21,5 +21,8 @@ __all__ = [
     "BaseModel",
     "TimeSeriesBackbone",
     "get_model",
+    "get_policy",
     "register_model",
 ]
+
+get_policy = get_model

@@ -8,7 +8,7 @@ from .device import DeviceManager
 from .ipc.ndjson_transport import NdjsonTransport
 from .models.sidecar_registry import ModelRegistry
 from .pipeline.inference import InferenceEngine
-from .pipeline.training import TrainingService
+from .pipeline.service import TrainingService
 
 logging.basicConfig(
     stream=sys.stderr,
@@ -29,9 +29,7 @@ class MlRequestHandler:
         self.registry = registry
         self.device_manager = device_manager
         assert hasattr(self.registry, "list_models"), "Registry must have list_models"
-        self.training = TrainingService(
-            registry=registry, device_manager=device_manager
-        )
+        self.training = TrainingService(registry=registry, device_manager=device_manager)
         self._handlers = {
             "health.ping": self._health_ping,
             "lifecycle.shutdown": self._lifecycle_shutdown,
@@ -79,9 +77,7 @@ class MlRequestHandler:
     async def _inference_complete(self, p, cb):
         if p.get("stream"):
             text = ""
-            async for token in self.engine.complete_stream(
-                **{k: v for k, v in p.items() if k != "stream"}
-            ):
+            async for token in self.engine.complete_stream(**{k: v for k, v in p.items() if k != "stream"}):
                 text += token
                 if cb:
                     await cb({"token": token, "is_streaming": True})
@@ -90,9 +86,7 @@ class MlRequestHandler:
             return await self.engine.complete(**p)
 
     async def _inference_embed(self, p, _cb):
-        vector = await self.engine.embed(
-            text=p["text"], model_id=p.get("model_id", "all-MiniLM-L6-v2")
-        )
+        vector = await self.engine.embed(text=p["text"], model_id=p.get("model_id", "all-MiniLM-L6-v2"))
         return {"embedding": vector}
 
     async def _inference_plan(self, p, _cb):
@@ -191,9 +185,7 @@ class MlRequestHandler:
     async def _voice_transcribe(self, p, _cb):
         from .stt.whisper import WhisperSTT
 
-        stt = WhisperSTT(
-            model_size=p.get("model_size", "base"), device=p.get("device", "cpu")
-        )
+        stt = WhisperSTT(model_size=p.get("model_size", "base"), device=p.get("device", "cpu"))
         text = await stt.transcribe(p["audio_path"])
         return {"text": text, "audio_path": p["audio_path"]}
 
