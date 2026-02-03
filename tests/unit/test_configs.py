@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from python.src.configs import EnvConfig, ModelConfig, TrainConfig
+from src.configs import EnvConfig, ModelConfig, TrainConfig
 
 
 def test_config_from_dict():

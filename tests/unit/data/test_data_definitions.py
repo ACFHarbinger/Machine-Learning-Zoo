@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 import pandas as pd
 import torch
 
-from python.src.data.data_utils import df_to_torch, read_csv, read_json
-from python.src.utils.definitions import (
+from src.data.data_utils import df_to_torch, read_csv, read_json
+from src.utils.definitions import (
     CORE_LOCK_WAIT_TIME,
     update_lock_wait_time,
 )

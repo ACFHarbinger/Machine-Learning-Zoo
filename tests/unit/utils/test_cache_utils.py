@@ -2,7 +2,7 @@
 Tests for cache utilities.
 """
 
-from python.src.db.cache import cache_key
+from src.db.cache import cache_key
 
 
 class TestCacheKey:

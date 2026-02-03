@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
-from python.src.storage.base import StorageConfig
-from python.src.storage.factory import create_storage
-from python.src.storage.gcs import GCSStorage
-from python.src.storage.local import LocalStorage
-from python.src.storage.s3 import S3Storage
+from src.storage.base import StorageConfig
+from src.storage.factory import create_storage
+from src.storage.gcs import GCSStorage
+from src.storage.local import LocalStorage
+from src.storage.s3 import S3Storage
 
 
 class TestStorageFactory:

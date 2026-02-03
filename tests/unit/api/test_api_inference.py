@@ -8,7 +8,7 @@ import torch
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from python.src.api.inference import (
+from src.api.inference import (
     BatchInferenceHandler,
     PredictionRequest,
     app,
@@ -26,7 +26,7 @@ def client():
     mock_redis.get.return_value = None
     mock_redis.close = AsyncMock()
 
-    with patch("python.src.api.inference._REDIS", mock_redis):
+    with patch("src.api.inference._REDIS", mock_redis):
         # Also prevent lifespan from overwriting it with a real connection
         with patch("redis.asyncio.from_url", return_value=mock_redis):
             with TestClient(app) as c:
@@ -87,12 +87,12 @@ async def test_batch_inference_handler_process_batch():
 
 
 def test_get_model_singleton():
-    with patch("python.src.api.inference.load_model") as mock_load:
+    with patch("src.api.inference.load_model") as mock_load:
         mock_model = MagicMock(spec=torch.nn.Module)
         mock_load.return_value = (mock_model, {})
 
         # Reset global state for test
-        from python.src.api import inference
+        from src.api import inference
 
         inference._MODEL = None
 
@@ -111,7 +111,7 @@ def test_health_endpoint(client):
     assert "gpu_available" in data
 
 
-@patch("python.src.api.inference.batch_handler.predict", new_callable=AsyncMock)
+@patch("src.api.inference.batch_handler.predict", new_callable=AsyncMock)
 def test_predict_endpoint(mock_predict, client):
     mock_predict.return_value = [[0.5, 0.6]]
 
@@ -132,8 +132,8 @@ def test_predict_endpoint_cached(client):
     mock_redis = AsyncMock()
     mock_redis.get.return_value = json.dumps([[0.9, 0.1]])
 
-    with patch("python.src.api.inference._REDIS", mock_redis):
-        with patch("python.src.api.inference.batch_handler.predict") as mock_predict:
+    with patch("src.api.inference._REDIS", mock_redis):
+        with patch("src.api.inference.batch_handler.predict") as mock_predict:
             payload = {"observations": [[0.1, 0.2, 0.3]]}
             response = client.post("/predict", json=payload)
 

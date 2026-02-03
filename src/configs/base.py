@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -25,10 +24,13 @@ class BaseConfig:
     @classmethod
     def from_dict(cls: type[T], data: dict[str, Any]) -> T:
         """Create configuration from a dictionary, recursively handling nested configs."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(cls)
         kwargs = {}
         for k, v in data.items():
-            if k in cls.__dataclass_fields__:
-                field_type = cls.__dataclass_fields__[k].type
+            if k in hints:
+                field_type = hints[k]
                 # Handle nested BaseConfig
                 if (
                     isinstance(field_type, type)
@@ -48,6 +50,7 @@ class BaseConfig:
 def deep_sanitize(cfg: Any) -> Any:
     """Recursively convert DictConfig/ListConfig to primitives."""
     from omegaconf import DictConfig, ListConfig
+
     if isinstance(cfg, DictConfig):
         return {k: deep_sanitize(v) for k, v in cfg.items()}
     if isinstance(cfg, ListConfig):

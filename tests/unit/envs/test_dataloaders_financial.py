@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from python.src.data.dataloaders import (
+from src.data.dataloaders import (
     FinancialDataset,
     StreamingDataset,
     create_dataloader,

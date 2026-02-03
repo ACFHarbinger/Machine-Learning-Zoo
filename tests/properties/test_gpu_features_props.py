@@ -6,7 +6,7 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
-from python.src.utils.functions.gpu_features import GPUFeatureEngineer
+from src.utils.functions.gpu_features import GPUFeatureEngineer
 
 # Strategy for generating valid price series
 # Prices must be positive, sequences must be long enough for lookback

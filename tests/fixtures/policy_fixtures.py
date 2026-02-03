@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from torch import nn
 
-from python.src.policies.neural import NeuralPolicy
+from src.policies.neural import NeuralPolicy
 
 
 @pytest.fixture

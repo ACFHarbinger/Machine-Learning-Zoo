@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.pipeline.train import clip_grad_norms, rollout, train_batch, train_epoch
+from src.pipeline.train import clip_grad_norms, rollout, train_batch, train_epoch
 
 
 @pytest.fixture
@@ -64,9 +64,9 @@ def test_clip_grad_norms(dummy_model):
     assert clipped[0] <= 0.1
 
 
-@patch("python.src.pipeline.train.train_batch")
-@patch("python.src.pipeline.train.log_epoch")
-@patch("python.src.pipeline.train.get_inner_model")
+@patch("src.pipeline.train.train_batch")
+@patch("src.pipeline.train.log_epoch")
+@patch("src.pipeline.train.get_inner_model")
 @patch("torch.save")
 def test_train_epoch(  # noqa: PLR0913
     mock_torch_save,
@@ -110,7 +110,7 @@ def test_train_epoch(  # noqa: PLR0913
     assert "optimizer" in args[0]
 
 
-@patch("python.src.pipeline.train.log_timeseries_values")
+@patch("src.pipeline.train.log_timeseries_values")
 def test_train_batch(mock_log, dummy_model):
     optimizer = torch.optim.Adam(dummy_model.parameters())
     baseline = MagicMock()

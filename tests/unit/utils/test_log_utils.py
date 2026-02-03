@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 import torch
 
-from python.src.utils.logging.log_utils import (
+from src.utils.logging.log_utils import (
     _convert_numpy,
     log_epoch,
     log_timeseries_values,
@@ -18,13 +18,13 @@ from python.src.utils.logging.log_utils import (
 
 @pytest.fixture
 def mock_wandb():
-    with patch("python.src.utils.logging.log_utils.wandb") as mock:
+    with patch("src.utils.logging.log_utils.wandb") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_plt():
-    with patch("python.src.utils.logging.log_utils.plt") as mock:
+    with patch("src.utils.logging.log_utils.plt") as mock:
         yield mock
 
 

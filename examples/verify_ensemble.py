@@ -4,7 +4,7 @@ Verification script for Ensemble Models.
 
 import torch
 
-from python.src.models.ensemble import create_ensemble_from_configs
+from src.models.ensemble import create_ensemble_from_configs
 
 
 def verify_ensemble():

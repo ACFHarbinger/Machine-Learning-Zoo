@@ -3,7 +3,7 @@ import logging
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from python.src.pipeline.hpo.optimize import bayesian_optimization, run_dehb_search
+from src.pipeline.hpo.optimize import bayesian_optimization, run_dehb_search
 
 logging.basicConfig(level=logging.INFO)
 

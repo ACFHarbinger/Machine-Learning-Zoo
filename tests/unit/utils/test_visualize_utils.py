@@ -5,7 +5,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.utils.logging.visualize_utils import (
+from src.utils.logging.visualize_utils import (
     MyModelWrapper,
     get_batch,
     load_model_instance,
@@ -48,7 +48,7 @@ def test_my_model_wrapper(dummy_model):
     assert out.shape == (2, 2)
 
 
-@patch("python.src.utils.logging.visualize_utils.load_model")
+@patch("src.utils.logging.visualize_utils.load_model")
 def test_load_model_instance(mock_load, dummy_model):
     mock_load.return_value = (dummy_model, {"opt": 1})
     model, opts = load_model_instance("fake_path", torch.device("cpu"))

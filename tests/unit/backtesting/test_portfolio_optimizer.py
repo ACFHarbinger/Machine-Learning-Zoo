@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from python.src.models.portfolio.portfolio_optimizer import PortfolioOptimizer
+from src.models.portfolio.portfolio_optimizer import PortfolioOptimizer
 
 
 @pytest.fixture

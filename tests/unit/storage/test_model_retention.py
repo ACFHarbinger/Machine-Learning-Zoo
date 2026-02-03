@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from python.src.utils.io.model_retention import ModelRetentionPolicy, RetentionConfig
+from src.utils.io.model_retention import ModelRetentionPolicy, RetentionConfig
 
 
 @pytest.fixture

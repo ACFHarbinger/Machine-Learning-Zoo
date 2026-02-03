@@ -8,7 +8,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.pipeline.meta.maml import MAMLDataModule, MAMLLightningModule
+from src.pipeline.meta.maml import MAMLDataModule, MAMLLightningModule
 
 
 class SimpleModel(nn.Module):

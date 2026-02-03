@@ -3,10 +3,10 @@ import sys
 
 import torch
 
-# Adjust path to include python/src
+# Adjust path to include src
 sys.path.append(os.path.join(os.getcwd(), "python", "src"))
 
-from python.src.models.helper_factory import HelperModelFactory
+from src.models.helper_factory import HelperModelFactory
 
 
 def test_ml_factory_listing():

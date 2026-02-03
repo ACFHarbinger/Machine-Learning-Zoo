@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from python.src.backtesting.sample_strategy import SMACrossoverStrategy
+from src.backtesting.sample_strategy import SMACrossoverStrategy
 
 
 class TestSMACrossoverStrategy(unittest.TestCase):

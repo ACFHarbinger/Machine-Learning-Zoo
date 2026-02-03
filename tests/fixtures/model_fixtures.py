@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from python.src.models.time_series import TimeSeriesBackbone
-from python.src.utils.io.model_versioning import ModelMetadata
+from src.models.time_series import TimeSeriesBackbone
+from src.utils.io.model_versioning import ModelMetadata
 
 
 @pytest.fixture

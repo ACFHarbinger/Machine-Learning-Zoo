@@ -11,7 +11,7 @@ def mock_args() -> argparse.Namespace:
     """Mock CLI arguments."""
     return argparse.Namespace(
         command="train",
-        config="python/src/conf/config.yaml",
+        config="src/conf/config.yaml",
         overrides={"model.hidden_dim": "256"}
     )
 

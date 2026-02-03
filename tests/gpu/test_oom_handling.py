@@ -8,7 +8,7 @@ import pytest
 import torch
 
 try:
-    from python.src.utils.profiling import get_gpu_memory_stats
+    from src.utils.profiling import get_gpu_memory_stats
 except ImportError:
     pass
 

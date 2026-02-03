@@ -13,7 +13,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.utils.io.model_versioning import (
+from src.utils.io.model_versioning import (
     ModelMetadata,
     ModelRegistry,
     check_version_compatibility,

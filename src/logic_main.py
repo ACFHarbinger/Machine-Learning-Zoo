@@ -6,7 +6,7 @@ from typing import Any, Callable
 # Add shared and logic src to path
 # (The Rust core will set PYTHONPATH properly)
 
-from src.ipc.ndjson_transport import NdjsonTransport
+from .ipc.ndjson_transport import NdjsonTransport
 
 logging.basicConfig(
     stream=sys.stderr,
@@ -43,22 +43,22 @@ class LogicRequestHandler:
         return {"status": "shutting_down"}
 
     async def _personality_get_hatching(self, p, _cb):
-        from src.personality import get_personality
+        from .personality import get_personality
 
         return {"message": get_personality().hatching_message}
 
     async def _personality_get_prompt(self, p, _cb):
-        from src.personality import get_personality
+        from .personality import get_personality
 
         return {"prompt": get_personality().system_prompt}
 
     async def _personality_get_name(self, p, _cb):
-        from src.personality import get_personality
+        from .personality import get_personality
 
         return {"name": get_personality().name}
 
     async def _personality_update_name(self, p, _cb):
-        from src.personality import get_personality
+        from .personality import get_personality
 
         success = get_personality().update_name(p["name"])
         return {"success": success, "name": get_personality().name}

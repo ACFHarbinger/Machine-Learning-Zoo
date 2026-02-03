@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.models.ensemble import EnsembleModel, create_ensemble_from_configs
+from src.models.ensemble import EnsembleModel, create_ensemble_from_configs
 
 
 class SimpleModel(nn.Module):
@@ -108,7 +108,7 @@ def test_predict_with_uncertainty():
     )
 
 
-@patch("python.src.models.ensemble.TimeSeriesBackbone")
+@patch("src.models.ensemble.TimeSeriesBackbone")
 def test_create_ensemble_from_configs(mock_backbone):
     mock_backbone.return_value = SimpleModel(1.0)
     configs = [{"name": "M1"}, {"name": "M2"}]

@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from python.src.backtesting.engine import BacktestEngine
-from python.src.backtesting.strategy import BaseStrategy
+from src.backtesting.engine import BacktestEngine
+from src.backtesting.strategy import BaseStrategy
 
 
 class MockStrategy(BaseStrategy):
@@ -17,7 +17,7 @@ class MockStrategy(BaseStrategy):
 
 @pytest.fixture
 def mock_arena():
-    with patch("python.src.backtesting.engine.PolymarketArena") as mock:
+    with patch("src.backtesting.engine.PolymarketArena") as mock:
         instance = mock.return_value
         instance.current_step.return_value = 0
         instance.collateral.return_value = 10000.0
@@ -31,7 +31,7 @@ def mock_arena():
 def test_backtest_engine_init(mock_arena):
     engine = BacktestEngine(initial_collateral=5000.0, taker_fee=0.002)
     # Check if PolymarketArena was initialized with correct args
-    from python.src.backtesting.engine import PolymarketArena
+    from src.backtesting.engine import PolymarketArena
 
     PolymarketArena.assert_called_once_with(5000.0, 0.002)
     assert engine.strategy is None

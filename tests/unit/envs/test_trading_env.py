@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from python.src.env.trading_env import TradingEnv
+from src.env.trading_env import TradingEnv
 
 
 class TestTradingEnv(unittest.TestCase):

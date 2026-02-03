@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from python.src.features.feature_selection import TimeSeriesFeatureSelector
-from python.src.features.pipeline import FeaturePipeline
+from src.features.feature_selection import TimeSeriesFeatureSelector
+from src.features.pipeline import FeaturePipeline
 
 
 @pytest.fixture

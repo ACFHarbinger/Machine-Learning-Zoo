@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from python.src.storage.base import ModelMetadata, ModelStorage, StorageConfig
+from src.storage.base import ModelMetadata, ModelStorage, StorageConfig
 
 
 class ConcreteStorage(ModelStorage):

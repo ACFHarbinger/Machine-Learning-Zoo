@@ -3,11 +3,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 import torch
 
-from python.src.utils.io.cloud_storage import (
+from src.utils.io.cloud_storage import (
     CloudCheckpointManager,
     CloudStorageConfig,
 )
-from python.src.utils.io.model_versioning import (
+from src.utils.io.model_versioning import (
     ModelMetadata,
     ModelRegistry,
     check_version_compatibility,
@@ -57,7 +57,7 @@ class TestModelVersioning:
         assert check_version_compatibility("1.5.0", "1.0.0")
         assert not check_version_compatibility("2.0.0", "1.0.0")
 
-    @patch("python.src.utils.io.model_versioning.get_git_commit")
+    @patch("src.utils.io.model_versioning.get_git_commit")
     def test_create_metadata_from_config(self, mock_git):
         mock_git.return_value = "commit_hash"
         meta = create_metadata_from_config(
@@ -102,7 +102,7 @@ class TestCloudCheckpointManager:
     def mock_backend(self):
         return MagicMock()
 
-    @patch("python.src.utils.io.cloud_storage.S3Backend")
+    @patch("src.utils.io.cloud_storage.S3Backend")
     def test_manager_save_s3(self, mock_s3_backend):
         mock_backend = mock_s3_backend.return_value
         mock_backend.upload.return_value = "s3://uri"
@@ -123,7 +123,7 @@ class TestCloudCheckpointManager:
         assert metadata["model_type"] == "test_model"
         assert metadata["version"] == "1.0.0"
 
-    @patch("python.src.utils.io.cloud_storage.GCSBackend")
+    @patch("src.utils.io.cloud_storage.GCSBackend")
     def test_manager_load_gcs(self, mock_gcs_backend):
         mock_backend = mock_gcs_backend.return_value
 
@@ -163,7 +163,7 @@ class TestCloudCheckpointManager:
             CloudCheckpointManager(config, backend="ftp")
 
 
-@patch("python.src.utils.io.cloud_storage.zstd")
+@patch("src.utils.io.cloud_storage.zstd")
 class TestCloudBackends:
     # Minimal tests for Backend classes assuming clients are mocked
     # Since we tested logic in storage module, we focus on upload/download flow here
@@ -173,7 +173,7 @@ class TestCloudBackends:
         tmp_file.write_bytes(b"data")
 
         CloudStorageConfig(bucket="bucket")
-        with patch("python.src.utils.io.cloud_storage.S3Backend.client"):
+        with patch("src.utils.io.cloud_storage.S3Backend.client"):
             # We need to mock client property which imports boto3
             # OR better: mock boto3 import using sys.modules like before
             # But here we can patch the property if S3Backend is imported.

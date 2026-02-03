@@ -1,6 +1,6 @@
 import torch
 
-from python.src.models.probabilistic.diffusion_unet import (
+from src.models.probabilistic.diffusion_unet import (
     DiffusionUNet1D,
     ResidualBlock1D,
     SinusoidalPositionEmbeddings,

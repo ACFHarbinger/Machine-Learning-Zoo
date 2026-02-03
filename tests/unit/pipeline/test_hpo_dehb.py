@@ -5,13 +5,13 @@ import ConfigSpace as CS  # noqa: N817
 import numpy as np
 import pytest
 
-from python.src.pipeline.hpo.de_async import AsyncDifferentialEvolution
-from python.src.pipeline.hpo.dehb import (
+from src.pipeline.hpo.de_async import AsyncDifferentialEvolution
+from src.pipeline.hpo.dehb import (
     DEHB,
     DifferentialEvolutionHyperband,
     get_config_space,
 )
-from python.src.pipeline.hpo.dehb_shb_manager import SynchronousHalvingBracketManager
+from src.pipeline.hpo.dehb_shb_manager import SynchronousHalvingBracketManager
 
 
 def dummy_objective(config, fidelity, **kwargs):
@@ -32,7 +32,7 @@ def get_simple_cs():
 
 @pytest.fixture(autouse=True)
 def mock_dask_client():
-    with patch("python.src.pipeline.hpo.dehb.Client") as mock_client_class:
+    with patch("src.pipeline.hpo.dehb.Client") as mock_client_class:
         mock_client = MagicMock()
         mock_client.scheduler_info.return_value = {"workers": ["w1", "w2"]}
         mock_client_class.return_value = mock_client
@@ -71,7 +71,7 @@ def test_get_config_space_custom():
 
 def test_dehb_init(basic_dehb_kwargs):
     cs = get_simple_cs()
-    with patch("python.src.pipeline.hpo.dehb.os.makedirs"):
+    with patch("src.pipeline.hpo.dehb.os.makedirs"):
         dehb = DEHB(cs=cs, f=dummy_objective, **basic_dehb_kwargs)
         assert dehb.min_fidelity == 1.0
         assert dehb.max_fidelity == 10.0
@@ -82,7 +82,7 @@ def test_dehb_init(basic_dehb_kwargs):
 
 def test_dehb_ask_tell(basic_dehb_kwargs):
     cs = get_simple_cs()
-    with patch("python.src.pipeline.hpo.dehb.os.makedirs"):
+    with patch("src.pipeline.hpo.dehb.os.makedirs"):
         dehb = DEHB(cs=cs, f=dummy_objective, **basic_dehb_kwargs)
 
         # Ask for a job
@@ -103,7 +103,7 @@ def test_dehb_ask_tell(basic_dehb_kwargs):
 
 def test_dehb_distributed_init(basic_dehb_kwargs):
     cs = get_simple_cs()
-    with patch("python.src.pipeline.hpo.dehb.os.makedirs"):
+    with patch("src.pipeline.hpo.dehb.os.makedirs"):
         # Explicit n_workers=2 should trigger Client usage (mocked autouse)
         dehb = DEHB(cs=cs, f=dummy_objective, n_workers=2, **basic_dehb_kwargs)
         assert dehb.n_workers == 2
@@ -162,7 +162,7 @@ def test_async_de_mutation():
 def test_dehb_gpu_distribution(basic_dehb_kwargs):
     cs = get_simple_cs()
     with (
-        patch("python.src.pipeline.hpo.dehb.os.makedirs"),
+        patch("src.pipeline.hpo.dehb.os.makedirs"),
         patch.dict(os.environ, {"CUDA_VISIBLE_DEVICES": "0,1,2"}),
     ):
         dehb = DEHB(cs=cs, f=dummy_objective, **basic_dehb_kwargs)

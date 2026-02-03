@@ -6,7 +6,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.utils.io.cloud_storage import (
+from src.utils.io.cloud_storage import (
     CloudCheckpointManager,
     CloudStorageConfig,
     GCSBackend,
@@ -125,7 +125,7 @@ def test_gcs_backend_download(mock_client_cls, config, tmp_path):
 
 
 def test_checkpoint_manager_save_load(config, dummy_model, dummy_optimizer):
-    with patch("python.src.utils.io.cloud_storage.S3Backend") as mock_backend_cls:
+    with patch("src.utils.io.cloud_storage.S3Backend") as mock_backend_cls:
         mock_backend = mock_backend_cls.return_value
         mock_backend.upload.return_value = "s3://test/uri"
 
@@ -167,7 +167,7 @@ def test_checkpoint_manager_save_load(config, dummy_model, dummy_optimizer):
 
 
 def test_list_versions(config):
-    with patch("python.src.utils.io.cloud_storage.S3Backend") as mock_backend_cls:
+    with patch("src.utils.io.cloud_storage.S3Backend") as mock_backend_cls:
         mock_backend = mock_backend_cls.return_value
         mock_backend.list_objects.return_value = [
             {"key": "test-prefix/ppo/v1.0.0/checkpoint.pt.zst"},

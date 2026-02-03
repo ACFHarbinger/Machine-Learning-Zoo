@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from python.src.storage.base import StorageConfig
-from python.src.storage.gcs import GCSStorage
+from src.storage.base import StorageConfig
+from src.storage.gcs import GCSStorage
 
 
 @pytest.fixture

@@ -2,8 +2,8 @@ import unittest
 
 import torch
 
-from python.src.pipeline.core.lightning.self_supervised import SelfSupervisedModule
-from python.src.pipeline.core.lightning.unsupervised_learning import UnsupervisedModule
+from src.pipeline.core.lightning.self_supervised import SelfSupervisedModule
+from src.pipeline.core.lightning.unsupervised_learning import UnsupervisedModule
 
 
 class TestUnsupervised(unittest.TestCase):

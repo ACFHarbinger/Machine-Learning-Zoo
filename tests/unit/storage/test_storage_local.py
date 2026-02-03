@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from python.src.storage.base import StorageConfig
-from python.src.storage.local import LocalStorage
+from src.storage.base import StorageConfig
+from src.storage.local import LocalStorage
 
 
 @pytest.fixture

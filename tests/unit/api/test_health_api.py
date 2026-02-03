@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from python.src.api.health import app
+from src.api.health import app
 
 
 class TestHealthAPI(unittest.TestCase):
@@ -9,8 +9,8 @@ class TestHealthAPI(unittest.TestCase):
         app.testing = True
         self.app = app.test_client()
 
-    @patch("python.src.api.health.psutil")
-    @patch("python.src.api.health.torch")
+    @patch("src.api.health.psutil")
+    @patch("src.api.health.torch")
     def test_health_endpoint(self, mock_torch, mock_psutil):
         # Mocking
         mock_torch.cuda.is_available.return_value = False

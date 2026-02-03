@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 from src.training.federated import FederatedAggregator, FederatedClient
-from src.utils.generation.generators import GANGenerator, VAEGenerator
+from src.utils.gen.generators import GANGenerator, VAEGenerator
 from src.envs.envs import TradingEnv, MultiAgentEnvWrapper
 
 

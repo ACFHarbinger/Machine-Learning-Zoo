@@ -21,13 +21,12 @@ except ImportError:
     TORCH_AVAILABLE = False
     print("Warning: PyTorch or OmegaConf not available. Some features may not work.")
 
-# Add the project root to Python path
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
+# from models.composed import build_model
+# from utils.config import deep_sanitize
 
 try:
-    from models.composed import build_model
-    from utils.config import deep_sanitize
+    from .models.composed import build_model
+    from .utils.config import deep_sanitize
 
     LOCAL_MODULES_AVAILABLE = True
 except ImportError as e:
@@ -72,7 +71,9 @@ def build_model_from_config(config: dict[str, Any]) -> Any:
         raise ImportError("Local modules not available")
 
     backbone_name = config.get("backbone")
-    head_name = config.get("head", "classification")  # Default to classification if not specified
+    head_name = config.get(
+        "head", "classification"
+    )  # Default to classification if not specified
     backbone_config = config.get("backbone_config", {})
     head_config = config.get("head_config", {})
 
@@ -142,10 +143,14 @@ def demonstrate_model(model: Any, config: dict[str, Any]) -> None:
             )
             print(f"Model output type: {type(output)}")
             if isinstance(output, torch.Tensor):
-                print(f"Output sample: {output[0] if output.numel() > 0 else 'Empty tensor'}")
+                print(
+                    f"Output sample: {output[0] if output.numel() > 0 else 'Empty tensor'}"
+                )
         except Exception as e:
             print(f"Error during forward pass: {e}")
-            print("This might be expected if the model requires specific input preprocessing.")
+            print(
+                "This might be expected if the model requires specific input preprocessing."
+            )
 
 
 def main() -> None:
@@ -153,8 +158,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Machine Learning Zoo - Build and demonstrate models from presets"
     )
-    parser.add_argument("preset", nargs="?", help="Path to preset YAML configuration file")
-    parser.add_argument("--list-presets", action="store_true", help="List available preset files")
+    parser.add_argument(
+        "preset", nargs="?", help="Path to preset YAML configuration file"
+    )
+    parser.add_argument(
+        "--list-presets", action="store_true", help="List available preset files"
+    )
     parser.add_argument(
         "--demo",
         action="store_true",
@@ -166,7 +175,7 @@ def main() -> None:
 
     # List presets if requested
     if args.list_presets:
-        presets_dir = project_root / "presets"
+        presets_dir = Path(__file__).parent.parent / "presets"
         if presets_dir.exists():
             print("Available presets:")
             for preset_file in presets_dir.glob("*.yaml"):
@@ -176,7 +185,9 @@ def main() -> None:
         return
 
     if not args.preset:
-        print("Error: No preset specified. Use --list-presets to see available presets.")
+        print(
+            "Error: No preset specified. Use --list-presets to see available presets."
+        )
         sys.exit(1)
 
     # Load configuration

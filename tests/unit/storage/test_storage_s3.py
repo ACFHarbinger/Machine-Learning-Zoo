@@ -3,10 +3,10 @@ from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
-from python.src.storage.base import StorageConfig
+from src.storage.base import StorageConfig
 
 # Set PYTHONPATH via pytest or env is assumed.
-from python.src.storage.s3 import S3Storage
+from src.storage.s3 import S3Storage
 
 
 @pytest.fixture

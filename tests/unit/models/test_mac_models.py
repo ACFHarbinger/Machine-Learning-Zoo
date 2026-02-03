@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from python.src.models.time_series import TimeSeriesBackbone
+from src.models.time_series import TimeSeriesBackbone
 
 
 class TestRegressionModels:
@@ -59,7 +59,7 @@ class TestRegressionModels:
 
 # Moved out of TestRegressionModels class as they no longer use 'self'
 def test_olsr_model(regression_data):
-    from python.src.models.mac import OLSRModel
+    from src.models.mac import OLSRModel
 
     X, y = regression_data
     model = OLSRModel()
@@ -70,7 +70,7 @@ def test_olsr_model(regression_data):
 
 
 def test_stepwise_model(regression_data):
-    from python.src.models.mac import StepwiseRegressionModel
+    from src.models.mac import StepwiseRegressionModel
 
     X, y = regression_data
     model = StepwiseRegressionModel(n_features_to_select=2)
@@ -83,7 +83,7 @@ def test_stepwise_model(regression_data):
 
 
 def test_mars_model(regression_data):
-    from python.src.models.mac import MARSModel
+    from src.models.mac import MARSModel
 
     X, y = regression_data
     model = MARSModel(n_segments=3)
@@ -93,7 +93,7 @@ def test_mars_model(regression_data):
 
 
 def test_loess_model(regression_data):
-    from python.src.models.mac import LOESSModel
+    from src.models.mac import LOESSModel
 
     X, y = regression_data
     # LOESS needs sorted X for stable interpolation test, but our model handles it
@@ -104,7 +104,7 @@ def test_loess_model(regression_data):
 
 
 def test_lwl_model(regression_data):
-    from python.src.models.mac import LWLModel
+    from src.models.mac import LWLModel
 
     model = LWLModel(n_neighbors=5)
     model.fit(regression_data[0], regression_data[1])
@@ -114,7 +114,7 @@ def test_lwl_model(regression_data):
 
 
 def test_m5_model(regression_data):
-    from python.src.models.mac import M5Model
+    from src.models.mac import M5Model
 
     model = M5Model()
     model.fit(regression_data[0], regression_data[1])
@@ -124,7 +124,7 @@ def test_m5_model(regression_data):
 
 
 def test_lars_model(regression_data):
-    from python.src.models.mac import LARSModel
+    from src.models.mac import LARSModel
 
     model = LARSModel()
     model.fit(regression_data[0], regression_data[1])
@@ -161,51 +161,51 @@ def test_tree_model_regression(model_name, regression_data):
     # Let's instantiate directly based on name.
 
     if model_name == "RandomForest":
-        from python.src.models.mac import RandomForestModel
+        from src.models.mac import RandomForestModel
 
         model = RandomForestModel(task="regression")
     elif model_name == "DecisionTree":
-        from python.src.models.mac import DecisionTreeModel
+        from src.models.mac import DecisionTreeModel
 
         model = DecisionTreeModel(task="regression")
     elif model_name == "GradientBoosting":
-        from python.src.models.mac import GradientBoostingModel
+        from src.models.mac import GradientBoostingModel
 
         model = GradientBoostingModel(task="regression")
     elif model_name == "XGBoost":
-        from python.src.models.mac import XGBoostModel
+        from src.models.mac import XGBoostModel
 
         model = XGBoostModel(task="regression")
     elif model_name == "LightGBM":
-        from python.src.models.mac import LightGBMModel
+        from src.models.mac import LightGBMModel
 
         model = LightGBMModel(task="regression")
     elif model_name == "CART":
-        from python.src.models.mac import CARTModel
+        from src.models.mac import CARTModel
 
         model = CARTModel(task="regression")
     elif model_name == "ID3":
-        from python.src.models.mac import ID3Model
+        from src.models.mac import ID3Model
 
         model = ID3Model(task="regression")  # Will fallback to default
     elif model_name == "C45":
-        from python.src.models.mac import C45Model
+        from src.models.mac import C45Model
 
         model = C45Model(task="regression")
     elif model_name == "C50":
-        from python.src.models.mac import C50Model
+        from src.models.mac import C50Model
 
         model = C50Model(task="regression")
     elif model_name == "CHAID":
-        from python.src.models.mac import CHAIDModel
+        from src.models.mac import CHAIDModel
 
         model = CHAIDModel(task="regression")
     elif model_name == "DecisionStump":
-        from python.src.models.mac import DecisionStumpModel
+        from src.models.mac import DecisionStumpModel
 
         model = DecisionStumpModel(task="regression")
     elif model_name == "ConditionalTree":
-        from python.src.models.mac import ConditionalDecisionTreeModel
+        from src.models.mac import ConditionalDecisionTreeModel
 
         model = ConditionalDecisionTreeModel(task="regression")
     else:
@@ -318,7 +318,7 @@ class TestClassicalCommon:
         backbone = TimeSeriesBackbone(classical_cfg)
         X = torch.randn(100, 10)
         y = torch.randn(100, 1)
-        from python.src.models.mac.base import ClassicalModel
+        from src.models.mac.base import ClassicalModel
 
         # Static analysis tools can sometimes misidentify nn.Module attributes as Tensors
         # Explicitly checking the type helps resolve "Object of type 'Tensor' is not callable"

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from python.src.commands.base_parser import (
+from src.commands.base_parser import (
     ConfigsParser,
     LowercaseAction,
     StoreDictKeyPair,

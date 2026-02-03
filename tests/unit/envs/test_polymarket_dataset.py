@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 import torch
 
-from python.src.data.polymarket_dataset import PolymarketDataset
+from src.data.polymarket_dataset import PolymarketDataset
 
 
 @pytest.fixture

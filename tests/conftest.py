@@ -8,19 +8,19 @@ from unittest.mock import MagicMock
 import pytest
 
 pytest_plugins = [
-    "python.tests.fixtures.arg_fixtures",
-    "python.tests.fixtures.config_fixtures",
-    "python.tests.fixtures.deep_fixtures",
-    "python.tests.fixtures.environment_fixtures",
-    "python.tests.fixtures.hpo_fixtures",
-    "python.tests.fixtures.mac_fixtures",
-    "python.tests.fixtures.model_fixtures",
-    "python.tests.fixtures.nglab_fixtures",
-    "python.tests.fixtures.pipeline_fixtures",
-    "python.tests.fixtures.policy_fixtures",
-    "python.tests.fixtures.regression_fixtures",
-    "python.tests.fixtures.tensor_fixtures",
-    "python.tests.fixtures.utils_fixtures",
+    "tests.fixtures.arg_fixtures",
+    "tests.fixtures.config_fixtures",
+    "tests.fixtures.deep_fixtures",
+    "tests.fixtures.environment_fixtures",
+    "tests.fixtures.hpo_fixtures",
+    "tests.fixtures.mac_fixtures",
+    "tests.fixtures.model_fixtures",
+    "tests.fixtures.nglab_fixtures",
+    "tests.fixtures.pipeline_fixtures",
+    "tests.fixtures.policy_fixtures",
+    "tests.fixtures.regression_fixtures",
+    "tests.fixtures.tensor_fixtures",
+    "tests.fixtures.utils_fixtures",
 ]
 
 # Filter stubborn warnings that pyproject.toml misses
@@ -39,16 +39,15 @@ mock_zstd.ZstdCompressor.return_value.compress.side_effect = gzip.compress
 mock_zstd.ZstdDecompressor.return_value.decompress.side_effect = gzip.decompress
 sys.modules["zstandard"] = mock_zstd
 
-# The project root is THREE levels up from conftest.py:
-# conftest.py -> tests -> python -> nglab (Project Root)
-# /home/pkhunter/Repositories/nglab/python/tests/conftest.py
-# .parent -> python/tests
-# .parent.parent -> python
-# .parent.parent.parent -> nglab (Project Root)
-project_root = Path(__file__).resolve().parent.parent.parent
+# The project root is TWO levels up from conftest.py:
+# conftest.py -> tests (Project Root)
+# /home/pkhunter/Repositories/Machine-Learning-Zoo/tests/conftest.py
+# .parent -> tests
+# .parent.parent -> Machine-Learning-Zoo (Project Root)
+project_root = Path(__file__).resolve().parent.parent
 
 # Add the project root to sys.path.
-# This allows 'import python.src...' to resolve correctly.
+# This allows 'import src...' to resolve correctly.
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 

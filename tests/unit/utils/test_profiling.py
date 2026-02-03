@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.utils.profiling.cuda_profiler import (
+from src.utils.profiling.cuda_profiler import (
     CUDAProfiler,
     ProfilerConfig,
     get_gpu_memory_stats,
@@ -29,7 +29,7 @@ def test_profiler_config():
     assert config.profile_memory is False
 
 
-@patch("python.src.utils.profiling.cuda_profiler.torch_profile")
+@patch("src.utils.profiling.cuda_profiler.torch_profile")
 def test_cuda_profiler_basic(mock_torch_profile, tmp_path):
     config = ProfilerConfig(
         output_dir=str(tmp_path / "profiler"), export_chrome_trace=False

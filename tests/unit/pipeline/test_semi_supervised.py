@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import torch
 
-from python.src.pipeline.core.lightning.semi_supervised import SemiSupervisedModule
+from src.pipeline.core.lightning.semi_supervised import SemiSupervisedModule
 
 
 class TestSemiSupervisedModule(unittest.TestCase):

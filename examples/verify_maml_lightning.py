@@ -5,8 +5,8 @@ Verification script for MAML Lightning Module.
 import pytorch_lightning as pl
 import torch
 
-from python.src.models.time_series import TimeSeriesBackbone
-from python.src.pipeline.meta.maml import MAMLDataModule, MAMLLightningModule
+from src.models.time_series import TimeSeriesBackbone
+from src.pipeline.meta.maml import MAMLDataModule, MAMLLightningModule
 
 
 def verify_maml_lightning():

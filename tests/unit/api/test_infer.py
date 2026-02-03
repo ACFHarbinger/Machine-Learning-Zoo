@@ -7,7 +7,7 @@ import pytest
 
 # Import the module to test
 # Since infer.py is a script, we import it as a module to access main
-from python.src import infer
+from src import infer
 
 
 def test_inference_script_success(mock_model_artifact):

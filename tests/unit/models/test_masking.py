@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from python.src.utils.functions.masking import ProbMask, TriangularCausalMask
+from src.utils.functions.masking import ProbMask, TriangularCausalMask
 
 
 class TestMasking(unittest.TestCase):

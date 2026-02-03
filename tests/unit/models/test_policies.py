@@ -2,10 +2,10 @@ import unittest
 
 import torch
 
-from python.src.policies.black_scholes import BlackScholesPolicy
-from python.src.policies.neural import NeuralPolicy
-from python.src.policies.regular import RegularPolicy
-from python.src.policies.threshold import ThresholdPolicy
+from src.policies.black_scholes import BlackScholesPolicy
+from src.policies.neural import NeuralPolicy
+from src.policies.regular import RegularPolicy
+from src.policies.threshold import ThresholdPolicy
 
 
 class TestPolicies(unittest.TestCase):

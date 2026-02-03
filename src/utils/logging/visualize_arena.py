@@ -5,15 +5,8 @@ Verification script for the Trading Arena environment.
 import os
 import sys
 
-# Ensure we can import nglab
-sys.path.insert(0, os.getcwd())
-
 try:
-    import nglab
-
-    print(f"Successfully imported nglab from {nglab.__file__}")
-
-    from src.envs import TradingEnv
+    from ..envs import TradingEnv
 
     print("Successfully imported TradingEnv")
 

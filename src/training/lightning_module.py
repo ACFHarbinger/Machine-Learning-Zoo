@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import get_peft_model, LoraConfig, TaskType, prepare_model_for_kbit_training
-from src.training.domain_adaptation import (
+from .domain_adaptation import (
     MMDLoss,
     GradientReversalLayer,
     DomainDiscriminator,

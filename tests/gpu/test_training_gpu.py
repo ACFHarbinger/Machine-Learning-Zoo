@@ -9,8 +9,8 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.utils.mixed_precision import MixedPrecisionConfig, MixedPrecisionTrainer
-from python.src.utils.profiling.gpu_optimization import MemoryPool
+from src.utils.mixed_precision import MixedPrecisionConfig, MixedPrecisionTrainer
+from src.utils.profiling.gpu_optimization import MemoryPool
 
 
 @pytest.mark.gpu

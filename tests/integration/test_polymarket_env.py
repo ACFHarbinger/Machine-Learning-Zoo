@@ -12,7 +12,7 @@ class TestPolymarketEnvInitialization:
 
     def test_empty_market_ids(self):
         """Test initialization with empty market_ids."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(market_ids=[])
 
@@ -22,7 +22,7 @@ class TestPolymarketEnvInitialization:
 
     def test_single_market(self):
         """Test initialization with single market."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(market_ids=["MARKET1"])
 
@@ -34,7 +34,7 @@ class TestPolymarketEnvInitialization:
 
     def test_multiple_markets(self, market_data):
         """Test initialization with multiple markets."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         market_ids = market_data["market_ids"]
         env = PolymarketEnv(market_ids=market_ids)
@@ -47,7 +47,7 @@ class TestPolymarketEnvInitialization:
 
     def test_custom_parameters(self):
         """Test initialization with custom parameters."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(
             market_ids=["M1", "M2"],
@@ -62,7 +62,7 @@ class TestPolymarketEnvInitialization:
 
     def test_observation_space_dimensions(self, market_data):
         """Test observation space dimensions match formula."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         for num_markets in [1, 2, 3, 5]:
             market_ids = [f"M{i}" for i in range(num_markets)]
@@ -73,7 +73,7 @@ class TestPolymarketEnvInitialization:
 
     def test_action_space_multidiscrete(self):
         """Test action space is MultiDiscrete."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(market_ids=["M1", "M2", "M3"])
 
@@ -240,7 +240,7 @@ class TestPolymarketEnvActions:
 
     def test_insufficient_collateral_prevents_trade(self):
         """Test insufficient collateral prevents trades."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(
             market_ids=["M1"],
@@ -280,7 +280,7 @@ class TestPolymarketEnvActions:
 
     def test_fees_applied_correctly(self):
         """Test fees are applied correctly."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(
             market_ids=["M1"],
@@ -390,7 +390,7 @@ class TestPolymarketEnvAccountValue:
 
     def test_account_value_python_fallback(self):
         """Test account value calculation in Python fallback."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(market_ids=["M1"], initial_collateral=10000.0)
         env.reset()
@@ -421,7 +421,7 @@ class TestPolymarketEnvReward:
 
     def test_reward_positive_on_profit(self):
         """Test reward is positive when account value increases."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(market_ids=["M1"], initial_collateral=10000.0)
         env.reset()
@@ -443,7 +443,7 @@ class TestPolymarketEnvTermination:
 
     def test_termination_zero_account_value(self):
         """Test termination when account value <= 0."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(market_ids=["M1"], initial_collateral=10000.0)
         env.reset()
@@ -529,7 +529,7 @@ class TestPolymarketEnvRender:
 
     def test_render_human_mode(self, capsys):
         """Test render in human mode outputs to stdout."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(market_ids=["M1"], render_mode="human")
         env.reset()
@@ -540,7 +540,7 @@ class TestPolymarketEnvRender:
 
     def test_render_none_mode(self, capsys):
         """Test render in None mode does nothing."""
-        from python.src.env.envs import PolymarketEnv
+        from src.env.envs import PolymarketEnv
 
         env = PolymarketEnv(market_ids=["M1"], render_mode=None)
         env.reset()

@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from python.src.pipeline.core.lightning.base import BaseModule
+from src.pipeline.core.lightning.base import BaseModule
 
 
 class ConcreteModule(BaseModule):

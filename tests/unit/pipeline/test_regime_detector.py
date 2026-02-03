@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from python.src.pipeline.meta.regime_detector import RegimeDetector
+from src.pipeline.meta.regime_detector import RegimeDetector
 
 
 @pytest.fixture

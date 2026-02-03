@@ -3,7 +3,7 @@ from __future__ import annotations
 from hypothesis import given
 from hypothesis import strategies as st
 
-from python.src.configs import TrainConfig
+from src.configs import TrainConfig
 
 
 @given(st.integers(min_value=0, max_value=1000000))

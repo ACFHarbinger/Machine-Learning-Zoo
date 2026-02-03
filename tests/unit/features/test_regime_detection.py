@@ -1,6 +1,6 @@
 import numpy as np
 
-from python.src.features.regime import MarketRegimeDetector
+from src.features.regime import MarketRegimeDetector
 
 
 def test_regime_detector_fit_predict():

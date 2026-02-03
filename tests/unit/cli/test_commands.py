@@ -2,17 +2,17 @@ import argparse
 import unittest
 from unittest.mock import patch
 
-from python.src.commands.registry import get_parser
-from python.src.commands.train_parser import add_train_args
+from src.commands.registry import get_parser
+from src.commands.train_parser import add_train_args
 
 
 class TestRegistry(unittest.TestCase):
-    @patch("python.src.commands.registry.add_train_args")
-    @patch("python.src.commands.registry.add_inference_args")
-    @patch("python.src.commands.registry.add_crawler_args")
-    @patch("python.src.commands.registry.add_hpo_args")
-    @patch("python.src.commands.registry.add_active_learning_args")
-    @patch("python.src.commands.registry.add_sentiment_args")
+    @patch("src.commands.registry.add_train_args")
+    @patch("src.commands.registry.add_inference_args")
+    @patch("src.commands.registry.add_crawler_args")
+    @patch("src.commands.registry.add_hpo_args")
+    @patch("src.commands.registry.add_active_learning_args")
+    @patch("src.commands.registry.add_sentiment_args")
     def test_get_parser(self, *mocks):
         """Test get_parser creates parser and calls all add_*_args functions."""
         parser = get_parser()

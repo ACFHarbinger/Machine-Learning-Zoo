@@ -5,7 +5,7 @@ Tests for online normalization layer.
 import torch
 from torch import nn
 
-from python.src.pipeline.online_learning.normalization import OnlineNormalizer
+from src.pipeline.online_learning.normalization import OnlineNormalizer
 
 
 class TestOnlineNormalizer:

@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from python.src.db.cache import (
+from src.db.cache import (
     cache_key,
     cached_query,
     get_cache_stats,
@@ -24,12 +24,12 @@ class TestCache:
 
     @pytest.mark.anyio
     async def test_get_redis_client(self):
-        with patch("python.src.db.cache.redis.Redis") as mock_redis_class:
+        with patch("src.db.cache.redis.Redis") as mock_redis_class:
             mock_client = AsyncMock()
             mock_redis_class.return_value = mock_client
 
             # Reset global client to test initialization
-            import python.src.db.cache as cache_module
+            import src.db.cache as cache_module
 
             cache_module._redis_client = None
 
@@ -43,7 +43,7 @@ class TestCache:
         mock_client = AsyncMock()
         mock_client.get.return_value = '{"result": "cached_data"}'
 
-        with patch("python.src.db.cache.get_redis_client", return_value=mock_client):
+        with patch("src.db.cache.get_redis_client", return_value=mock_client):
 
             @cached_query(ttl=300, key_prefix="test")
             async def test_func(arg1):
@@ -59,7 +59,7 @@ class TestCache:
         mock_client = AsyncMock()
         mock_client.get.return_value = None
 
-        with patch("python.src.db.cache.get_redis_client", return_value=mock_client):
+        with patch("src.db.cache.get_redis_client", return_value=mock_client):
 
             @cached_query(ttl=300, key_prefix="test")
             async def test_func(arg1):
@@ -76,7 +76,7 @@ class TestCache:
         mock_client = AsyncMock()
         mock_client.get.side_effect = Exception("Redis error")
 
-        with patch("python.src.db.cache.get_redis_client", return_value=mock_client):
+        with patch("src.db.cache.get_redis_client", return_value=mock_client):
 
             @cached_query(ttl=300, key_prefix="test")
             async def test_func(arg1):
@@ -93,7 +93,7 @@ class TestCache:
         mock_client.keys.return_value = ["key1", "key2", "key3"]
         mock_client.delete.return_value = 3
 
-        with patch("python.src.db.cache.get_redis_client", return_value=mock_client):
+        with patch("src.db.cache.get_redis_client", return_value=mock_client):
             count = await invalidate_cache("test_*")
 
             assert count == 3
@@ -105,7 +105,7 @@ class TestCache:
         mock_client = AsyncMock()
         mock_client.keys.return_value = []
 
-        with patch("python.src.db.cache.get_redis_client", return_value=mock_client):
+        with patch("src.db.cache.get_redis_client", return_value=mock_client):
             count = await invalidate_cache("nonexistent_*")
 
             assert count == 0
@@ -116,7 +116,7 @@ class TestCache:
         mock_client = AsyncMock()
         mock_client.info.return_value = {"keyspace_hits": 100, "keyspace_misses": 50}
 
-        with patch("python.src.db.cache.get_redis_client", return_value=mock_client):
+        with patch("src.db.cache.get_redis_client", return_value=mock_client):
             stats = await get_cache_stats()
 
             assert stats["keyspace_hits"] == 100

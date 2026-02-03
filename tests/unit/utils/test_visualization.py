@@ -6,7 +6,7 @@ import torch
 
 # Do NOT mock sys.modules here as it breaks other tests.
 # Instead, patch inside the tests or fixtures.
-from python.src.utils.plot_utils import (
+from src.utils.plot_utils import (
     discrete_cmap,
     draw_graph,
     plot_attention_maps_wrapper,
@@ -17,25 +17,25 @@ from python.src.utils.plot_utils import (
 
 @pytest.fixture
 def mock_plt():
-    with patch("python.src.utils.plot_utils.plt") as mock:
+    with patch("src.utils.plot_utils.plt") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_sns():
-    with patch("python.src.utils.plot_utils.sns") as mock:
+    with patch("src.utils.plot_utils.sns") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_px():
-    with patch("python.src.utils.plot_utils.px") as mock:
+    with patch("src.utils.plot_utils.px") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_nx():
-    with patch("python.src.utils.plot_utils.nx") as mock:
+    with patch("src.utils.plot_utils.nx") as mock:
         mock.from_numpy_array.return_value = MagicMock()
         yield mock
 
@@ -149,7 +149,7 @@ class TestPlotUtils:
 
         mock_sns.heatmap.assert_called()
 
-    @patch("python.src.utils.plot_utils.px")
+    @patch("src.utils.plot_utils.px")
     def test_visualize_interactive_plot(self, mock_px):
         kwargs = {
             "plot_target": np.zeros((10, 10)),

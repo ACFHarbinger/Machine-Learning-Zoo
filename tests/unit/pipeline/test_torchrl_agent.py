@@ -3,8 +3,8 @@ from typing import cast
 
 from tensordict import TensorDict
 
-from python.src.env.env_wrapper import TradingEnvWrapper
-from python.src.env.trading_env import TradingEnv
+from src.env.env_wrapper import TradingEnvWrapper
+from src.env.trading_env import TradingEnv
 
 
 class TestTorchRLAgent(unittest.TestCase):

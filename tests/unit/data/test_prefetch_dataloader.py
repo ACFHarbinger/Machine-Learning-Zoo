@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from python.src.data.prefetch_dataloader import (
+from src.data.prefetch_dataloader import (
     BackgroundPrefetcher,
     CUDAPrefetcher,
     PrefetchDataLoader,
@@ -163,7 +163,7 @@ def test_prefetch_dataloader_iter(dataset):
     # CUDA case
     with patch("torch.cuda.is_available", return_value=True):
         with patch(
-            "python.src.data.prefetch_dataloader.CUDAPrefetcher"
+            "src.data.prefetch_dataloader.CUDAPrefetcher"
         ) as mock_prefetcher:
             dl_cuda = PrefetchDataLoader(dataset, batch_size=2, device="cuda:0")
             iter(dl_cuda)

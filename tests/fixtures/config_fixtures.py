@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from python.src.configs import (
+from src.configs import (
     EnvConfig,
     ModelConfig,
     PPOConfig,

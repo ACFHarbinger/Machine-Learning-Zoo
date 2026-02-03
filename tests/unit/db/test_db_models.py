@@ -1,6 +1,6 @@
 import unittest
 
-from python.src.db.models import (
+from src.db.models import (
     Base,
     MarketData,
     ModelCheckpoint,

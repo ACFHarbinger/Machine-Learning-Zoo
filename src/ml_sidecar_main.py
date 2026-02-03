@@ -4,11 +4,11 @@ import sys
 from collections.abc import Callable
 from typing import Any, Dict, Optional
 
-from src.ipc.ndjson_transport import NdjsonTransport
-from src.inference.engine import InferenceEngine
-from src.models.sidecar_registry import ModelRegistry
-from src.training import TrainingService
-from src.device import DeviceManager
+from .ipc.ndjson_transport import NdjsonTransport
+from .inference.engine import InferenceEngine
+from .models.sidecar_registry import ModelRegistry
+from .training import TrainingService
+from .device import DeviceManager
 
 logging.basicConfig(
     stream=sys.stderr,
@@ -29,7 +29,9 @@ class MlRequestHandler:
         self.registry = registry
         self.device_manager = device_manager
         assert hasattr(self.registry, "list_models"), "Registry must have list_models"
-        self.training = TrainingService(registry=registry, device_manager=device_manager)
+        self.training = TrainingService(
+            registry=registry, device_manager=device_manager
+        )
         self._handlers = {
             "health.ping": self._health_ping,
             "lifecycle.shutdown": self._lifecycle_shutdown,
@@ -136,7 +138,10 @@ class MlRequestHandler:
     # ── Training handlers ────────────────────────────────────────
 
     async def _training_start(self, p, cb):
-        return {"run_id": await self.training.start(p, progress_callback=cb), "status": "started"}
+        return {
+            "run_id": await self.training.start(p, progress_callback=cb),
+            "status": "started",
+        }
 
     async def _training_stop(self, p, _cb):
         return {"stopped": await self.training.stop(p["run_id"]), "run_id": p["run_id"]}
@@ -177,21 +182,23 @@ class MlRequestHandler:
         return {"deployed_models": deployed}
 
     async def _voice_synthesize(self, p, _cb):
-        from src.tts.elevenlabs import ElevenLabsTTS
+        from .tts.elevenlabs import ElevenLabsTTS
 
         tts = ElevenLabsTTS(api_key=p.get("api_key"))
         success = await tts.synthesize(p["text"], p["output_path"])
         return {"success": success, "output_path": p["output_path"]}
 
     async def _voice_transcribe(self, p, _cb):
-        from src.stt.whisper import WhisperSTT
+        from .stt.whisper import WhisperSTT
 
-        stt = WhisperSTT(model_size=p.get("model_size", "base"), device=p.get("device", "cpu"))
+        stt = WhisperSTT(
+            model_size=p.get("model_size", "base"), device=p.get("device", "cpu")
+        )
         text = await stt.transcribe(p["audio_path"])
         return {"text": text, "audio_path": p["audio_path"]}
 
     async def _personality_hatch_chat(self, p, _cb):
-        from src.personality import get_personality
+        from .personality import get_personality
 
         personality = get_personality()
         system_prompt = f"{personality.system_prompt}\n\n# Hatching Context\nYou are in the 'hatching' phase. Be extremely welcoming and discuss your identity with the user."

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from python.src.utils.io.file_utils import compose_dirpath, read_json
+from src.utils.io.file_utils import compose_dirpath, read_json
 
 
 class TestComposeDirpath:

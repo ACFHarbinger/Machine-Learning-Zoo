@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 import torch
 
-from python.src.data.data_utils import df_to_torch, read_csv, read_json
-from python.src.data.dataloaders import (
+from src.data.data_utils import df_to_torch, read_csv, read_json
+from src.data.dataloaders import (
     FinancialDataset,
     StreamingDataset,
     create_dataloader,

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from python.src.data.streaming import StreamingFinancialDataset
+from src.data.streaming import StreamingFinancialDataset
 
 
 @pytest.fixture
@@ -85,12 +85,12 @@ def test_streaming_financial_dataset_loop_forever(csv_file):
 
 def test_streaming_financial_dataset_multi_worker_warning(csv_file):
     dataset = StreamingFinancialDataset(csv_file)
-    with patch("python.src.data.streaming.get_worker_info") as mock_worker_info:
+    with patch("src.data.streaming.get_worker_info") as mock_worker_info:
         mock_info = MagicMock()
         mock_info.num_workers = 2
         mock_worker_info.return_value = mock_info
 
-        with patch("python.src.data.streaming.logger.warning") as mock_warning:
+        with patch("src.data.streaming.logger.warning") as mock_warning:
             it = iter(dataset)
             next(it)
             mock_warning.assert_called_once()

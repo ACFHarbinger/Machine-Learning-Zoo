@@ -1,11 +1,11 @@
 import argparse
 import unittest
 
-from python.src.commands.active_learning_parser import add_active_learning_args
-from python.src.commands.crawler_parser import add_crawler_args
-from python.src.commands.hpo_parser import add_hpo_args
-from python.src.commands.inference_parser import add_inference_args
-from python.src.commands.sentiment_parser import add_sentiment_args
+from src.commands.active_learning_parser import add_active_learning_args
+from src.commands.crawler_parser import add_crawler_args
+from src.commands.hpo_parser import add_hpo_args
+from src.commands.inference_parser import add_inference_args
+from src.commands.sentiment_parser import add_sentiment_args
 
 
 class TestCrawlerParser(unittest.TestCase):

@@ -7,14 +7,14 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.pipeline.active_learning.sampler import (
+from src.pipeline.active_learning.sampler import (
     BaldSampler,
     BaseSampler,
     EntropySampler,
     RandomSampler,
     UncertaintySampler,
 )
-from python.src.pipeline.active_learning.uncertainty import (
+from src.pipeline.active_learning.uncertainty import (
     QuantileHead,
     mc_dropout_predict,
     pinball_loss,

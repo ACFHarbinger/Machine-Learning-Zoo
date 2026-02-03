@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.pipeline.core.reinforce.reinforce_baselines import (
+from src.pipeline.core.reinforce.reinforce_baselines import (
     Baseline,
     BaselineDataset,
     CriticBaseline,
@@ -147,11 +147,11 @@ def test_rollout_baseline_init():
 
     with (
         patch(
-            "python.src.pipeline.core.reinforce.reinforce_baselines.rollout",
+            "src.pipeline.core.reinforce.reinforce_baselines.rollout",
             return_value=torch.ones(100),
         ),
         patch(
-            "python.src.pipeline.core.reinforce.reinforce_baselines.copy.deepcopy",
+            "src.pipeline.core.reinforce.reinforce_baselines.copy.deepcopy",
             side_effect=lambda x: x,
         ),
     ):
@@ -174,11 +174,11 @@ def test_rollout_baseline_epoch_callback():
 
     with (
         patch(
-            "python.src.pipeline.core.reinforce.reinforce_baselines.rollout",
+            "src.pipeline.core.reinforce.reinforce_baselines.rollout",
             return_value=torch.ones(100) * 10,
         ),
         patch(
-            "python.src.pipeline.core.reinforce.reinforce_baselines.copy.deepcopy",
+            "src.pipeline.core.reinforce.reinforce_baselines.copy.deepcopy",
             side_effect=lambda x: x,
         ),
     ):
@@ -190,11 +190,11 @@ def test_rollout_baseline_epoch_callback():
         candidate_model = MagicMock(spec=nn.Module)
         with (
             patch(
-                "python.src.pipeline.core.reinforce.reinforce_baselines.rollout",
+                "src.pipeline.core.reinforce.reinforce_baselines.rollout",
                 return_value=torch.ones(100) * 5,
             ),
             patch(
-                "python.src.pipeline.core.reinforce.reinforce_baselines.ttest_rel"
+                "src.pipeline.core.reinforce.reinforce_baselines.ttest_rel"
             ) as mock_ttest,
         ):
             mock_res = MagicMock()

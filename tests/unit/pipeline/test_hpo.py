@@ -3,13 +3,13 @@ from unittest.mock import MagicMock, patch
 import ConfigSpace as CS  # noqa: N817
 import numpy as np
 
-from python.src.pipeline.hpo.de import DifferentialEvolution
-from python.src.pipeline.hpo.dehb import (
+from src.pipeline.hpo.de import DifferentialEvolution
+from src.pipeline.hpo.dehb import (
     DifferentialEvolutionHyperband,
     get_config_space,
 )
-from python.src.pipeline.hpo.dehb_config_repo import ConfigRepository
-from python.src.pipeline.hpo.optimize import (
+from src.pipeline.hpo.dehb_config_repo import ConfigRepository
+from src.pipeline.hpo.optimize import (
     bayesian_optimization,
     grid_search,
     optimize_model,
@@ -239,9 +239,9 @@ def test_get_config_space():
 # ============================================================
 
 
-@patch("python.src.pipeline.hpo.optimize.pl.Trainer")
-@patch("python.src.pipeline.hpo.optimize.TimeSeriesBackbone")
-@patch("python.src.pipeline.hpo.optimize.SLLightningModule")
+@patch("src.pipeline.hpo.optimize.pl.Trainer")
+@patch("src.pipeline.hpo.optimize.TimeSeriesBackbone")
+@patch("src.pipeline.hpo.optimize.SLLightningModule")
 def test_optimize_model_mocked(mock_pl_module, mock_backbone, mock_trainer):
     """Test optimize_model ensuring it sets up the trainer and model correctly."""
     # Setup mocks
@@ -291,7 +291,7 @@ def test_optimize_model_mocked(mock_pl_module, mock_backbone, mock_trainer):
     )
 
 
-@patch("python.src.pipeline.hpo.optimize.optimize_model")
+@patch("src.pipeline.hpo.optimize.optimize_model")
 def test_bayesian_optimization_mocked(mock_optimize_model):
     """Test bayesian_optimization wrapper (Optuna) with mocked objective."""
     # Mock return value of the objective function
@@ -312,7 +312,7 @@ def test_bayesian_optimization_mocked(mock_optimize_model):
     assert mock_optimize_model.call_count == 2
 
 
-@patch("python.src.pipeline.hpo.optimize.optimize_model")
+@patch("src.pipeline.hpo.optimize.optimize_model")
 def test_grid_search_mocked(mock_optimize_model):
     """Test grid search wrapper with mocked objective."""
     mock_optimize_model.return_value = 0.5
@@ -332,7 +332,7 @@ def test_grid_search_mocked(mock_optimize_model):
     assert mock_optimize_model.call_count == 4
 
 
-@patch("python.src.pipeline.hpo.optimize.optimize_model")
+@patch("src.pipeline.hpo.optimize.optimize_model")
 def test_random_search_mocked(mock_optimize_model):
     """Test random search wrapper with mocked objective."""
     mock_optimize_model.return_value = 0.5

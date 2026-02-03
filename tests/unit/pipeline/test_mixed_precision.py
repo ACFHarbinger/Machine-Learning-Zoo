@@ -12,7 +12,7 @@ import pytest
 import torch
 from torch import nn
 
-from python.src.utils.mixed_precision import (
+from src.utils.mixed_precision import (
     MixedPrecisionConfig,
     MixedPrecisionTrainer,
     PrecisionMode,
