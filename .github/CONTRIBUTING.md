@@ -18,7 +18,7 @@ Thank you for your interest in contributing to Machine Learning Zoo! We welcome 
     ```bash
     uv pip install -e ".[dev,docs]"
     ```
-    See [DEVELOPMENT.md](DEVELOPMENT.md) for more details.
+    See [DEVELOPMENT.md](../docs/DEVELOPMENT.md) for more details.
 
 ## Development Workflow
 

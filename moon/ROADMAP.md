@@ -2,7 +2,26 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-This roadmap addresses documentation, code clarity, and developer experience gaps identified through an audit of the Machine Learning Zoo codebase. Each phase is ordered by impact: earlier phases unblock the most contributors and users.
+This is the **master roadmap** for Machine Learning Zoo. It addresses documentation, code clarity,
+and developer-experience gaps identified through a codebase audit; per-subsystem engineering
+roadmaps live under [`moon/roadmaps/`](roadmaps/).
+
+Completed items are moved to [`docs/CHANGELOG.md`](../docs/CHANGELOG.md).
+
+---
+
+## Module Roadmaps
+
+MLZ is a modular ML library (`src/`). Each subsystem has a dedicated roadmap:
+
+| Roadmap | Subsystem | Scope |
+| :--- | :--- | :--- |
+| [Models](roadmaps/models.md) | `src/models`, `src/features` | Model library, factories, registries, fine-tuning (PEFT/DeepSpeed) |
+| [RL Environments & Policies](roadmaps/rl.md) | `src/envs`, `src/policies`, `src/pipeline` | Gymnasium envs, SB3/TorchRL policies, training loops |
+| [Data & Storage](roadmaps/data.md) | `src/data`, `src/db`, `src/storage` | Datasets, loaders, DB, artifact storage |
+| [Serving & IPC](roadmaps/serving.md) | `src/api`, `src/ipc`, sidecars | ML sidecar, request handlers, IPC bridge |
+| [Speech (STT/TTS) & Personas](roadmaps/speech.md) | `src/stt`, `src/tts`, `personality.py` | Audio pipelines and the Agent/Persona layer |
+| [Infrastructure](roadmaps/infrastructure.md) | `src/device`, `src/utils`, `src/configs`, `benchmark` | Devices, Hydra configs, profiling, benchmarks |
 
 ---
 
@@ -207,4 +226,4 @@ Concrete guides so contributors don't have to reverse-engineer patterns from exi
 
 ---
 
-_This plan is scoped to documentation and clarity improvements. Feature development is tracked separately in [ROADMAP.md](ROADMAP.md)._
+_This master plan is scoped to documentation and clarity improvements. Feature development is tracked in the per-subsystem roadmaps under [`moon/roadmaps/`](roadmaps/)._

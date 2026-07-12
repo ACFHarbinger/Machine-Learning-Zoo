@@ -11,11 +11,11 @@ A comprehensive machine learning library with modular components for building an
 ## 📚 Documentation
 
 - [**Contributing**](.github/CONTRIBUTING.md): How to contribute code.
-- [**Architecture**](ARCHITECTURE.md): System design overview.
-- [**Agents**](AGENTS.md): Understanding the Agent/Sidecar system.
-- [**Development**](DEVELOPMENT.md): Setup and development guide.
-- [**Roadmap**](ROADMAP.md): Future plans.
-- [**Tutorial**](TUTORIAL.md): Build your first model.
+- [**Architecture**](docs/ARCHITECTURE.md): System design overview.
+- [**Agents**](docs/AGENTS.md): Understanding the Agent/Sidecar system.
+- [**Development**](docs/DEVELOPMENT.md): Setup and development guide.
+- [**Roadmap**](moon/ROADMAP.md): Future plans.
+- [**Tutorial**](docs/TUTORIAL.md): Build your first model.
 
 ## Features
 
@@ -44,7 +44,7 @@ uv pip install -e ".[dev,docs]"
 uv pip install -e ".[gpu]"
 ```
 
-See [DEPENDENCIES.md](DEPENDENCIES.md) for a full list of requirements.
+See [DEPENDENCIES.md](docs/DEPENDENCIES.md) for a full list of requirements.
 
 ## Usage
 
@@ -75,4 +75,4 @@ print(model)
 
 ## Support
 
-If you encounter issues, please check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) or open an issue on GitHub.
+If you encounter issues, please check [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) or open an issue on GitHub.
