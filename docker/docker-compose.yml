@@ -2,11 +2,13 @@ version: '3.8'
 
 services:
   inference-server:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - ./outputs:/app/outputs
+      - ../outputs:/app/outputs
     environment:
       - REDIS_URL=redis://redis:6379/0
     depends_on:
