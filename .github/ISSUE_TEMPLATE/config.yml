@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/ACFHarbinger/Machine-Learning-Zoo/tree/main/docs
+    about: Architecture, development, testing, tutorial, and API reference.
+  - name: 🗺️ Roadmap
+    url: https://github.com/ACFHarbinger/Machine-Learning-Zoo/tree/main/moon
+    about: Master roadmap and per-subsystem roadmaps.

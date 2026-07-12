@@ -1,0 +1,57 @@
+name: 🐛 Bug Report
+description: Report a defect in Machine Learning Zoo
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Telling us which subsystem is affected speeds up triage.
+
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: Affected subsystem
+      options:
+        - Models (src/models, src/features)
+        - RL envs / policies / pipeline (src/envs, src/policies, src/pipeline)
+        - Data & storage (src/data, src/db, src/storage)
+        - Serving & IPC (src/api, src/ipc, sidecar)
+        - Speech / personas (src/stt, src/tts, personality.py)
+        - Infrastructure (src/device, src/utils, src/configs, benchmark)
+        - Build / tooling (just, uv, CI)
+        - Other / unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Expected vs actual behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Minimal command / config to reproduce.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python, CUDA/GPU, torch version, and key deps.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / traceback
+      render: shell

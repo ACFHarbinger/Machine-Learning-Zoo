@@ -1,0 +1,38 @@
+name: ✨ Feature Request
+description: Propose a new capability for Machine Learning Zoo
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: Target subsystem
+      options:
+        - Models
+        - RL envs / policies / pipeline
+        - Data & storage
+        - Serving & IPC
+        - Speech / personas
+        - Infrastructure / tooling
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Note which module roadmap this extends (moon/roadmaps/).
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

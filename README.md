@@ -10,7 +10,7 @@ A comprehensive machine learning library with modular components for building an
 
 ## 📚 Documentation
 
-- [**Contributing**](.github/CONTRIBUTING.md): How to contribute code.
+- [**Contributing**](git/CONTRIBUTING.md): How to contribute code.
 - [**Architecture**](docs/ARCHITECTURE.md): System design overview.
 - [**Agents**](docs/AGENTS.md): Understanding the Agent/Sidecar system.
 - [**Development**](docs/DEVELOPMENT.md): Setup and development guide.
