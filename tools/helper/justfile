@@ -1,0 +1,20 @@
+# tools/helper — presentation + stats.
+
+set shell := ["bash", "-c"]
+
+bold := '\033[1m'
+cyan := '\033[0;36m'
+reset := '\033[0m'
+
+[private]
+_print_header:
+    @printf '{{bold}}{{cyan}}Machine Learning Zoo{{reset}}\n'
+    @printf 'Modular ML library: models, RL envs/policies, data, serving/IPC, speech, infra\n\n'
+
+# List every recipe across all sub-modules
+help: _print_header
+    @just --list --list-submodules
+
+# Lines of code
+stats: _print_header
+    @tokei src 2>/dev/null || echo "(install tokei for LoC stats)"

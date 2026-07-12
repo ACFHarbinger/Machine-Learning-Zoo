@@ -1,0 +1,28 @@
+# tools/quality — formatting, linting, type-checking.
+
+set shell := ["bash", "-c"]
+
+# Format (black + isort + ruff format)
+fmt:
+    uv run black .
+    uv run isort . --profile black
+    uv run ruff format .
+
+# Lint (mirrors CI: black --check, isort --check, mypy) + ruff
+lint:
+    uv run black . --check
+    uv run isort . --check-only --profile black
+    uv run ruff check .
+    uv run mypy .
+
+# Auto-fix ruff issues
+fix:
+    uv run ruff check --fix .
+
+# Type-check only
+typecheck:
+    uv run mypy .
+
+# Audit dependencies for vulnerabilities
+audit:
+    uv run pip-audit || echo "⚠️  pip-audit not installed (pip install pip-audit)"

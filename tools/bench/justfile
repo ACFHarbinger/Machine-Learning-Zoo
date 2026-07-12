@@ -1,0 +1,7 @@
+# tools/bench — benchmarks.
+
+set shell := ["bash", "-c"]
+
+# Run the benchmark suite
+run *args:
+    uv run python -m benchmark {{args}} || uv run python benchmark/run.py {{args}}

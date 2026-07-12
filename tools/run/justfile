@@ -1,0 +1,19 @@
+# tools/run — entry points.
+
+set shell := ["bash", "-c"]
+
+# Run the main CLI (mlzoo entry point)
+main *args:
+    uv run mlzoo {{args}}
+
+# Run the ML sidecar (serves models over IPC)
+sidecar *args:
+    uv run python src/ml_sidecar_main.py {{args}}
+
+# Run the logic-layer entry point
+logic *args:
+    uv run python src/logic_main.py {{args}}
+
+# Start the inference API server
+serve *args:
+    uv run python -m src.api.server {{args}}
