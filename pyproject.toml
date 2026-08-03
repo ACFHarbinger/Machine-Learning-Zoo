@@ -7,7 +7,7 @@ name = "machine-learning-zoo"
 version = "0.1.0"
 description = "A comprehensive machine learning library with modular components for building and training various ML models"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = { file = "../LICENSE.md" }
 requires-python = ">=3.10"
 authors = [{ name = "Machine Learning Zoo Contributors" }]
 maintainers = [{ name = "Machine Learning Zoo Contributors" }]
