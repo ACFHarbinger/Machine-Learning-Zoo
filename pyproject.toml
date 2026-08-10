@@ -63,7 +63,7 @@ dependencies = [
     # pytorch-lightning, tensordict) kept their existing version constraints
     # here rather than being overwritten by nglab's.
     "loss-landscapes>=3.0.6",
-    "matplotlib==3.7",
+    "matplotlib==3.10.9",
     "optuna>=4.6.0",
     "requests==2.31",
     "rich>=14.2.0",
