@@ -73,7 +73,7 @@ dependencies = [
     "torch-geometric>=2.7.0",
     "torchmetrics>=1.0",
     "torchrl>=0.10.1",
-    "wandb==0.15",
+    "wandb==0.28.1",
     "xgboost>=2.0.0",
     "lightgbm>=4.0.0",
     "statsmodels>=0.14.0",
